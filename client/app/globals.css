@@ -1,0 +1,46 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    @apply font-sans text-text-main bg-white;
+    -webkit-font-smoothing: antialiased;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-primary text-white px-6 py-3 rounded-full font-semibold text-sm
+      hover:bg-primary-600 transition-all duration-200 active:scale-95 inline-flex items-center gap-2;
+  }
+  .btn-secondary {
+    @apply border border-primary text-primary px-6 py-3 rounded-full font-semibold text-sm
+      hover:bg-primary hover:text-white transition-all duration-200 active:scale-95 inline-flex items-center gap-2;
+  }
+  .btn-outline {
+    @apply border border-gray-300 text-text-main px-6 py-3 rounded-full font-semibold text-sm
+      hover:border-primary hover:text-primary transition-all duration-200 active:scale-95 inline-flex items-center gap-2;
+  }
+  .input-field {
+    @apply w-full border border-gray-200 rounded-lg px-4 py-3 text-sm text-text-main
+      focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent
+      placeholder:text-gray-400 transition-all duration-200;
+  }
+  .section-title {
+    @apply text-2xl md:text-3xl font-bold text-text-main text-center;
+  }
+  .badge-discount {
+    @apply bg-accent text-white text-xs font-bold px-2 py-1 rounded-full;
+  }
+  .badge-tag {
+    @apply bg-cream border border-gray-200 text-text-muted text-xs px-3 py-1 rounded-full;
+  }
+  .card-shadow {
+    @apply shadow-sm hover:shadow-md transition-shadow duration-200;
+  }
+}

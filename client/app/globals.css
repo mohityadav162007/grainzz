@@ -26,6 +26,10 @@
     @apply border border-gray-300 text-text-main px-6 py-3 rounded-full font-semibold text-sm
       hover:border-primary hover:text-primary transition-all duration-200 active:scale-95 inline-flex items-center gap-2;
   }
+  .btn-green {
+    @apply bg-primary text-white px-5 py-2.5 rounded-lg font-semibold text-sm
+      hover:bg-primary-600 transition-all duration-200 active:scale-95 inline-flex items-center gap-2;
+  }
   .input-field {
     @apply w-full border border-gray-200 rounded-lg px-4 py-3 text-sm text-text-main
       focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent
@@ -43,4 +47,48 @@
   .card-shadow {
     @apply shadow-sm hover:shadow-md transition-shadow duration-200;
   }
+}
+
+/* Marquee animation for Amazon strip */
+.marquee-container {
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.marquee-content {
+  display: inline-flex;
+  animation: marquee 20s linear infinite;
+}
+
+.marquee-content:hover {
+  animation-play-state: paused;
+}
+
+/* Hero carousel dots */
+.hero-dot {
+  @apply w-3 h-3 rounded-full transition-all duration-300 cursor-pointer;
+}
+.hero-dot.active {
+  @apply bg-white scale-110;
+}
+.hero-dot.inactive {
+  @apply bg-white/40 hover:bg-white/60;
+}
+
+/* FAQ accordion transitions */
+.faq-answer {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease-out, opacity 0.2s ease-out;
+  opacity: 0;
+}
+.faq-answer.open {
+  max-height: 500px;
+  opacity: 1;
+}
+
+/* Stat counter animation */
+@keyframes countUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
 }

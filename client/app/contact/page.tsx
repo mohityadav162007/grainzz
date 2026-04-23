@@ -2,7 +2,6 @@
 import { useState } from 'react';
 import { Phone, Mail, MapPin, ArrowRight, HelpCircle, RefreshCw, Truck, Loader2 } from 'lucide-react';
 import Link from 'next/link';
-import type { Metadata } from 'next';
 
 const helpCards = [
   { icon: HelpCircle, title: 'Support', desc: 'Already purchased and have a question about your product? Try our FAQs.', cta: 'FAQs', href: '/faqs' },

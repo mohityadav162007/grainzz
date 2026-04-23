@@ -1,9 +1,9 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { useParams, notFound } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
-import { ChevronRight, Plus, Minus, ShoppingCart, Star, ChevronLeft, ChevronRight as ChevronRightIcon } from 'lucide-react';
+import { ChevronRight, Plus, Minus, ShoppingCart, Star } from 'lucide-react';
 import { getProductBySlug } from '@/lib/api';
 import { useCartStore } from '@/store/cartStore';
 import ProductCard from '@/components/products/ProductCard';
@@ -14,17 +14,39 @@ export default function ProductDetailPage() {
   const [loading, setLoading] = useState(true);
   const [qty, setQty] = useState(1);
   const [selectedImage, setSelectedImage] = useState(0);
-  const [descOpen, setDescOpen] = useState(true);
+  const [openSections, setOpenSections] = useState<Set<string>>(new Set(['Description']));
   const [added, setAdded] = useState(false);
+  const [relatedProducts, setRelatedProducts] = useState<any[]>([]);
   const { addItem } = useCartStore();
 
   useEffect(() => {
     if (!slug) return;
     getProductBySlug(slug as string)
-      .then((res) => setProduct(res.data))
+      .then((res) => {
+        setProduct(res.data);
+        // Fetch related products by same category
+        if (res.data?.category) {
+          fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/products?category=${encodeURIComponent(res.data.category)}&limit=4`)
+            .then(r => r.json())
+            .then(r => {
+              const related = (r.data || []).filter((p: any) => p._id !== res.data._id);
+              setRelatedProducts(related.slice(0, 4));
+            })
+            .catch(() => {});
+        }
+      })
       .catch(() => setProduct(null))
       .finally(() => setLoading(false));
   }, [slug]);
+
+  const toggleSection = (label: string) => {
+    setOpenSections(prev => {
+      const next = new Set(prev);
+      if (next.has(label)) next.delete(label);
+      else next.add(label);
+      return next;
+    });
+  };
 
   const handleAddToCart = () => {
     if (!product) return;
@@ -35,7 +57,6 @@ export default function ProductDetailPage() {
       mrp: product.mrp,
       image: product.images?.[0] || '',
       quantity: qty,
-      tags: product.tags,
     });
     setAdded(true);
     setTimeout(() => setAdded(false), 2000);
@@ -60,6 +81,12 @@ export default function ProductDetailPage() {
 
   const discount = Math.round(((product.mrp - product.price) / product.mrp) * 100);
 
+  const accordionItems = [
+    { label: 'Description', content: product.description },
+    { label: 'Nutrition breakdown', content: product.nutritionInfo },
+    { label: 'Ingredients', content: product.ingredients },
+  ].filter(item => item.content);
+
   return (
     <div className="max-w-7xl mx-auto px-4 lg:px-8 py-8">
       {/* Breadcrumb */}
@@ -81,6 +108,10 @@ export default function ProductDetailPage() {
             {discount > 0 && (
               <div className="absolute top-4 left-4 badge-discount">-{discount}%</div>
             )}
+            {/* Veg Icon */}
+            <div className="absolute top-4 right-4 w-7 h-7 border-2 border-green-600 rounded flex items-center justify-center bg-white">
+              <div className="w-3 h-3 bg-green-600 rounded-full" />
+            </div>
           </div>
           {/* Thumbnails */}
           {product.images?.length > 1 && (
@@ -124,20 +155,16 @@ export default function ProductDetailPage() {
 
           {/* Accordion */}
           <div className="border-t border-gray-100">
-            {[
-              { label: 'Description', content: product.description },
-              { label: 'Nutrition breakdown', content: product.nutritionInfo },
-              { label: 'Ingredients', content: product.ingredients },
-            ].map(({ label, content }) => content && (
+            {accordionItems.map(({ label, content }) => (
               <div key={label} className="border-b border-gray-100">
                 <button
-                  onClick={() => setDescOpen(descOpen ? false : true)}
+                  onClick={() => toggleSection(label)}
                   className="w-full flex items-center justify-between py-3 text-sm font-semibold hover:text-primary transition-colors"
                 >
                   {label}
-                  <span>{descOpen ? <Minus size={16} /> : <Plus size={16} />}</span>
+                  <span>{openSections.has(label) ? <Minus size={16} /> : <Plus size={16} />}</span>
                 </button>
-                {descOpen && (
+                {openSections.has(label) && (
                   <p className="text-sm text-text-muted pb-4 leading-relaxed">{content}</p>
                 )}
               </div>
@@ -181,11 +208,95 @@ export default function ProductDetailPage() {
         </div>
       </div>
 
-      {/* Customer Reviews placeholder */}
+      {/* Customer Reviews */}
       <section className="mb-16">
         <h2 className="text-2xl font-black mb-6">Customer Reviews</h2>
-        <div className="bg-cream rounded-2xl p-6 text-center text-text-muted">
-          <p>No reviews yet. Be the first to review this product!</p>
+        <div className="grid md:grid-cols-2 gap-8">
+          {/* Rating Summary */}
+          <div className="bg-cream rounded-2xl p-6">
+            <div className="flex items-center gap-4 mb-4">
+              <span className="text-4xl font-black">3.8</span>
+              <div>
+                <div className="flex gap-0.5 mb-1">
+                  {[1,2,3,4].map(i => <Star key={i} size={16} className="fill-yellow-400 text-yellow-400" />)}
+                  <Star size={16} className="text-gray-300" />
+                </div>
+                <p className="text-xs text-text-muted">Based on reviews</p>
+              </div>
+            </div>
+            {[5,4,3,2,1].map(star => (
+              <div key={star} className="flex items-center gap-2 mb-1">
+                <span className="text-xs w-4">{star}★</span>
+                <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
+                  <div className="h-full bg-primary rounded-full" style={{ width: star === 5 ? '60%' : star === 4 ? '25%' : star === 3 ? '10%' : '3%' }} />
+                </div>
+              </div>
+            ))}
+          </div>
+          {/* Review Form */}
+          <div className="bg-white border border-gray-100 rounded-2xl p-6">
+            <h3 className="font-bold mb-4">Leave us a review!</h3>
+            <div className="space-y-3">
+              <div>
+                <label className="text-xs font-semibold text-text-muted block mb-1">Overall Rating*</label>
+                <div className="flex gap-1">{[1,2,3,4,5].map(i => <Star key={i} size={20} className="text-gray-300 cursor-pointer hover:text-yellow-400 transition-colors" />)}</div>
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-text-muted block mb-1">Review Title*</label>
+                <input className="input-field" placeholder="Give your review a title" />
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-text-muted block mb-1">Review*</label>
+                <textarea className="input-field resize-none" rows={3} placeholder="Write your review here" />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-semibold text-text-muted block mb-1">Name*</label>
+                  <input className="input-field" />
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-text-muted block mb-1">Email*</label>
+                  <input className="input-field" type="email" />
+                </div>
+              </div>
+              <button className="btn-primary">Submit <span className="ml-1">→</span></button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* You may also like */}
+      {relatedProducts.length > 0 && (
+        <section className="mb-16">
+          <h2 className="text-2xl font-black mb-6">You may also like</h2>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+            {relatedProducts.map((p: any) => (
+              <ProductCard key={p._id} product={p} />
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* Hear it from our customers (mini testimonials) */}
+      <section className="mb-16">
+        <h2 className="text-2xl font-black mb-6">Hear it from our customers</h2>
+        <div className="grid md:grid-cols-3 gap-4">
+          {[
+            { text: '"Finally, a snack that doesn\'t make me choose between my health and my cravings! Grainzz has become my go-to for mid-day hunger."', name: 'Sophia Maren', role: 'Director of Product' },
+            { text: '"I\'ve tried so many healthy snack brands but Grainzz is on a different level. The peri peri oats chips are absolutely addictive!"', name: 'Rahul Sharma', role: 'Fitness Enthusiast' },
+            { text: '"My kids love them which is a huge win! No more hiding spinach in their food. These grain puffs are our family\'s new favourite."', name: 'Priya Mehra', role: 'Mom of Two' },
+          ].map((t, i) => (
+            <div key={i} className="bg-cream rounded-2xl p-6">
+              <p className="text-sm text-text-main italic leading-relaxed mb-4">{t.text}</p>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-primary/20 rounded-full flex items-center justify-center text-primary font-bold">{t.name[0]}</div>
+                <div>
+                  <p className="text-sm font-bold">{t.name}</p>
+                  <p className="text-xs text-text-muted">{t.role}</p>
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
       </section>
     </div>

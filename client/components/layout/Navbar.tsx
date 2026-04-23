@@ -14,14 +14,14 @@ const navLinks = [
 ];
 
 export default function Navbar() {
-  const { itemCount, openCart } = useCartStore();
+  const { items, itemCount, openCart } = useCartStore();
   const [count, setCount] = useState(0);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
   // Hydration fix for cart count
-  useEffect(() => { setCount(itemCount()); });
+  useEffect(() => { setCount(itemCount()); }, [items]);
 
   return (
     <>

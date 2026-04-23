@@ -39,8 +39,7 @@ export default function ProductsPage() {
       if (selectedCategories.length === 1) params.category = selectedCategories[0];
       if (search) params.search = search;
       const res = await getProducts(params);
-      if (page === 1) setProducts(res.data || []);
-      else setProducts((prev) => [...prev, ...(res.data || [])]);
+      setProducts(res.data || []);
       setTotal(res.pagination?.total || 0);
     } catch { }
     finally { setLoading(false); }

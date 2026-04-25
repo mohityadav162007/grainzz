@@ -35,8 +35,8 @@ export default function AdminProductsPage() {
     }
   };
 
-  const filteredProducts = products.filter(p => 
-    p.name.toLowerCase().includes(search.toLowerCase()) || 
+  const filteredProducts = products.filter(p =>
+    p.name.toLowerCase().includes(search.toLowerCase()) ||
     p.category.toLowerCase().includes(search.toLowerCase())
   );
 
@@ -74,6 +74,7 @@ export default function AdminProductsPage() {
                 <th className="px-6 py-4">Category</th>
                 <th className="px-6 py-4">Price</th>
                 <th className="px-6 py-4">Stock</th>
+                <th className="px-6 py-4">Views</th>
                 <th className="px-6 py-4">Status</th>
                 <th className="px-6 py-4 text-right">Actions</th>
               </tr>
@@ -81,15 +82,15 @@ export default function AdminProductsPage() {
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan={6} className="px-6 py-8 text-center text-gray-500">Loading products...</td>
+                  <td colSpan={7} className="px-6 py-8 text-center text-gray-500">Loading products...</td>
                 </tr>
               ) : filteredProducts.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-6 py-8 text-center text-gray-500">No products found.</td>
+                  <td colSpan={7} className="px-6 py-8 text-center text-gray-500">No products found.</td>
                 </tr>
               ) : (
                 filteredProducts.map((product) => (
-                  <tr key={product._id} className="border-b last:border-0 hover:bg-gray-50/50">
+                  <tr key={product.id} className="border-b last:border-0 hover:bg-gray-50/50">
                     <td className="px-6 py-4 font-medium text-gray-900 flex items-center gap-3">
                       {product.images?.[0] ? (
                         <img src={product.images[0]} alt={product.name} className="w-10 h-10 rounded-lg object-cover bg-gray-100" />
@@ -108,18 +109,19 @@ export default function AdminProductsPage() {
                         {product.stock} in stock
                       </span>
                     </td>
+                    <td className="px-6 py-4 text-gray-500">{product.views || 0}</td>
                     <td className="px-6 py-4">
-                      {product.isActive ? (
+                      {product.is_active ? (
                         <span className="text-green-600 bg-green-50 px-2 py-1 rounded-md text-xs font-semibold">Active</span>
                       ) : (
                         <span className="text-gray-500 bg-gray-100 px-2 py-1 rounded-md text-xs font-semibold">Inactive</span>
                       )}
                     </td>
                     <td className="px-6 py-4 text-right space-x-2">
-                      <Link href={`/dashboard/products/${product._id}/edit`} className="inline-flex items-center justify-center w-8 h-8 rounded-lg text-primary hover:bg-primary/10 transition-colors">
+                      <Link href={`/dashboard/products/${product.id}/edit`} className="inline-flex items-center justify-center w-8 h-8 rounded-lg text-primary hover:bg-primary/10 transition-colors">
                         <Edit size={16} />
                       </Link>
-                      <button onClick={() => handleDelete(product._id, product.name)} className="inline-flex items-center justify-center w-8 h-8 rounded-lg text-red-600 hover:bg-red-50 transition-colors">
+                      <button onClick={() => handleDelete(product.id, product.name)} className="inline-flex items-center justify-center w-8 h-8 rounded-lg text-red-600 hover:bg-red-50 transition-colors">
                         <Trash2 size={16} />
                       </button>
                     </td>

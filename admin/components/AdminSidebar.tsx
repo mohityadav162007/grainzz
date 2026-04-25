@@ -1,8 +1,9 @@
 'use client';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { LayoutDashboard, Package, ShoppingBag, Tag, Star, LogOut, Menu, X } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { LayoutDashboard, Package, ShoppingBag, Tag, Star, LogOut, Menu, X, Home, BarChart3 } from 'lucide-react';
+import { useState } from 'react';
+import { adminLogout } from '@/lib/api';
 
 const navItems = [
   { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
@@ -10,6 +11,8 @@ const navItems = [
   { label: 'Orders', href: '/dashboard/orders', icon: ShoppingBag },
   { label: 'Coupons', href: '/dashboard/coupons', icon: Tag },
   { label: 'Offers', href: '/dashboard/offers', icon: Star },
+  { label: 'Homepage', href: '/dashboard/homepage', icon: Home },
+  { label: 'Analytics', href: '/dashboard/export', icon: BarChart3 },
 ];
 
 export default function AdminSidebar() {
@@ -17,8 +20,8 @@ export default function AdminSidebar() {
   const router = useRouter();
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  const handleLogout = () => {
-    localStorage.removeItem('grainzz_admin_token');
+  const handleLogout = async () => {
+    await adminLogout();
     router.push('/login');
   };
 

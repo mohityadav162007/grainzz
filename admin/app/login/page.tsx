@@ -16,8 +16,7 @@ export default function LoginPage() {
     setLoading(true);
     setError('');
     try {
-      const res = await adminLogin(email, password);
-      localStorage.setItem('grainzz_admin_token', res.token);
+      await adminLogin(email, password);
       router.push('/dashboard');
     } catch (err: any) {
       setError(err.message || 'Invalid credentials');
@@ -72,9 +71,6 @@ export default function LoginPage() {
               {loading ? <><Loader2 size={18} className="animate-spin" /> Signing In...</> : 'Sign In'}
             </button>
           </form>
-          <p className="text-xs text-gray-400 text-center mt-4">
-            Default: admin@grainzz.com / Grainzz@2026
-          </p>
         </div>
       </div>
     </div>

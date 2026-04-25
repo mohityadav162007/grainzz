@@ -28,7 +28,7 @@ export default function CheckoutPage() {
       // Create order
       const orderRes = await createOrder({
         items: items.map((i) => ({
-          product: i._id,
+          product_id: i._id,
           name: i.name,
           image: i.image,
           price: i.price,

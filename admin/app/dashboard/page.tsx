@@ -1,29 +1,33 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { ShoppingBag, DollarSign, Package, TrendingUp } from 'lucide-react';
-import { getOrderStats } from '@/lib/api';
+import { ShoppingBag, DollarSign, Package, TrendingUp, Users, Eye } from 'lucide-react';
+import { getOrderStats, getUsersCount } from '@/lib/api';
 import Link from 'next/link';
 
 export default function DashboardPage() {
   const [stats, setStats] = useState<any>(null);
+  const [usersCount, setUsersCount] = useState<number>(0);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    getOrderStats().then((res) => setStats(res.data)).catch(() => {}).finally(() => setLoading(false));
+    Promise.all([
+      getOrderStats().then((res) => setStats(res.data)).catch(() => {}),
+      getUsersCount().then((res) => setUsersCount(res.count)).catch(() => {}),
+    ]).finally(() => setLoading(false));
   }, []);
 
   const statCards = [
     { label: 'Total Orders', value: stats?.totalOrders ?? '—', icon: ShoppingBag, color: 'bg-blue-500' },
     { label: 'Paid Orders', value: stats?.paidOrders ?? '—', icon: TrendingUp, color: 'bg-green-500' },
-    { label: 'Total Revenue', value: stats ? `₹${stats.revenue.toLocaleString()}` : '—', icon: DollarSign, color: 'bg-primary' },
-    { label: 'Recent (24h)', value: stats?.recentOrders?.length ?? '—', icon: Package, color: 'bg-orange-500' },
+    { label: 'Total Revenue', value: stats ? `₹${Number(stats.revenue).toLocaleString()}` : '—', icon: DollarSign, color: 'bg-primary' },
+    { label: 'Users', value: usersCount, icon: Users, color: 'bg-purple-500' },
   ];
 
   return (
     <div>
       <div className="mb-8">
         <h1 className="text-2xl font-black text-gray-900">Dashboard</h1>
-        <p className="text-gray-500 text-sm mt-1">Welcome back, Admin. Here's what's happening with Grainzz.</p>
+        <p className="text-gray-500 text-sm mt-1">Welcome back, Admin. Here&apos;s what&apos;s happening with Grainzz.</p>
       </div>
 
       {/* Stats Cards */}
@@ -65,15 +69,21 @@ export default function DashboardPage() {
               </thead>
               <tbody className="divide-y divide-gray-50">
                 {stats.recentOrders.map((order: any) => (
-                  <tr key={order._id} className="hover:bg-gray-50 transition-colors">
-                    <td className="px-6 py-4 text-sm font-mono text-gray-500">{order._id.slice(-8)}</td>
-                    <td className="px-6 py-4 text-sm font-medium">{order.userDetails?.name || 'N/A'}</td>
-                    <td className="px-6 py-4 text-sm font-bold">₹{order.totalAmount}</td>
+                  <tr key={order.id} className="hover:bg-gray-50 transition-colors">
+                    <td className="px-6 py-4 text-sm font-mono text-gray-500">{order.id?.slice(0, 8)}</td>
+                    <td className="px-6 py-4 text-sm font-medium">{order.user_name || 'N/A'}</td>
+                    <td className="px-6 py-4 text-sm font-bold">₹{order.total_amount}</td>
                     <td className="px-6 py-4">
-                      <span className={`admin-badge-${order.status}`}>{order.status}</span>
+                      <span className={`inline-block px-2 py-1 rounded-full text-xs font-semibold ${
+                        order.status === 'paid' ? 'bg-green-100 text-green-700' :
+                        order.status === 'shipped' ? 'bg-blue-100 text-blue-700' :
+                        order.status === 'delivered' ? 'bg-purple-100 text-purple-700' :
+                        order.status === 'cancelled' ? 'bg-red-100 text-red-700' :
+                        'bg-yellow-100 text-yellow-700'
+                      }`}>{order.status}</span>
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-400">
-                      {new Date(order.createdAt).toLocaleDateString('en-IN')}
+                      {new Date(order.created_at).toLocaleDateString('en-IN')}
                     </td>
                   </tr>
                 ))}

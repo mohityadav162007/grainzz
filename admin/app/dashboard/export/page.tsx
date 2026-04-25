@@ -148,7 +148,7 @@ export default function AnalyticsPage() {
                     <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                     <XAxis dataKey="month" tick={{ fontSize: 12 }} />
                     <YAxis tick={{ fontSize: 12 }} tickFormatter={(v) => `₹${(v / 1000).toFixed(0)}k`} />
-                    <Tooltip formatter={(v: number) => [`₹${v.toLocaleString()}`, 'Revenue']} />
+                    <Tooltip formatter={(v: any) => [`₹${v.toLocaleString()}`, 'Revenue']} />
                     <Area type="monotone" dataKey="revenue" stroke="#16a34a" fill="url(#revGradient)" strokeWidth={2} />
                   </AreaChart>
                 </ResponsiveContainer>
@@ -266,7 +266,7 @@ export default function AnalyticsPage() {
                   <XAxis dataKey="month" tick={{ fontSize: 12 }} />
                   <YAxis yAxisId="left" tick={{ fontSize: 12 }} tickFormatter={(v) => `₹${(v / 1000).toFixed(0)}k`} />
                   <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 12 }} />
-                  <Tooltip formatter={(v: number, name: string) => [name === 'revenue' ? `₹${v.toLocaleString()}` : v, name === 'revenue' ? 'Revenue' : 'Orders']} />
+                  <Tooltip formatter={(v: any, name: any) => [name === 'revenue' ? `₹${Number(v).toLocaleString()}` : v, name === 'revenue' ? 'Revenue' : 'Orders']} />
                   <Legend />
                   <Bar yAxisId="left" dataKey="revenue" fill="#16a34a" name="Revenue" radius={[4, 4, 0, 0]} />
                   <Bar yAxisId="right" dataKey="orders" fill="#2563eb" name="Orders" radius={[4, 4, 0, 0]} />
@@ -285,7 +285,7 @@ export default function AnalyticsPage() {
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                 <XAxis dataKey="date" tick={{ fontSize: 10 }} interval={2} />
                 <YAxis tick={{ fontSize: 12 }} tickFormatter={(v) => `₹${v}`} />
-                <Tooltip formatter={(v: number) => [`₹${v.toLocaleString()}`, 'Revenue']} />
+                <Tooltip formatter={(v: any) => [`₹${v.toLocaleString()}`, 'Revenue']} />
                 <Line type="monotone" dataKey="revenue" stroke="#16a34a" strokeWidth={2} dot={false} />
               </LineChart>
             </ResponsiveContainer>
@@ -307,7 +307,7 @@ export default function AnalyticsPage() {
                         <Cell key={i} fill={COLORS[i % COLORS.length]} />
                       ))}
                     </Pie>
-                    <Tooltip formatter={(v: number) => [`₹${v.toLocaleString()}`, 'Revenue']} />
+                    <Tooltip formatter={(v: any) => [`₹${v.toLocaleString()}`, 'Revenue']} />
                   </PieChart>
                 </ResponsiveContainer>
               </div>

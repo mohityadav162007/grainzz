@@ -1,84 +1,103 @@
+'use client';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import ProductCard from '@/components/products/ProductCard';
+import { supabase } from '@/lib/supabase';
+import { getSiteContent } from '@/lib/api';
 
-const fallbackProducts = [
-  {
-    _id: 'fp-1', name: 'Oats Chips – Peri Peri', slug: 'oats-chips-peri-peri',
-    price: 149, mrp: 199, images: [], category: 'Healthy Chips',
-    stock: 100, isSale: true, tags: ['Jar', '150g'],
-    nutritionInfo: 'High-Fibre | No Palm Oil | Baked Crunch',
-    discountPercent: 25,
-  },
-  {
-    _id: 'fp-2', name: 'Quinoa Puffs – Classic Salt', slug: 'quinoa-puffs-classic-salt',
-    price: 149, mrp: 199, images: [], category: 'Grain Puffs',
-    stock: 80, isSale: true, tags: ['Jar', '100g'],
-    nutritionInfo: 'High Protein | Gluten Free',
-    discountPercent: 25,
-  },
-  {
-    _id: 'fp-3', name: 'Bajra Chips – Masala', slug: 'bajra-chips-masala',
-    price: 129, mrp: 169, images: [], category: 'Healthy Chips',
-    stock: 60, isSale: false, tags: ['Pouch', '120g'],
-    nutritionInfo: 'Iron Rich | High Fibre',
-    discountPercent: 24,
-  },
-  {
-    _id: 'fp-4', name: 'Ragi Chips – Cheese Onion', slug: 'ragi-chips-cheese-onion',
-    price: 139, mrp: 179, images: [], category: 'Healthy Chips',
-    stock: 75, isSale: true, tags: ['Pouch', '130g'],
-    nutritionInfo: 'Calcium Rich | High Fibre',
-    discountPercent: 22,
-  },
-];
-
-async function getFeaturedProducts() {
-  try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/products?limit=8`, {
-      next: { revalidate: 300 },
-    });
-    const data = await res.json();
-    return data.data?.length > 0 ? data.data : fallbackProducts;
-  } catch {
-    return fallbackProducts;
-  }
-}
-
-const categories = [
+const tabs = [
   { label: 'Bestsellers', value: '' },
-  { label: 'Puffed Rice', value: 'Puffed Rice' },
-  { label: 'Healthy Chips', value: 'Healthy Chips' },
-  { label: 'Grain Puffs', value: 'Grain Puffs' },
+  { label: 'Jar Combos', value: 'Combos' },
+  { label: 'Puffed Rice Combos', value: 'Puffed Rice' },
+  { label: 'Shop All Jars', value: 'all-jars' },
 ];
 
-export default async function ProductSegments() {
-  const products = await getFeaturedProducts();
+export default function ProductSegments() {
+  const [activeTab, setActiveTab] = useState('');
+  const [products, setProducts] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [heading, setHeading] = useState('Explore the Grainzz Snack Range');
+  const [subheading, setSubheading] = useState('From supergrain jars to puffed rice packets and value-packed combos, discover snacks made for every craving and every kind of muncher.');
+
+  // Fetch heading content
+  useEffect(() => {
+    getSiteContent('product_tabs_heading').then((content) => {
+      if (content) {
+        if (content.heading) setHeading(content.heading);
+        if (content.subheading) setSubheading(content.subheading);
+      }
+    }).catch(() => {});
+  }, []);
+
+  // Fetch products based on tab
+  useEffect(() => {
+    const fetchProducts = async () => {
+      setLoading(true);
+      try {
+        let query = supabase
+          .from('products')
+          .select('*')
+          .eq('is_active', true);
+
+        if (activeTab === '') {
+          // Bestsellers - sort by views/popularity
+          query = query.order('views', { ascending: false });
+        } else if (activeTab === 'all-jars') {
+          // All jars - filter categories that are jars (Healthy Chips, Grain Puffs)
+          query = query.in('category', ['Healthy Chips', 'Grain Puffs']);
+        } else {
+          query = query.eq('category', activeTab);
+        }
+
+        query = query.limit(8);
+
+        const { data, error } = await query;
+        if (error) throw error;
+        setProducts(data || []);
+      } catch {
+        setProducts([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchProducts();
+  }, [activeTab]);
 
   return (
     <section className="py-16 bg-white">
       <div className="max-w-7xl mx-auto px-4 lg:px-8">
-        <h2 className="section-title mb-6">Our Product Segments</h2>
+        <h2 className="section-title mb-3">{heading}</h2>
+        <p className="text-center text-text-muted text-sm md:text-base max-w-2xl mx-auto mb-8">{subheading}</p>
 
         {/* Category tabs */}
         <div className="flex flex-wrap gap-2 justify-center mb-10">
-          {categories.map((cat) => (
-            <Link
-              key={cat.label}
-              href={cat.value ? `/products?category=${cat.value}` : '/products'}
+          {tabs.map((tab) => (
+            <button
+              key={tab.label}
+              onClick={() => setActiveTab(tab.value)}
               className={`px-5 py-2.5 rounded-full text-sm font-medium border transition-all duration-200
-                ${cat.value === '' ? 'bg-primary text-white border-primary' : 'border-gray-200 text-text-muted hover:border-primary hover:text-primary'}`}
+                ${activeTab === tab.value
+                  ? 'bg-primary text-white border-primary'
+                  : 'border-gray-200 text-text-muted hover:border-primary hover:text-primary'
+                }`}
             >
-              {cat.label}
-            </Link>
+              {tab.label}
+            </button>
           ))}
         </div>
 
         {/* Products grid */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
-          {products.slice(0, 8).map((product: any) => (
-            <ProductCard key={product._id} product={product} />
-          ))}
-        </div>
+        {loading ? (
+          <div className="h-64 flex items-center justify-center text-text-muted">Loading products...</div>
+        ) : products.length === 0 ? (
+          <div className="h-64 flex items-center justify-center text-text-muted">No products found in this category</div>
+        ) : (
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+            {products.map((product: any) => (
+              <ProductCard key={product.id} product={product} />
+            ))}
+          </div>
+        )}
 
         <div className="text-center mt-10">
           <Link href="/products" className="btn-primary">

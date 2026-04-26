@@ -69,10 +69,10 @@ export default function CartDrawer() {
                 <span>Product</span><span>Total</span>
               </div>
               {items.map((item) => (
-                <div key={item._id} className="flex items-center gap-3 px-5 py-4 border-b">
+                <div key={item.id} className="flex items-center gap-3 px-5 py-4 border-b">
                   <div className="w-16 h-16 relative rounded-lg overflow-hidden bg-gray-100 flex-shrink-0">
                     {item.image ? (
-                      <Image src={item.image} alt={item.name} fill className="object-cover" />
+                      <Image src={item.image} alt={item.name} fill className="object-cover" sizes="64px" />
                     ) : (
                       <div className="w-full h-full bg-cream" />
                     )}
@@ -89,7 +89,7 @@ export default function CartDrawer() {
                     <div className="flex items-center gap-2 mt-2">
                       <div className="flex items-center border border-gray-200 rounded-full overflow-hidden">
                         <button
-                          onClick={() => updateQuantity(item._id, item.quantity - 1)}
+                          onClick={() => updateQuantity(item.id, item.quantity - 1)}
                           className="px-3 py-1 hover:bg-gray-50 transition-colors"
                         >
                           <Minus size={12} />
@@ -98,7 +98,7 @@ export default function CartDrawer() {
                           {item.quantity}
                         </span>
                         <button
-                          onClick={() => updateQuantity(item._id, item.quantity + 1)}
+                          onClick={() => updateQuantity(item.id, item.quantity + 1)}
                           className="px-3 py-1 hover:bg-gray-50 transition-colors"
                         >
                           <Plus size={12} />
@@ -108,7 +108,7 @@ export default function CartDrawer() {
                   </div>
                   <div className="flex flex-col items-end gap-2">
                     <span className="text-sm font-bold">₹{item.price * item.quantity}</span>
-                    <button onClick={() => removeItem(item._id)} className="text-gray-400 hover:text-accent transition-colors">
+                    <button onClick={() => removeItem(item.id)} className="text-gray-400 hover:text-accent transition-colors">
                       <Trash2 size={16} />
                     </button>
                   </div>

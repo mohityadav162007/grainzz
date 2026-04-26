@@ -31,7 +31,7 @@ export const getProducts = async (params?: Record<string, string>) => {
   const to = from + limit - 1;
   query = query.range(from, to);
 
-  const { data, error, count } = await query;
+  const { data, error } = await query;
   if (error) throw new Error(error.message);
 
   // Get total count for pagination
@@ -68,6 +68,135 @@ export const getProductBySlug = async (slug: string) => {
   }
 
   return { success: true, data };
+};
+
+// ─── Homepage Dynamic Content ────────────────────────────────────────────────
+
+export const getSiteContent = async (key: string) => {
+  const { data, error } = await supabase
+    .from('site_content')
+    .select('value')
+    .eq('key', key)
+    .single();
+
+  if (error) return null;
+  return data?.value;
+};
+
+export const getHeroSlides = async () => {
+  const { data, error } = await supabase
+    .from('hero_slides')
+    .select('*')
+    .eq('is_active', true)
+    .order('sort_order', { ascending: true })
+    .limit(5);
+
+  if (error) throw new Error(error.message);
+  return data || [];
+};
+
+export const getTrustMetrics = async () => {
+  const { data, error } = await supabase
+    .from('trust_metrics')
+    .select('*')
+    .eq('is_active', true)
+    .order('sort_order', { ascending: true });
+
+  if (error) throw new Error(error.message);
+  return data || [];
+};
+
+export const getBenefits = async () => {
+  const { data, error } = await supabase
+    .from('benefits')
+    .select('*')
+    .eq('is_active', true)
+    .order('sort_order', { ascending: true });
+
+  if (error) throw new Error(error.message);
+  return data || [];
+};
+
+export const getAvailabilityLogos = async () => {
+  const { data, error } = await supabase
+    .from('availability_logos')
+    .select('*')
+    .eq('is_active', true)
+    .order('sort_order', { ascending: true });
+
+  if (error) throw new Error(error.message);
+  return data || [];
+};
+
+export const getTestimonials = async () => {
+  const { data, error } = await supabase
+    .from('testimonials')
+    .select('*')
+    .eq('is_active', true)
+    .order('sort_order', { ascending: true });
+
+  if (error) throw new Error(error.message);
+  return data || [];
+};
+
+export const getInstagramPosts = async () => {
+  const { data, error } = await supabase
+    .from('instagram_posts')
+    .select('*')
+    .eq('is_active', true)
+    .order('sort_order', { ascending: true });
+
+  if (error) throw new Error(error.message);
+  return data || [];
+};
+
+export const getFaqs = async () => {
+  const { data, error } = await supabase
+    .from('faqs')
+    .select('*')
+    .eq('is_active', true)
+    .order('sort_order', { ascending: true });
+
+  if (error) throw new Error(error.message);
+  return data || [];
+};
+
+export const getProductsByCategory = async (category: string, limit = 8) => {
+  const { data, error } = await supabase
+    .from('products')
+    .select('*')
+    .eq('is_active', true)
+    .eq('category', category)
+    .order('created_at', { ascending: false })
+    .limit(limit);
+
+  if (error) throw new Error(error.message);
+  return data || [];
+};
+
+export const getFeaturedProducts = async (limit = 8) => {
+  const { data, error } = await supabase
+    .from('products')
+    .select('*')
+    .eq('is_active', true)
+    .order('views', { ascending: false })
+    .limit(limit);
+
+  if (error) throw new Error(error.message);
+  return data || [];
+};
+
+export const getComboProducts = async (limit = 6) => {
+  const { data, error } = await supabase
+    .from('products')
+    .select('*')
+    .eq('is_active', true)
+    .eq('category', 'Combos')
+    .order('created_at', { ascending: false })
+    .limit(limit);
+
+  if (error) throw new Error(error.message);
+  return data || [];
 };
 
 // ─── Orders ──────────────────────────────────────────────────────────────────

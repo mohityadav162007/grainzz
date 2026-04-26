@@ -5,7 +5,7 @@ import { Plus, ShoppingCart } from 'lucide-react';
 import { useCartStore } from '@/store/cartStore';
 
 interface Product {
-  _id: string;
+  id: string;
   name: string;
   slug: string;
   price: number;
@@ -13,8 +13,8 @@ interface Product {
   images: string[];
   category: string;
   stock: number;
-  isSale: boolean;
-  discountPercent: number;
+  is_sale: boolean;
+  discount_percent: number;
   tags: string[];
 }
 
@@ -25,18 +25,18 @@ interface ProductCardProps {
 export default function ProductCard({ product }: ProductCardProps) {
   const { addItem } = useCartStore();
   const isOutOfStock = product.stock === 0;
-  const discount = Math.round(((product.mrp - product.price) / product.mrp) * 100);
+  const discount = product.discount_percent || Math.round(((product.mrp - product.price) / product.mrp) * 100);
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     if (isOutOfStock) return;
     addItem({
-      _id: product._id,
+      id: product.id,
       name: product.name,
       price: product.price,
       mrp: product.mrp,
-      image: product.images[0] || '/placeholder.jpg',
+      image: product.images?.[0] || '',
       quantity: 1,
       tags: product.tags,
     });
@@ -47,12 +47,13 @@ export default function ProductCard({ product }: ProductCardProps) {
       <div className="bg-white rounded-2xl overflow-hidden card-shadow border border-gray-100 h-full flex flex-col">
         {/* Image */}
         <div className="relative aspect-square overflow-hidden bg-gray-50">
-          {product.images[0] ? (
+          {product.images?.[0] ? (
             <Image
               src={product.images[0]}
               alt={product.name}
               fill
               className="object-cover group-hover:scale-105 transition-transform duration-300"
+              sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center bg-cream">

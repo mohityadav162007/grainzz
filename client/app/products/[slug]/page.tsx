@@ -4,7 +4,7 @@ import { useParams } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 import { ChevronRight, Plus, Minus, ShoppingCart, Star } from 'lucide-react';
-import { getProductBySlug } from '@/lib/api';
+import { getProductBySlug, getProductsByCategory } from '@/lib/api';
 import { useCartStore } from '@/store/cartStore';
 import ProductCard from '@/components/products/ProductCard';
 
@@ -26,13 +26,9 @@ export default function ProductDetailPage() {
         setProduct(res.data);
         // Fetch related products by same category
         if (res.data?.category) {
-          fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/products?category=${encodeURIComponent(res.data.category)}&limit=4`)
-            .then(r => r.json())
-            .then(r => {
-              const related = (r.data || []).filter((p: any) => p._id !== res.data._id);
-              setRelatedProducts(related.slice(0, 4));
-            })
-            .catch(() => {});
+          getProductsByCategory(res.data.category, 5).then((related) => {
+              setRelatedProducts(related.filter((p: any) => p.id !== res.data.id).slice(0, 4));
+            }).catch(() => {});
         }
       })
       .catch(() => setProduct(null))
@@ -51,7 +47,7 @@ export default function ProductDetailPage() {
   const handleAddToCart = () => {
     if (!product) return;
     addItem({
-      _id: product._id,
+      id: product.id,
       name: product.name,
       price: product.price,
       mrp: product.mrp,
@@ -271,7 +267,7 @@ export default function ProductDetailPage() {
           <h2 className="text-2xl font-black mb-6">You may also like</h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
             {relatedProducts.map((p: any) => (
-              <ProductCard key={p._id} product={p} />
+              <ProductCard key={p.id} product={p} />
             ))}
           </div>
         </section>

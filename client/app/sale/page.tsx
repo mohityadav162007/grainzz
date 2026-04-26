@@ -23,7 +23,7 @@ export default async function SalePage() {
         <p className="text-text-muted py-20 text-center">No sale products at the moment. Check back soon!</p>
       ) : (
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
-          {products.map((product: any) => <ProductCard key={product._id} product={product} />)}
+          {products.map((product: any) => <ProductCard key={product.id} product={product} />)}
         </div>
       )}
     </div>

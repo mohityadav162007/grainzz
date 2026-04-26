@@ -1,29 +1,40 @@
-import { Leaf, Flame, Star, Flag } from 'lucide-react';
+'use client';
+import { useState, useEffect } from 'react';
+import { Leaf, Flame, Star, Flag, Droplets, Wheat, Feather, Heart, ShieldCheck } from 'lucide-react';
+import { getBenefits, getAvailabilityLogos, getSiteContent } from '@/lib/api';
 
-const benefits = [
-  {
-    icon: Leaf,
-    title: 'Clean Snacking',
-    description: 'We believe snacking shouldn\'t be a choice between a greasy bag of chips or a boring diet. All our products are crafted with clean ingredients.',
-  },
-  {
-    icon: Star,
-    title: 'Powered by Supergrains',
-    description: 'We use the power of ancient supergrains like ragi, bajra, jowar and quinoa to bring you nutritionally dense snacks.',
-  },
-  {
-    icon: Flame,
-    title: 'Roasted, Not Deep-Fried',
-    description: 'Grainzz snacks go through a roasting process instead of deep frying, delivering all the crunch without the guilt.',
-  },
-  {
-    icon: Flag,
-    title: 'Bold, Authentic & Indian',
-    description: 'We celebrate Indian flavors fiercely. Our snacks are "desi" at heart, bringing traditional Indian flavors to the modern health-conscious snacker.',
-  },
+const iconMap: Record<string, any> = {
+  Leaf, Flame, Star, Flag, Droplets, Wheat, Feather, Heart, ShieldCheck,
+};
+
+const fallbackBenefits = [
+  { icon: 'Droplets', title: 'No Palm Oil. No Compromise.', description: 'We skip palm oil for cleaner, lighter snacks. Every bite is free from the heavy, greasy feeling you get with conventional chips.' },
+  { icon: 'Wheat', title: 'Powered by Real Millets & Grains', description: 'Ragi, bajra, quinoa, jowar, and oats — we use real supergrains for more substance, more fibre, and more nutrition in every pack.' },
+  { icon: 'Flame', title: 'Bold Indian Flavours', description: 'Modern takes on beloved desi flavours — Royal Mint, Tandoori Masala, and Zesty Chilli — that make healthy snacking genuinely exciting.' },
+  { icon: 'Feather', title: 'Lightness You Can Feel', description: 'No heavy after-feeling. Just light, crunchy snacks designed for whenever hunger strikes — guilt-free from the first bite to the last.' },
 ];
 
 export default function BenefitsSection() {
+  const [benefits, setBenefits] = useState(fallbackBenefits);
+  const [heading, setHeading] = useState('Healthy Snacking With Benefits That Truly Matter');
+  const [intro, setIntro] = useState('Every Grainzz snack is built to give you bold flavour, better ingredients and a lighter snacking experience — without making healthy feel boring.');
+  const [logos, setLogos] = useState<any[]>([
+    { name: 'Amazon', href: 'https://www.amazon.in' },
+    { name: 'Blinkit', href: 'https://blinkit.com' },
+    { name: 'MyStore', href: 'https://mystore.in' },
+  ]);
+
+  useEffect(() => {
+    getBenefits().then((data) => { if (data.length > 0) setBenefits(data); }).catch(() => {});
+    getAvailabilityLogos().then((data) => { if (data.length > 0) setLogos(data); }).catch(() => {});
+    getSiteContent('benefits_heading').then((content) => {
+      if (content) {
+        if (content.heading) setHeading(content.heading);
+        if (content.intro) setIntro(content.intro);
+      }
+    }).catch(() => {});
+  }, []);
+
   return (
     <>
       <section className="py-16 bg-cream">
@@ -43,41 +54,63 @@ export default function BenefitsSection() {
                   </div>
                 </div>
               </div>
+
+              {/* Core claims as badges */}
+              <div className="flex flex-wrap gap-2 mt-4 justify-center">
+                {['No Palm Oil', 'Gluten-Free', 'Zero Cholesterol', 'Real Ingredients'].map((claim) => (
+                  <span key={claim} className="bg-primary/10 text-primary text-xs font-semibold px-3 py-1.5 rounded-full">
+                    ✓ {claim}
+                  </span>
+                ))}
+              </div>
             </div>
 
             {/* Benefits */}
             <div>
-              <h2 className="text-2xl md:text-3xl font-black text-text-main mb-8 leading-tight">
-                Healthy Snacking With<br />Benefits Beyond The Ordinary
+              <h2 className="text-2xl md:text-3xl font-black text-text-main mb-3 leading-tight">
+                {heading}
               </h2>
+              <p className="text-text-muted text-sm mb-8 leading-relaxed">{intro}</p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                {benefits.map(({ icon: Icon, title, description }) => (
-                  <div key={title} className="flex flex-col gap-2">
-                    <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0">
-                        <Icon size={16} className="text-primary" />
+                {benefits.map((benefit) => {
+                  const Icon = iconMap[benefit.icon] || Leaf;
+                  return (
+                    <div key={benefit.title} className="flex flex-col gap-2">
+                      <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0">
+                          <Icon size={16} className="text-primary" />
+                        </div>
+                        <h3 className="text-sm font-bold text-text-main">{benefit.title}</h3>
                       </div>
-                      <h3 className="text-sm font-bold text-text-main">{title}</h3>
+                      <p className="text-xs text-text-muted leading-relaxed pl-12">{benefit.description}</p>
                     </div>
-                    <p className="text-xs text-text-muted leading-relaxed pl-12">{description}</p>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Also Available on Amazon strip */}
-      <div className="bg-cream-100 border-y border-gray-100 py-3 overflow-hidden">
-        <div className="marquee-container">
-          <div className="marquee-content">
-            {Array(8).fill(null).map((_, i) => (
-              <div key={i} className="flex items-center gap-6 mx-8">
-                <span className="text-sm text-text-muted font-medium whitespace-nowrap">Also Available on:</span>
-                <span className="font-bold text-lg text-text-main whitespace-nowrap tracking-tight">amazon</span>
-                <span className="text-2xl">🛒</span>
-              </div>
+      {/* Also Available on strip */}
+      <div className="bg-cream-100 border-y border-gray-100 py-4 overflow-hidden">
+        <div className="max-w-7xl mx-auto px-4 lg:px-8">
+          <div className="flex items-center justify-center gap-8 flex-wrap">
+            <span className="text-sm text-text-muted font-medium whitespace-nowrap">Also Available on:</span>
+            {logos.map((logo) => (
+              <a
+                key={logo.name}
+                href={logo.href || '#'}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 hover:opacity-80 transition-opacity"
+              >
+                {logo.logo_url ? (
+                  <img src={logo.logo_url} alt={logo.name} className="h-8 object-contain" />
+                ) : (
+                  <span className="font-bold text-lg text-text-main tracking-tight">{logo.name}</span>
+                )}
+              </a>
             ))}
           </div>
         </div>

@@ -1,8 +1,18 @@
 'use client';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Phone, Mail, MapPin, Facebook, Twitter, Linkedin, Instagram, Send } from 'lucide-react';
+import { getSiteContent } from '@/lib/api';
 
 export default function Footer() {
+  const [subscribeHeading, setSubscribeHeading] = useState('Get First Access to Offers, New Launches and Snack Deals');
+
+  useEffect(() => {
+    getSiteContent('footer_subscribe').then((content) => {
+      if (content?.heading) setSubscribeHeading(content.heading);
+    }).catch(() => {});
+  }, []);
+
   return (
     <footer className="bg-primary text-white">
       <div className="max-w-7xl mx-auto px-4 lg:px-8 py-12">
@@ -30,7 +40,7 @@ export default function Footer() {
           <div>
             <h4 className="font-semibold mb-4">Quick Links</h4>
             <ul className="space-y-2 text-sm text-white/80">
-              {['Home', 'About Us', 'FAQs', 'Contact Us', 'My Account'].map((item) => (
+              {['Home', 'About Us', 'FAQs', 'Contact Us'].map((item) => (
                 <li key={item}>
                   <Link href={item === 'Home' ? '/' : `/${item.toLowerCase().replace(/\s+/g, '-')}`}
                     className="hover:text-white transition-colors">{item}</Link>
@@ -70,7 +80,7 @@ export default function Footer() {
 
           {/* Subscribe */}
           <div>
-            <h4 className="font-semibold mb-4">Subscribe to get latest offers</h4>
+            <h4 className="font-semibold mb-4">{subscribeHeading}</h4>
             <form
               onSubmit={(e) => e.preventDefault()}
               className="flex items-center gap-0 border border-white/40 rounded-md overflow-hidden"
@@ -89,9 +99,9 @@ export default function Footer() {
                 { Icon: Facebook, href: '#' },
                 { Icon: Twitter, href: '#' },
                 { Icon: Linkedin, href: '#' },
-                { Icon: Instagram, href: '#' },
+                { Icon: Instagram, href: 'https://instagram.com/grainzzbyvitalicious' },
               ].map(({ Icon, href }, i) => (
-                <a key={i} href={href}
+                <a key={i} href={href} target="_blank" rel="noopener noreferrer"
                   className="w-8 h-8 border border-white/40 rounded-full flex items-center justify-center hover:bg-white/20 transition-colors">
                   <Icon size={14} />
                 </a>

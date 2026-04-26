@@ -28,7 +28,7 @@ export default function CheckoutPage() {
       // Create order
       const orderRes = await createOrder({
         items: items.map((i) => ({
-          product_id: i._id,
+          product_id: i.id,
           name: i.name,
           image: i.image,
           price: i.price,
@@ -42,7 +42,7 @@ export default function CheckoutPage() {
         totalAmount: total(),
       });
 
-      const orderId = orderRes.data._id;
+      const orderId = orderRes.data.id;
 
       // Initiate PhonePe payment
       try {
@@ -151,7 +151,7 @@ export default function CheckoutPage() {
               <h2 className="font-bold mb-4">Order Summary</h2>
               <div className="space-y-3 mb-4 max-h-64 overflow-y-auto">
                 {items.map((item) => (
-                  <div key={item._id} className="flex justify-between text-sm gap-3">
+                  <div key={item.id} className="flex justify-between text-sm gap-3">
                     <div className="flex-1 min-w-0">
                       <p className="font-medium truncate">{item.name}</p>
                       <p className="text-text-muted text-xs">Qty: {item.quantity}</p>

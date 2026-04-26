@@ -374,6 +374,165 @@ export const updateHomepageSection = async (
   return { success: true, data };
 };
 
+// ─── Site Content (Key-Value Store) ──────────────────────────────────────────
+
+export const getSiteContent = async (key: string) => {
+  const { data, error } = await supabase
+    .from('site_content')
+    .select('*')
+    .eq('key', key)
+    .single();
+  if (error) return null;
+  return data;
+};
+
+export const getAllSiteContent = async () => {
+  const { data, error } = await supabase.from('site_content').select('*');
+  if (error) throw new Error(error.message);
+  return data || [];
+};
+
+export const upsertSiteContent = async (key: string, value: any) => {
+  const { data, error } = await supabase
+    .from('site_content')
+    .upsert({ key, value }, { onConflict: 'key' })
+    .select()
+    .single();
+  if (error) throw new Error(error.message);
+  return data;
+};
+
+// ─── Hero Slides ─────────────────────────────────────────────────────────────
+
+export const getHeroSlides = async () => {
+  const { data, error } = await supabase
+    .from('hero_slides')
+    .select('*')
+    .order('sort_order', { ascending: true });
+  if (error) throw new Error(error.message);
+  return data || [];
+};
+
+export const createHeroSlide = async (slide: any) => {
+  const { data, error } = await supabase.from('hero_slides').insert(slide).select().single();
+  if (error) throw new Error(error.message);
+  return data;
+};
+
+export const updateHeroSlide = async (id: string, slide: any) => {
+  const { data, error } = await supabase.from('hero_slides').update(slide).eq('id', id).select().single();
+  if (error) throw new Error(error.message);
+  return data;
+};
+
+export const deleteHeroSlide = async (id: string) => {
+  const { error } = await supabase.from('hero_slides').delete().eq('id', id);
+  if (error) throw new Error(error.message);
+};
+
+// ─── Trust Metrics ───────────────────────────────────────────────────────────
+
+export const getTrustMetrics = async () => {
+  const { data, error } = await supabase.from('trust_metrics').select('*').order('sort_order', { ascending: true });
+  if (error) throw new Error(error.message);
+  return data || [];
+};
+
+export const updateTrustMetric = async (id: string, metric: any) => {
+  const { data, error } = await supabase.from('trust_metrics').update(metric).eq('id', id).select().single();
+  if (error) throw new Error(error.message);
+  return data;
+};
+
+// ─── Benefits ────────────────────────────────────────────────────────────────
+
+export const getBenefits = async () => {
+  const { data, error } = await supabase.from('benefits').select('*').order('sort_order', { ascending: true });
+  if (error) throw new Error(error.message);
+  return data || [];
+};
+
+export const updateBenefit = async (id: string, benefit: any) => {
+  const { data, error } = await supabase.from('benefits').update(benefit).eq('id', id).select().single();
+  if (error) throw new Error(error.message);
+  return data;
+};
+
+// ─── Availability Logos ──────────────────────────────────────────────────────
+
+export const getAvailabilityLogos = async () => {
+  const { data, error } = await supabase.from('availability_logos').select('*').order('sort_order', { ascending: true });
+  if (error) throw new Error(error.message);
+  return data || [];
+};
+
+export const createAvailabilityLogo = async (logo: any) => {
+  const { data, error } = await supabase.from('availability_logos').insert(logo).select().single();
+  if (error) throw new Error(error.message);
+  return data;
+};
+
+export const updateAvailabilityLogo = async (id: string, logo: any) => {
+  const { data, error } = await supabase.from('availability_logos').update(logo).eq('id', id).select().single();
+  if (error) throw new Error(error.message);
+  return data;
+};
+
+export const deleteAvailabilityLogo = async (id: string) => {
+  const { error } = await supabase.from('availability_logos').delete().eq('id', id);
+  if (error) throw new Error(error.message);
+};
+
+// ─── Testimonials ────────────────────────────────────────────────────────────
+
+export const getTestimonials = async () => {
+  const { data, error } = await supabase.from('testimonials').select('*').order('sort_order', { ascending: true });
+  if (error) throw new Error(error.message);
+  return data || [];
+};
+
+export const createTestimonial = async (testimonial: any) => {
+  const { data, error } = await supabase.from('testimonials').insert(testimonial).select().single();
+  if (error) throw new Error(error.message);
+  return data;
+};
+
+export const updateTestimonial = async (id: string, testimonial: any) => {
+  const { data, error } = await supabase.from('testimonials').update(testimonial).eq('id', id).select().single();
+  if (error) throw new Error(error.message);
+  return data;
+};
+
+export const deleteTestimonial = async (id: string) => {
+  const { error } = await supabase.from('testimonials').delete().eq('id', id);
+  if (error) throw new Error(error.message);
+};
+
+// ─── FAQs ────────────────────────────────────────────────────────────────────
+
+export const getFaqs = async () => {
+  const { data, error } = await supabase.from('faqs').select('*').order('sort_order', { ascending: true });
+  if (error) throw new Error(error.message);
+  return data || [];
+};
+
+export const createFaq = async (faq: any) => {
+  const { data, error } = await supabase.from('faqs').insert(faq).select().single();
+  if (error) throw new Error(error.message);
+  return data;
+};
+
+export const updateFaq = async (id: string, faq: any) => {
+  const { data, error } = await supabase.from('faqs').update(faq).eq('id', id).select().single();
+  if (error) throw new Error(error.message);
+  return data;
+};
+
+export const deleteFaq = async (id: string) => {
+  const { error } = await supabase.from('faqs').delete().eq('id', id);
+  if (error) throw new Error(error.message);
+};
+
 // ─── Analytics & Export ──────────────────────────────────────────────────────
 
 export const getUsersCount = async () => {

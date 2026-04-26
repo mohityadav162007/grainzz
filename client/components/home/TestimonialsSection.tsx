@@ -1,30 +1,39 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight, Star } from 'lucide-react';
+import { getTestimonials } from '@/lib/api';
 
-const testimonials = [
+const fallbackTestimonials = [
   {
-    text: '"Finally, a snack that doesn\'t make me choose between my health and my cravings! Grainzz has become my go-to for mid-day hunger. I love that it\'s roasted and made from millets!"',
-    author: 'Sophia Maren',
-    role: 'Director of Product',
+    text: 'Loved the flavour and crunch. It doesn\'t feel like regular oily chips at all. The Ragi Chips are my absolute favourite — spicy but not overwhelming. Will definitely reorder!',
+    author: 'Aarav Mehta',
+    role: 'Verified Buyer',
     rating: 5,
   },
   {
-    text: '"I\'ve tried so many healthy snack brands but Grainzz is on a different level. The peri peri oats chips are absolutely addictive — in the best way possible!"',
-    author: 'Rahul Sharma',
+    text: 'Finally found a snack that\'s light but hits the flavour spot. Tandoori Masala puffed rice is my absolute favorite. Great for evening cravings without the guilt.',
+    author: 'Priya S.',
+    role: 'Health Enthusiast',
+    rating: 5,
+  },
+  {
+    text: 'A perfect way to try everything Grainzz has to offer. The starter box has become my go-to office snack. Love the variety and the fact that it comes with free puffed rice!',
+    author: 'Rohan G.',
     role: 'Fitness Enthusiast',
-    rating: 5,
-  },
-  {
-    text: '"My kids love them which is a huge win! No more hiding spinach in their food. These grain puffs are our family\'s new favourite snack."',
-    author: 'Priya Mehra',
-    role: 'Mom of Two',
     rating: 5,
   },
 ];
 
 export default function TestimonialsSection() {
   const [current, setCurrent] = useState(0);
+  const [testimonials, setTestimonials] = useState(fallbackTestimonials);
+
+  useEffect(() => {
+    getTestimonials()
+      .then((data) => { if (data.length > 0) setTestimonials(data); })
+      .catch(() => {});
+  }, []);
+
   const prev = () => setCurrent((c) => (c - 1 + testimonials.length) % testimonials.length);
   const next = () => setCurrent((c) => (c + 1) % testimonials.length);
 
@@ -48,7 +57,6 @@ export default function TestimonialsSection() {
               <span className="font-black text-primary">₹149</span>
               <span className="text-text-muted line-through text-xs">MRP ₹199</span>
             </div>
-            {/* Discount badge */}
             <div className="absolute top-4 left-4 badge-discount">-25%</div>
           </div>
 
@@ -66,7 +74,7 @@ export default function TestimonialsSection() {
 
                 {/* Quote */}
                 <p className="text-sm md:text-base leading-relaxed mb-6 opacity-95 min-h-[80px]" key={current}>
-                  {testimonials[current].text}
+                  &ldquo;{testimonials[current].text}&rdquo;
                 </p>
               </div>
 

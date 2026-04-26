@@ -1,34 +1,34 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Plus, Minus, ShoppingCart, ChevronDown, ChevronUp } from 'lucide-react';
 import Link from 'next/link';
 import { useCartStore } from '@/store/cartStore';
-
-const variantOptions = {
-  box: ['Box of 6 Grainzz', 'Box of 12 Grainzz'],
-};
-
-const accordionData = [
-  {
-    label: 'Description',
-    content: 'The perfect variety snack box for the health-conscious snacker. Experience all our signature grain-based flavors in one convenient pack. High in fiber, roasted to perfection, and 100% guilt-free.',
-  },
-  {
-    label: 'Nutrition breakdown',
-    content: 'Calories: 120 per serving | Protein: 4g | Fibre: 6g | Fat: 3g | No Trans Fat | No Palm Oil',
-  },
-  {
-    label: 'Ingredients',
-    content: 'Assorted Grainzz Products: Oats, Ragi, Bajra, Quinoa, Rice Flour, Natural Seasonings, Salt.',
-  },
-];
+import { getSiteContent, getProductBySlug } from '@/lib/api';
 
 export default function EssentialSnackBox() {
   const [qty, setQty] = useState(1);
-  const [selectedBox, setSelectedBox] = useState(variantOptions.box[0]);
-  const [openSections, setOpenSections] = useState<Set<string>>(new Set(['Description']));
   const [added, setAdded] = useState(false);
+  const [product, setProduct] = useState<any>(null);
+  const [featuredConfig, setFeaturedConfig] = useState<any>(null);
+  const [openSections, setOpenSections] = useState<Set<string>>(new Set(['Description']));
   const { addItem } = useCartStore();
+
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const config = await getSiteContent('featured_product');
+        if (config) {
+          setFeaturedConfig(config);
+          const slug = config.slug || 'essential-snack-box-mixed';
+          try {
+            const res = await getProductBySlug(slug);
+            if (res.data) setProduct(res.data);
+          } catch {}
+        }
+      } catch {}
+    };
+    loadData();
+  }, []);
 
   const toggleSection = (label: string) => {
     setOpenSections(prev => {
@@ -40,17 +40,32 @@ export default function EssentialSnackBox() {
   };
 
   const handleAddToCart = () => {
+    if (!product) return;
     addItem({
-      _id: 'essential-snack-box',
-      name: `The Essential Snack Box – ${selectedBox}`,
-      price: 149,
-      mrp: 199,
-      image: '',
+      id: product.id,
+      name: product.name,
+      price: product.price,
+      mrp: product.mrp,
+      image: product.images?.[0] || '',
       quantity: qty,
     });
     setAdded(true);
     setTimeout(() => setAdded(false), 2000);
   };
+
+  const heading = featuredConfig?.heading || 'The Supergrain Starter Box';
+  const supportingLine = featuredConfig?.supporting_line || product?.nutrition_info || 'High Fibre | No Palm Oil | Gluten-Free | Zero Cholesterol';
+  const freeGiftMessage = featuredConfig?.free_gift_message || '';
+  const description = featuredConfig?.description || product?.description || '';
+  const ctaText = featuredConfig?.cta_text || 'Build Your Starter Box';
+  const price = product?.price || 549;
+  const mrp = product?.mrp || 699;
+
+  const accordionData = [
+    { label: 'Description', content: description },
+    { label: 'Nutrition breakdown', content: product?.nutrition_info || 'High in Fibre | No Palm Oil | Gluten-Free | Zero Cholesterol' },
+    { label: 'Ingredients', content: product?.ingredients || 'Assorted Grainzz Products: Ragi, Bajra, Oats, Quinoa, Natural Seasonings, Salt.' },
+  ];
 
   return (
     <section className="py-16 bg-cream">
@@ -59,67 +74,61 @@ export default function EssentialSnackBox() {
           {/* Image */}
           <div className="relative bg-white rounded-3xl p-8 flex items-center justify-center min-h-[400px] shadow-sm group">
             <div className="flex flex-col items-center">
-              {/* Snack box visual */}
-              <div className="relative w-52 h-52 bg-gradient-to-br from-amber-100 to-amber-50 rounded-2xl flex items-center justify-center shadow-inner">
-                <div className="grid grid-cols-2 gap-2 p-4">
-                  {['🫙', '🌾', '🍘', '🥜'].map((emoji, i) => (
-                    <div key={i} className="w-16 h-16 bg-white rounded-xl flex items-center justify-center text-2xl shadow-sm">
-                      {emoji}
+              {product?.images?.[0] ? (
+                <img
+                  src={product.images[0]}
+                  alt={heading}
+                  className="max-h-[300px] object-contain group-hover:scale-105 transition-transform duration-500"
+                />
+              ) : (
+                <>
+                  <div className="relative w-52 h-52 bg-gradient-to-br from-amber-100 to-amber-50 rounded-2xl flex items-center justify-center shadow-inner">
+                    <div className="grid grid-cols-2 gap-2 p-4">
+                      {['🫙', '🌾', '🍘', '🥜'].map((emoji, i) => (
+                        <div key={i} className="w-16 h-16 bg-white rounded-xl flex items-center justify-center text-2xl shadow-sm">
+                          {emoji}
+                        </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Product card below */}
-              <div className="mt-4 text-center">
-                <div className="w-24 h-32 mx-auto bg-gradient-to-b from-green-400 to-green-600 rounded-xl flex flex-col items-center justify-center text-white shadow-lg">
-                  <span className="text-[7px] font-bold tracking-widest opacity-70">VITALICIOUS</span>
-                  <span className="font-brand text-xs font-black">GRAIN<span className="text-yellow-300">ZZ</span></span>
-                  <div className="w-8 h-8 bg-white/20 rounded-full mt-1" />
-                  <span className="text-[6px] mt-1 opacity-70">OATS CHIPS</span>
-                </div>
-                <p className="text-sm font-bold text-text-main mt-2">Oats Chips – Peri Peri</p>
-                <p className="text-xs text-text-muted">₹149 <span className="line-through">MRP ₹199</span></p>
-              </div>
+                  </div>
+                  <div className="mt-4 text-center">
+                    <div className="w-24 h-32 mx-auto bg-gradient-to-b from-green-400 to-green-600 rounded-xl flex flex-col items-center justify-center text-white shadow-lg">
+                      <span className="text-[7px] font-bold tracking-widest opacity-70">VITALICIOUS</span>
+                      <span className="font-brand text-xs font-black">GRAIN<span className="text-yellow-300">ZZ</span></span>
+                      <div className="w-8 h-8 bg-white/20 rounded-full mt-1" />
+                      <span className="text-[6px] mt-1 opacity-70">STARTER BOX</span>
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
 
-            <Link
-              href="/products/essential-snack-box-mixed"
-              className="absolute bottom-4 left-4 text-xs text-text-muted border border-gray-200 rounded-full px-4 py-2 hover:border-primary hover:text-primary transition-colors"
-            >
-              Quick View
-            </Link>
+            {product && (
+              <Link
+                href={`/products/${product.slug}`}
+                className="absolute bottom-4 left-4 text-xs text-text-muted border border-gray-200 rounded-full px-4 py-2 hover:border-primary hover:text-primary transition-colors"
+              >
+                Quick View
+              </Link>
+            )}
           </div>
 
           {/* Product Details */}
           <div>
-            <h2 className="text-2xl md:text-3xl font-black text-text-main mb-1">The Essential Snack Box</h2>
-            <p className="text-text-muted text-sm mb-3">High-Fibre | No Palm Oil | Baked Crunch</p>
+            <h2 className="text-2xl md:text-3xl font-black text-text-main mb-1">{heading}</h2>
+            <p className="text-text-muted text-sm mb-3">{supportingLine}</p>
 
-            <div className="flex items-baseline gap-2 mb-5">
-              <span className="text-3xl font-black text-primary">₹149</span>
-              <span className="text-text-muted line-through text-sm">MRP ₹199</span>
+            <div className="flex items-baseline gap-2 mb-3">
+              <span className="text-3xl font-black text-primary">₹{price}</span>
+              <span className="text-text-muted line-through text-sm">MRP ₹{mrp}</span>
             </div>
 
-            {/* Variants */}
-            <div className="mb-5">
-              <p className="text-sm font-semibold mb-2">Select your box</p>
-              <div className="flex flex-wrap gap-2">
-                {variantOptions.box.map((opt) => (
-                  <button
-                    key={opt}
-                    onClick={() => setSelectedBox(opt)}
-                    className={`text-xs px-4 py-2.5 rounded-lg border transition-all duration-200 ${
-                      selectedBox === opt
-                        ? 'border-primary bg-primary/5 text-primary font-semibold'
-                        : 'border-gray-200 text-text-muted hover:border-primary'
-                    }`}
-                  >
-                    {opt}
-                  </button>
-                ))}
+            {/* Free Gift Message */}
+            {freeGiftMessage && (
+              <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 mb-5 text-sm text-amber-800 font-medium">
+                {freeGiftMessage}
               </div>
-            </div>
+            )}
 
             {/* Accordion */}
             <div className="border-t border-gray-200 mb-6">
@@ -161,7 +170,7 @@ export default function EssentialSnackBox() {
               </button>
             </div>
             <button onClick={handleAddToCart} className="w-full btn-primary justify-center rounded-xl py-4 text-base">
-              Quick Buy
+              {ctaText}
             </button>
           </div>
         </div>

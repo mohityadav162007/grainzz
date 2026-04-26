@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
-import { ChevronRight, Plus, Minus, ShoppingCart, Star } from 'lucide-react';
+import { ChevronRight, Plus, Minus, Star, Heart } from 'lucide-react';
 import { getProductBySlug, getProductsByCategory } from '@/lib/api';
 import { useCartStore } from '@/store/cartStore';
 import ProductCard from '@/components/products/ProductCard';
@@ -53,6 +53,7 @@ export default function ProductDetailPage() {
       mrp: product.mrp,
       image: product.images?.[0] || '',
       quantity: qty,
+      tags: product.tags,
     });
     setAdded(true);
     setTimeout(() => setAdded(false), 2000);
@@ -60,241 +61,203 @@ export default function ProductDetailPage() {
 
   if (loading) {
     return (
-      <div className="max-w-7xl mx-auto px-4 lg:px-8 py-12">
-        <div className="grid md:grid-cols-2 gap-12">
-          <div className="aspect-square bg-gray-100 rounded-3xl animate-pulse" />
-          <div className="space-y-4">
-            <div className="h-8 bg-gray-100 rounded animate-pulse w-3/4" />
-            <div className="h-6 bg-gray-100 rounded animate-pulse w-1/2" />
-            <div className="h-12 bg-gray-100 rounded animate-pulse" />
+      <div className="max-w-[1440px] mx-auto px-4 lg:px-[120px] py-[60px]">
+        <div className="grid md:grid-cols-2 gap-[48px]">
+          <div className="aspect-square bg-[#EEEEEE] rounded-[20px] animate-pulse" />
+          <div className="space-y-[24px]">
+            <div className="h-[40px] bg-[#EEEEEE] rounded-[8px] animate-pulse w-3/4" />
+            <div className="h-[24px] bg-[#EEEEEE] rounded-[8px] animate-pulse w-1/2" />
+            <div className="h-[64px] bg-[#EEEEEE] rounded-[8px] animate-pulse" />
           </div>
         </div>
       </div>
     );
   }
 
-  if (!product) return <div className="py-20 text-center text-text-muted">Product not found.</div>;
+  if (!product) return <div className="py-[100px] text-center text-[#707070] font-sans">Product not found.</div>;
 
   const discount = Math.round(((product.mrp - product.price) / product.mrp) * 100);
 
   const accordionItems = [
-    { label: 'Description', content: product.description },
-    { label: 'Nutrition breakdown', content: product.nutritionInfo },
-    { label: 'Ingredients', content: product.ingredients },
+    { label: 'Description', content: product.description || 'Enjoy our healthy snack packed with nutrition.' },
+    { label: 'Nutrition breakdown', content: product.nutritionInfo || 'High in Fiber. Zero Cholesterol. Gluten Free.' },
+    { label: 'Ingredients', content: product.ingredients || 'Supergrains (Ragi, Bajra, Sorghum).' },
   ].filter(item => item.content);
 
   return (
-    <div className="max-w-7xl mx-auto px-4 lg:px-8 py-8">
-      {/* Breadcrumb */}
-      <nav className="flex items-center gap-2 text-sm text-text-muted mb-6">
-        <Link href="/products" className="hover:text-primary transition-colors">Shop All</Link>
-        <ChevronRight size={14} />
-        <span className="text-text-main">{product.name}</span>
-      </nav>
+    <div className="bg-[#FCF9F2] min-h-screen pb-[60px] md:pb-[100px]">
+      <div className="max-w-[1440px] mx-auto px-4 md:px-[60px] lg:px-[120px] pt-[32px]">
+        {/* Breadcrumb */}
+        <nav className="flex items-center gap-[8px] text-[13px] md:text-[14px] font-semibold text-[#8E8E8E] mb-[32px] tracking-wide">
+          <Link href="/" className="hover:text-brand-green transition-colors">Home</Link>
+          <ChevronRight size={14} />
+          <Link href="/products" className="hover:text-brand-green transition-colors">All Products</Link>
+          <ChevronRight size={14} />
+          <span className="text-brand-black">{product.name}</span>
+        </nav>
 
-      <div className="grid md:grid-cols-2 gap-12 mb-16">
-        {/* Images */}
-        <div>
-          <div className="relative aspect-square rounded-3xl overflow-hidden bg-cream mb-4">
-            {product.images?.length > 0 ? (
-              <Image src={product.images[selectedImage]} alt={product.name} fill className="object-cover" />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center text-7xl">🫙</div>
-            )}
-            {discount > 0 && (
-              <div className="absolute top-4 left-4 badge-discount">-{discount}%</div>
-            )}
-            {/* Veg Icon */}
-            <div className="absolute top-4 right-4 w-7 h-7 border-2 border-green-600 rounded flex items-center justify-center bg-white">
-              <div className="w-3 h-3 bg-green-600 rounded-full" />
-            </div>
-          </div>
-          {/* Thumbnails */}
-          {product.images?.length > 1 && (
-            <div className="flex gap-2 overflow-x-auto pb-1">
-              {product.images.map((img: string, i: number) => (
-                <button
-                  key={i}
-                  onClick={() => setSelectedImage(i)}
-                  className={`relative w-20 h-20 rounded-xl overflow-hidden flex-shrink-0 border-2 transition-all ${selectedImage === i ? 'border-primary' : 'border-transparent'}`}
-                >
-                  <Image src={img} alt="" fill className="object-cover" />
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Product Info */}
-        <div>
-          {product.tags?.length > 0 && (
-            <div className="flex flex-wrap gap-2 mb-3">
-              {product.tags.map((tag: string) => (
-                <span key={tag} className="badge-tag">{tag}</span>
-              ))}
-            </div>
-          )}
-          <h1 className="text-2xl md:text-3xl font-black text-text-main mb-1">{product.name}</h1>
-          {product.nutritionInfo && (
-            <p className="text-sm text-text-muted mb-3">{product.nutritionInfo}</p>
-          )}
-
-          <div className="flex items-baseline gap-3 mb-6">
-            <span className="text-3xl font-black text-primary">₹{product.price}</span>
-            {product.mrp > product.price && (
-              <span className="text-lg text-text-muted line-through">MRP ₹{product.mrp}</span>
-            )}
-            {discount > 0 && (
-              <span className="badge-discount">{discount}% off</span>
-            )}
-          </div>
-
-          {/* Accordion */}
-          <div className="border-t border-gray-100">
-            {accordionItems.map(({ label, content }) => (
-              <div key={label} className="border-b border-gray-100">
-                <button
-                  onClick={() => toggleSection(label)}
-                  className="w-full flex items-center justify-between py-3 text-sm font-semibold hover:text-primary transition-colors"
-                >
-                  {label}
-                  <span>{openSections.has(label) ? <Minus size={16} /> : <Plus size={16} />}</span>
-                </button>
-                {openSections.has(label) && (
-                  <p className="text-sm text-text-muted pb-4 leading-relaxed">{content}</p>
-                )}
+        <div className="flex flex-col lg:flex-row gap-[48px] md:gap-[80px] mb-[80px]">
+          {/* Left Column: Images */}
+          <div className="w-full lg:w-[600px] flex-shrink-0">
+            <div className="relative aspect-[4/5] rounded-[24px] overflow-hidden bg-white shadow-sm border border-[#EAEAEA] mb-[16px]">
+              {product.images?.length > 0 ? (
+                <Image src={product.images[selectedImage]} alt={product.name} fill className="object-cover transition-transform duration-700 hover:scale-[1.03]" />
+              ) : (
+                <Image src="/Rectangle-10@2x.png" alt={product.name} fill className="object-cover" />
+              )}
+              {discount > 0 && (
+                <div className="absolute top-[20px] left-[20px] bg-brand-red text-white text-[14px] font-bold px-[12px] py-[6px] rounded-[6px] tracking-wide shadow-md">
+                  -{discount}%
+                </div>
+              )}
+              {/* Veg Icon */}
+              <div className="absolute top-[20px] right-[20px] w-[32px] h-[32px] border-2 border-[#1E8A38] rounded-[6px] flex items-center justify-center bg-white shadow-sm">
+                <div className="w-[12px] h-[12px] bg-[#1E8A38] rounded-full" />
               </div>
-            ))}
+            </div>
+            
+            {/* Thumbnails */}
+            {product.images?.length > 1 && (
+              <div className="flex gap-[12px] overflow-x-auto pb-2 scrollbar-none">
+                {product.images.map((img: string, i: number) => (
+                  <button
+                    key={i}
+                    onClick={() => setSelectedImage(i)}
+                    className={`relative w-[80px] h-[80px] md:w-[100px] md:h-[100px] rounded-[16px] overflow-hidden flex-shrink-0 transition-all 
+                      ${selectedImage === i ? 'border-[2px] border-brand-green shadow-md scale-[1.02]' : 'border border-[#EAEAEA] opacity-80 hover:opacity-100 hover:scale-[1.02]'}`}
+                  >
+                    <Image src={img} alt="" fill className="object-cover" />
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
-          {/* Quantity + CTA */}
-          {product.stock > 0 ? (
-            <div className="mt-6 flex flex-col gap-3">
-              <div className="flex items-center gap-4">
-                <div className="flex items-center border border-gray-200 rounded-full">
-                  <button onClick={() => setQty(Math.max(1, qty - 1))} className="px-4 py-2 hover:text-primary transition-colors">
-                    <Minus size={14} />
+          {/* Right Column: Info */}
+          <div className="flex-1 flex flex-col items-start pt-[12px]">
+            {product.tags?.length > 0 && (
+              <div className="flex flex-wrap gap-[8px] mb-[16px]">
+                {product.tags.map((tag: string) => (
+                  <span key={tag} className="bg-brand-red text-white text-[12px] font-bold px-[10px] py-[4px] rounded-[4px] uppercase tracking-wider">
+                    {tag}
+                  </span>
+                ))}
+              </div>
+            )}
+            
+            <h1 className="text-[32px] md:text-[45px] font-bold text-brand-black mb-[12px] leading-[1.2] tracking-tight font-sans">
+              {product.name}
+            </h1>
+            
+            {/* Reviews summary block (Figma shows stars near title usually) */}
+            <div className="flex items-center gap-[8px] mb-[24px]">
+              <div className="flex gap-[2px]">
+                {[1,2,3,4,5].map(i => <Star key={i} size={18} className="fill-[#FFD026] text-[#FFD026] stroke-0" />)}
+              </div>
+              <span className="text-[14px] font-semibold text-[#8E8E8E] underline cursor-pointer hover:text-brand-black">12 Reviews</span>
+            </div>
+
+            {/* Price */}
+            <div className="flex items-center gap-[16px] mb-[32px]">
+              <span className="text-[32px] md:text-[40px] font-bold text-brand-black leading-[1] tracking-tight font-sans">₹{product.price}</span>
+              {product.mrp > product.price && (
+                <span className="text-[20px] text-[#999999] font-medium line-through font-sans">MRP ₹{product.mrp}</span>
+              )}
+            </div>
+
+            {/* Accordions */}
+            <div className="w-full flex flex-col gap-[0px] mb-[40px] pt-[20px] border-t border-[#EAEAEA]">
+              {accordionItems.map(({ label, content }) => (
+                <div key={label} className="w-full border-b border-[#EAEAEA]">
+                  <button
+                    onClick={() => toggleSection(label)}
+                    className="w-full flex items-center justify-between py-[16px] text-[16px] md:text-[18px] font-bold text-brand-black border-none bg-transparent cursor-pointer hover:text-brand-green transition-colors"
+                  >
+                    {label}
+                    <span className="text-brand-green text-[20px] font-medium">{openSections.has(label) ? '−' : '+'}</span>
                   </button>
-                  <span className="px-4 py-2 text-sm font-semibold w-12 text-center">{qty}</span>
-                  <button onClick={() => setQty(qty + 1)} className="px-4 py-2 hover:text-primary transition-colors">
-                    <Plus size={14} />
+                  {openSections.has(label) && (
+                    <div className="text-[15px] md:text-[16px] text-[#666666] leading-[1.6] pb-[20px] animate-fade-in font-sans pr-[20px]">
+                      {content}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+
+            {/* Purchase Controls */}
+            {product.stock > 0 ? (
+              <div className="w-full flex flex-col gap-[20px]">
+                <div className="flex flex-col sm:flex-row items-center gap-[20px] w-full">
+                  {/* Quantity */}
+                  <div className="flex items-center gap-[20px] w-full sm:w-auto min-w-[160px] justify-between border-[1.5px] border-[#CCCCCC] rounded-[40px] px-2 py-1 bg-white">
+                    <button 
+                      onClick={() => setQty(Math.max(1, qty - 1))}
+                      className="w-[44px] h-[44px] rounded-full flex items-center justify-center hover:bg-[#F2F2F2] transition-colors cursor-pointer text-brand-black"
+                    >
+                      <Minus size={20} strokeWidth={2} />
+                    </button>
+                    <span className="text-[20px] md:text-[24px] font-bold text-brand-black font-sans">{qty}</span>
+                    <button 
+                      onClick={() => setQty(qty + 1)}
+                      className="w-[44px] h-[44px] rounded-full flex items-center justify-center hover:bg-[#F2F2F2] transition-colors cursor-pointer text-brand-black"
+                    >
+                      <Plus size={20} strokeWidth={2} />
+                    </button>
+                  </div>
+
+                  {/* Add to Cart */}
+                  <button 
+                    onClick={handleAddToCart}
+                    className="flex-1 w-full h-[56px] md:h-[60px] border-[1.5px] border-brand-green bg-transparent text-brand-green rounded-[40px] font-bold text-[18px] hover:bg-[#EEFBDC] transition-all cursor-pointer tracking-wide"
+                  >
+                    {added ? 'Added ✓' : 'Add to Cart'}
                   </button>
                 </div>
-                <button
-                  onClick={handleAddToCart}
-                  className={`flex-1 py-3 rounded-full border font-semibold text-sm transition-all flex items-center justify-center gap-2 ${added ? 'bg-green-50 border-green-500 text-green-600' : 'border-text-main hover:bg-primary hover:text-white hover:border-primary'}`}
+
+                {/* Quick Buy */}
+                <button 
+                  className="w-full h-[56px] md:h-[60px] bg-brand-green text-white rounded-[40px] font-bold text-[18px] hover:bg-[#154617] transition-all cursor-pointer tracking-wide border-none shadow-[0_4px_16px_rgba(29,94,32,0.2)]"
                 >
-                  <ShoppingCart size={16} />
-                  {added ? 'Added to Cart!' : 'Add to Cart'}
+                  Buy Now
                 </button>
               </div>
-              <Link
-                href="/checkout"
-                onClick={handleAddToCart}
-                className="btn-primary justify-center rounded-xl py-4 text-base"
-              >
-                Quick Buy
-              </Link>
-            </div>
-          ) : (
-            <div className="mt-6 p-4 bg-gray-50 rounded-xl text-center text-text-muted text-sm font-medium">
-              Out of Stock
-            </div>
-          )}
+            ) : (
+              <div className="w-full py-[20px] bg-gray-100 rounded-[12px] text-center text-[#707070] font-bold uppercase tracking-wider">
+                Out of Stock
+              </div>
+            )}
+          </div>
         </div>
+
+        {/* You may also like */}
+        {relatedProducts.length > 0 && (
+          <section className="mb-[80px]">
+            <h2 className="text-[28px] md:text-[36px] font-bold mb-[32px] text-brand-black tracking-tight font-sans border-b border-[#EAEAEA] pb-4">
+              You May Also Like
+            </h2>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-[16px] md:gap-[32px]">
+              {relatedProducts.map((p: any) => (
+                <ProductCard key={p.id} product={p} />
+              ))}
+            </div>
+          </section>
+        )}
       </div>
 
-      {/* Customer Reviews */}
-      <section className="mb-16">
-        <h2 className="text-2xl font-black mb-6">Customer Reviews</h2>
-        <div className="grid md:grid-cols-2 gap-8">
-          {/* Rating Summary */}
-          <div className="bg-cream rounded-2xl p-6">
-            <div className="flex items-center gap-4 mb-4">
-              <span className="text-4xl font-black">3.8</span>
-              <div>
-                <div className="flex gap-0.5 mb-1">
-                  {[1,2,3,4].map(i => <Star key={i} size={16} className="fill-yellow-400 text-yellow-400" />)}
-                  <Star size={16} className="text-gray-300" />
-                </div>
-                <p className="text-xs text-text-muted">Based on reviews</p>
-              </div>
-            </div>
-            {[5,4,3,2,1].map(star => (
-              <div key={star} className="flex items-center gap-2 mb-1">
-                <span className="text-xs w-4">{star}★</span>
-                <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
-                  <div className="h-full bg-primary rounded-full" style={{ width: star === 5 ? '60%' : star === 4 ? '25%' : star === 3 ? '10%' : '3%' }} />
-                </div>
-              </div>
-            ))}
-          </div>
-          {/* Review Form */}
-          <div className="bg-white border border-gray-100 rounded-2xl p-6">
-            <h3 className="font-bold mb-4">Leave us a review!</h3>
-            <div className="space-y-3">
-              <div>
-                <label className="text-xs font-semibold text-text-muted block mb-1">Overall Rating*</label>
-                <div className="flex gap-1">{[1,2,3,4,5].map(i => <Star key={i} size={20} className="text-gray-300 cursor-pointer hover:text-yellow-400 transition-colors" />)}</div>
-              </div>
-              <div>
-                <label className="text-xs font-semibold text-text-muted block mb-1">Review Title*</label>
-                <input className="input-field" placeholder="Give your review a title" />
-              </div>
-              <div>
-                <label className="text-xs font-semibold text-text-muted block mb-1">Review*</label>
-                <textarea className="input-field resize-none" rows={3} placeholder="Write your review here" />
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="text-xs font-semibold text-text-muted block mb-1">Name*</label>
-                  <input className="input-field" />
-                </div>
-                <div>
-                  <label className="text-xs font-semibold text-text-muted block mb-1">Email*</label>
-                  <input className="input-field" type="email" />
-                </div>
-              </div>
-              <button className="btn-primary">Submit <span className="ml-1">→</span></button>
-            </div>
-          </div>
+      {/* Mobile Sticky Add to Cart */}
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-[#EAEAEA] p-4 shadow-[0_-4px_20px_rgba(0,0,0,0.05)] z-40 flex items-center gap-[12px]">
+        <div className="flex-1">
+          <div className="text-[14px] text-brand-black">{product.name.length > 20 ? product.name.substring(0, 20) + '...' : product.name}</div>
+          <div className="text-[16px] font-bold text-brand-black">₹{product.price}</div>
         </div>
-      </section>
-
-      {/* You may also like */}
-      {relatedProducts.length > 0 && (
-        <section className="mb-16">
-          <h2 className="text-2xl font-black mb-6">You may also like</h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
-            {relatedProducts.map((p: any) => (
-              <ProductCard key={p.id} product={p} />
-            ))}
-          </div>
-        </section>
-      )}
-
-      {/* Hear it from our customers (mini testimonials) */}
-      <section className="mb-16">
-        <h2 className="text-2xl font-black mb-6">Hear it from our customers</h2>
-        <div className="grid md:grid-cols-3 gap-4">
-          {[
-            { text: '"Finally, a snack that doesn\'t make me choose between my health and my cravings! Grainzz has become my go-to for mid-day hunger."', name: 'Sophia Maren', role: 'Director of Product' },
-            { text: '"I\'ve tried so many healthy snack brands but Grainzz is on a different level. The peri peri oats chips are absolutely addictive!"', name: 'Rahul Sharma', role: 'Fitness Enthusiast' },
-            { text: '"My kids love them which is a huge win! No more hiding spinach in their food. These grain puffs are our family\'s new favourite."', name: 'Priya Mehra', role: 'Mom of Two' },
-          ].map((t, i) => (
-            <div key={i} className="bg-cream rounded-2xl p-6">
-              <p className="text-sm text-text-main italic leading-relaxed mb-4">{t.text}</p>
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-primary/20 rounded-full flex items-center justify-center text-primary font-bold">{t.name[0]}</div>
-                <div>
-                  <p className="text-sm font-bold">{t.name}</p>
-                  <p className="text-xs text-text-muted">{t.role}</p>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
+        <button 
+          onClick={handleAddToCart}
+          className="flex-1 h-[48px] bg-brand-green text-white rounded-full font-bold text-[16px] transition-colors"
+        >
+          {added ? 'Added ✓' : 'Add to Cart'}
+        </button>
+      </div>
     </div>
   );
 }

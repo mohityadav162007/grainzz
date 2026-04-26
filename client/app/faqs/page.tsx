@@ -8,12 +8,14 @@ export const metadata: Metadata = {
 
 export default function FAQsPage() {
   return (
-    <div className="py-8">
-      <div className="bg-cream py-12 text-center mb-4">
-        <h1 className="text-3xl md:text-4xl font-black text-text-main">Frequently Asked Questions</h1>
-        <p className="text-text-muted mt-2 text-sm">Everything you need to know about Grainzz</p>
+    <div className="bg-white min-h-screen pb-[100px]">
+      <div className="bg-[#FCF9F2] py-[80px] text-center w-full border-b border-[#EAEAEA]">
+        <h1 className="text-[40px] md:text-[56px] font-bold text-brand-black font-brand tracking-tight">Frequently Asked Questions</h1>
+        <p className="text-[#666666] mt-[16px] text-[18px] font-medium font-sans">Everything you need to know about Grainzz</p>
       </div>
-      <FAQSection />
+      <div className="pt-[40px]">
+        <FAQSection />
+      </div>
     </div>
   );
 }

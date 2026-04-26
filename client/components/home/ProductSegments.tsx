@@ -17,15 +17,13 @@ export default function ProductSegments() {
   const [activeTab, setActiveTab] = useState('');
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [heading, setHeading] = useState('Explore the Grainzz Snack Range');
-  const [subheading, setSubheading] = useState('From supergrain jars to puffed rice packets and value-packed combos, discover snacks made for every craving and every kind of muncher.');
+  const [heading, setHeading] = useState('Our Product Segments');
 
   // Fetch heading content
   useEffect(() => {
     getSiteContent('product_tabs_heading').then((content) => {
       if (content) {
         if (content.heading) setHeading(content.heading);
-        if (content.subheading) setSubheading(content.subheading);
       }
     }).catch(() => {});
   }, []);
@@ -41,20 +39,27 @@ export default function ProductSegments() {
           .eq('is_active', true);
 
         if (activeTab === '') {
-          // Bestsellers - sort by views/popularity
           query = query.order('views', { ascending: false });
         } else if (activeTab === 'all-jars') {
-          // All jars - filter categories that are jars (Healthy Chips, Grain Puffs)
           query = query.in('category', ['Healthy Chips', 'Grain Puffs']);
         } else {
           query = query.eq('category', activeTab);
         }
 
-        query = query.limit(8);
+        query = query.limit(4);
 
         const { data, error } = await query;
         if (error) throw error;
-        setProducts(data || []);
+        
+        // Sanitize placeholder links
+        const sanitized = (data || []).map((prod: any) => {
+          if (prod && Array.isArray(prod.images)) {
+             prod.images = prod.images.map((img: string) => img.includes('placeholder.jpg') ? '/image-2@2x.png' : img);
+          }
+          return prod;
+        });
+        
+        setProducts(sanitized);
       } catch {
         setProducts([]);
       } finally {
@@ -65,25 +70,22 @@ export default function ProductSegments() {
   }, [activeTab]);
 
   return (
-    <section className="py-[40px] md:py-[80px] bg-white w-full">
-      <div className="max-w-[1440px] mx-auto px-4 md:px-[80px]">
-        <h2 className="text-[28px] md:text-[40px] font-bold text-center text-brand-black mb-[12px] md:mb-[16px] leading-tight tracking-tight">
+    <section className="py-[40px] md:py-[60px] bg-white w-full">
+      <div className="max-w-[1440px] mx-auto px-4 md:px-[60px] lg:px-[100px]">
+        <h2 className="text-[24px] md:text-[32px] font-bold text-center text-brand-black mb-[32px] md:mb-[48px] tracking-tight font-sans">
           {heading}
         </h2>
-        <p className="text-center text-[#6B6B6B] text-[14px] md:text-[18px] max-w-3xl mx-auto mb-[32px] md:mb-[40px] leading-[1.4]">
-          {subheading}
-        </p>
 
         {/* Category tabs */}
-        <div className="flex flex-wrap gap-[12px] md:gap-[16px] justify-center mb-[32px] md:mb-[48px]">
+        <div className="flex flex-wrap items-center justify-center gap-[12px] md:gap-[16px] mb-[48px]">
           {tabs.map((tab) => (
             <button
               key={tab.label}
               onClick={() => setActiveTab(tab.value)}
-              className={`px-[16px] py-[8px] md:px-[24px] md:py-[12px] rounded-full text-[14px] md:text-[16px] font-semibold transition-all duration-200 border
+              className={`px-[24px] py-[10px] md:px-[32px] md:py-[12px] rounded-full text-[14px] md:text-[16px] font-bold transition-all duration-300 border-[1.5px]
                 ${activeTab === tab.value
                   ? 'bg-brand-green text-white border-brand-green shadow-md'
-                  : 'bg-[#F7F7F7] text-[#6B6B6B] border-transparent hover:border-brand-green hover:text-brand-green'
+                  : 'bg-transparent text-[#666666] border-[#CCCCCC] hover:border-brand-black hover:text-brand-black'
                 }`}
             >
               {tab.label}
@@ -93,21 +95,26 @@ export default function ProductSegments() {
 
         {/* Products grid */}
         {loading ? (
-          <div className="h-[200px] md:h-[300px] flex items-center justify-center text-[#6B6B6B] text-[16px] md:text-[18px]">Loading products...</div>
+          <div className="h-[300px] flex items-center justify-center text-[#999999] text-[16px] animate-pulse">Gathering bestsellers...</div>
         ) : products.length === 0 ? (
-          <div className="h-[200px] md:h-[300px] flex items-center justify-center text-[#6B6B6B] text-[16px] md:text-[18px]">No products found in this category</div>
+          <div className="h-[200px] flex items-center justify-center text-[#999999] text-[16px]">No snacks found in this category.</div>
         ) : (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-[16px] md:gap-[30px]">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-[20px] md:gap-[32px]">
             {products.map((product: any) => (
               <ProductCard key={product.id} product={product} />
             ))}
           </div>
         )}
 
-        <div className="flex justify-center mt-[32px] md:mt-[48px]">
-          <Link href="/products" className="inline-flex items-center gap-[8px] md:gap-[10px] bg-white border-2 border-brand-green text-brand-green px-[24px] py-[12px] md:px-[32px] md:py-[14px] rounded-full font-bold text-[16px] md:text-[18px] hover:bg-brand-green hover:text-white transition-all group">
-            View All Products
-            <ChevronRight size={20} className="group-hover:translate-x-1 transition-transform" />
+        <div className="flex justify-center mt-[48px] md:mt-[64px]">
+          <Link 
+            href="/products" 
+            className="inline-flex items-center justify-between gap-[24px] md:gap-[34px] bg-transparent border-[1.5px] border-brand-green text-brand-green hover:bg-brand-green hover:text-white pl-[24px] md:pl-[38px] pr-[6px] md:pr-[8px] py-[6px] md:py-[8px] rounded-[40px] transition-all group"
+          >
+            <span className="font-bold text-[16px] md:text-[20px] leading-[132%] capitalize">Load More</span>
+            <div className="w-[40px] h-[40px] md:w-[50px] md:h-[50px] bg-brand-green group-hover:bg-white rounded-full flex items-center justify-center text-white group-hover:text-brand-green transition-colors">
+              <ChevronRight size={24} strokeWidth={2.5} />
+            </div>
           </Link>
         </div>
       </div>

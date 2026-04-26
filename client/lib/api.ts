@@ -1,5 +1,13 @@
 import { supabase } from './supabase';
 
+const sanitizeImage = (url: string) => url.includes('placeholder.jpg') ? '/image-2@2x.png' : url;
+const sanitizeProduct = (product: any) => {
+  if (product && Array.isArray(product.images)) {
+    product.images = product.images.map(sanitizeImage);
+  }
+  return product;
+};
+
 // ─── Products ────────────────────────────────────────────────────────────────
 
 export const getProducts = async (params?: Record<string, string>) => {
@@ -42,7 +50,7 @@ export const getProducts = async (params?: Record<string, string>) => {
 
   return {
     success: true,
-    data: data || [],
+    data: (data || []).map(sanitizeProduct),
     pagination: {
       total: total || 0,
       page,
@@ -67,7 +75,7 @@ export const getProductBySlug = async (slug: string) => {
     supabase.rpc('increment_product_views', { product_id: data.id }).then(() => {});
   }
 
-  return { success: true, data };
+  return { success: true, data: data ? sanitizeProduct(data) : null };
 };
 
 // ─── Homepage Dynamic Content ────────────────────────────────────────────────
@@ -171,7 +179,7 @@ export const getProductsByCategory = async (category: string, limit = 8) => {
     .limit(limit);
 
   if (error) throw new Error(error.message);
-  return data || [];
+  return (data || []).map(sanitizeProduct);
 };
 
 export const getFeaturedProducts = async (limit = 8) => {
@@ -183,7 +191,7 @@ export const getFeaturedProducts = async (limit = 8) => {
     .limit(limit);
 
   if (error) throw new Error(error.message);
-  return data || [];
+  return (data || []).map(sanitizeProduct);
 };
 
 export const getComboProducts = async (limit = 6) => {
@@ -196,7 +204,7 @@ export const getComboProducts = async (limit = 6) => {
     .limit(limit);
 
   if (error) throw new Error(error.message);
-  return data || [];
+  return (data || []).map(sanitizeProduct);
 };
 
 // ─── Orders ──────────────────────────────────────────────────────────────────

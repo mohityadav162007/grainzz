@@ -6,7 +6,7 @@ import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
 import CartDrawer from '@/components/cart/CartDrawer';
 
-const jakarta = Plus_Jakarta_Sans({ subsets: ['latin'], display: 'swap' });
+const jakarta = Plus_Jakarta_Sans({ subsets: ['latin'], display: 'swap', adjustFontFallback: false });
 
 export const metadata: Metadata = {
   title: 'Grainzz – Power of Real Grains for Better Gainzz',

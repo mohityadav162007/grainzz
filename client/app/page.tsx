@@ -2,7 +2,8 @@ import HeroSection from '@/components/home/HeroSection';
 import StatsBar from '@/components/home/StatsBar';
 import ProductSegments from '@/components/home/ProductSegments';
 import BenefitsSection from '@/components/home/BenefitsSection';
-import SaleSection from '@/components/home/SaleSection';
+import PoweredBy from '@/components/home/PoweredBy';
+
 import EssentialSnackBox from '@/components/home/EssentialSnackBox';
 import TestimonialsSection from '@/components/home/TestimonialsSection';
 import InstagramSection from '@/components/home/InstagramSection';
@@ -14,10 +15,11 @@ export default function HomePage() {
   return (
     <div>
       <HeroSection />
-      <StatsBar />
       <ProductSegments />
       <BenefitsSection />
-      <SaleSection />
+      <PoweredBy />
+      <StatsBar />
+
       <EssentialSnackBox />
       <TestimonialsSection />
       <InstagramSection />

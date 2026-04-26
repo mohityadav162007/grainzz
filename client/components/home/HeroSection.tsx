@@ -1,16 +1,33 @@
 'use client';
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
-import { ChevronRight } from 'lucide-react';
+import { ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
 import { getHeroSlides } from '@/lib/api';
 
 const fallbackSlides = [
   {
-    top_line: 'Up to 40% OFF',
-    headline: 'Power of Real Grains\nfor Better Snacking',
-    subheadline: 'Discover bold, light and satisfying snacks made with millets, real ingredients and no palm oil.',
-    cta_text: 'Shop Bestsellers',
+    top_line: 'Upto 40% OFF',
+    headline: 'Power of Real Grainz\nfor better gainzz.',
+    subheadline: 'Get the power packed shakti of ragi, bajra and jowar\nnow in snack form.',
+    cta_text: 'Buy Now',
     cta_href: '/products',
+    image_url: '/Slider-Background@2x.png'
+  },
+  {
+    top_line: 'Upto 40% OFF',
+    headline: 'Power of Real Grainz\nfor better gainzz.',
+    subheadline: 'Get the power packed shakti of ragi, bajra and jowar\nnow in snack form.',
+    cta_text: 'Buy Now',
+    cta_href: '/products',
+    image_url: '/Slider-Background@2x.png'
+  },
+  {
+    top_line: 'Upto 40% OFF',
+    headline: 'Power of Real Grainz\nfor better gainzz.',
+    subheadline: 'Get the power packed shakti of ragi, bajra and jowar\nnow in snack form.',
+    cta_text: 'Buy Now',
+    cta_href: '/products',
+    image_url: '/Slider-Background@2x.png'
   },
 ];
 
@@ -31,7 +48,7 @@ export default function HeroSection() {
   useEffect(() => {
     getHeroSlides()
       .then((data) => {
-        if (data.length > 0) setSlides(data);
+        if (data && data.length > 0) setSlides(data);
       })
       .catch(() => {});
   }, []);
@@ -40,73 +57,83 @@ export default function HeroSection() {
     setCurrent((prev) => (prev + 1) % slides.length);
   }, [slides.length]);
 
+  const prevSlide = useCallback(() => {
+    setCurrent((prev) => (prev === 0 ? slides.length - 1 : prev - 1));
+  }, [slides.length]);
+
   useEffect(() => {
     if (slides.length <= 1) return;
-    const timer = setInterval(nextSlide, 5000);
+    const timer = setInterval(nextSlide, 3000);
     return () => clearInterval(timer);
   }, [nextSlide, slides.length]);
 
   const slide = slides[current];
 
   return (
-    <section className="w-full bg-[#FFFFFF] flex justify-center pb-[24px]">
+    <section className="w-full flex justify-center flex-col items-center">
       <div 
-        className="w-full max-w-[1440px] h-[590px] md:h-[579px] relative md:mt-[24px] overflow-hidden md:mx-[80px] md:rounded-tr-[145px]"
+        className="w-full h-[320px] md:h-[540px] lg:h-[600px] relative flex flex-col items-center justify-center overflow-hidden bg-[#2D0000] animate-fade-in"
+        key={current}
         style={{
           background: slide.image_url 
-            ? `linear-gradient(89.96deg, rgba(238, 251, 220, 0.95) 10%, rgba(238, 251, 220, 0.6) 45%, rgba(238, 251, 220, 0) 70%), url(${slide.image_url}) center/cover no-repeat`
-            : `linear-gradient(89.96deg, rgba(238, 251, 220, 1) 0%, rgba(238, 251, 220, 0.5) 100%)`,
+            ? `url(${slide.image_url}) left center/cover no-repeat`
+            : undefined,
         }}
       >
-        <div className="absolute inset-0 flex items-center px-4 md:px-[60px]">
-          {/* Left / Text Content matching Figma Metrics */}
-          <div className="w-full max-w-[600px] animate-fade-in" key={current}>
+        <div className="w-full max-w-[1440px] px-[20px] md:px-[60px] lg:px-[100px] h-full flex items-center justify-end">
+          {/* Content Block - Exactly matching Figma text and positioning */}
+          <div className="w-full md:w-[50%] flex flex-col items-start gap-[12px] md:gap-[20px] animate-fade-in pl-0 md:pl-[40px] pt-[20px] md:pt-[40px]">
             
-            <div className="mb-4 md:mb-6 flex">
-              <span className="bg-brand-red text-white text-[16px] md:text-[22px] font-semibold px-4 py-1.5 md:px-6 md:py-2 rounded-full inline-flex tracking-tight">
-                {slide.top_line}
-              </span>
-            </div>
-
-            <h1 className="text-[36px] md:text-[54px] font-bold text-brand-black leading-[1.1] mb-4 md:mb-6 whitespace-pre-line tracking-tight">
+            <h3 className="m-0 text-[13px] md:text-[18px] font-bold font-sans text-white tracking-wide uppercase">
+              {slide.top_line}
+            </h3>
+            
+            <h1 className="m-0 text-[32px] md:text-[52px] leading-[1.1] font-bold font-sans text-white tracking-[-0.02em] whitespace-pre-line">
               {slide.headline}
             </h1>
-
-            <p className="text-[16px] md:text-[22px] font-normal text-brand-black mb-8 md:mb-10 max-w-lg leading-[1.4]">
+            
+            <p className="m-0 text-[14px] md:text-[18px] leading-[1.5] font-medium font-sans text-white max-w-[480px] whitespace-pre-line">
               {slide.subheadline}
             </p>
 
-            {/* CTA Button */}
             <Link
               href={slide.cta_href}
-              className="inline-flex items-center gap-2 md:gap-3 bg-brand-green hover:bg-[#154617] text-white px-2 py-2 rounded-full transition-all group shadow-lg"
+              className="mt-[8px] md:mt-[16px] inline-flex items-center justify-between gap-[16px] md:gap-[24px] bg-white text-brand-black pl-[24px] md:pl-[28px] pr-[6px] md:pr-[8px] py-[6px] md:py-[8px] rounded-[40px] transition-transform hover:scale-[1.03] active:scale-95 group pointer-events-auto shadow-sm"
             >
-              <span className="text-[16px] md:text-[18px] font-semibold pl-4 md:pl-6 pr-1 md:pr-2 tracking-wide">
-                {slide.cta_text}
-              </span>
-              <div className="w-[36px] h-[36px] md:w-[45px] md:h-[45px] bg-white rounded-full flex items-center justify-center text-brand-green group-hover:bg-[#EEFBDC] transition-colors">
-                <ChevronRight size={20} strokeWidth={3} className="md:w-6 md:h-6" />
+              <span className="font-bold text-[15px] md:text-[18px] leading-[1] capitalize mt-[2px]">{slide.cta_text}</span>
+              <div className="w-[32px] h-[32px] md:w-[38px] md:h-[38px] bg-brand-green rounded-full flex items-center justify-center text-white transition-colors group-hover:bg-[#154617]">
+                <ArrowRight size={18} strokeWidth={2.5} className="ml-[2px]" />
               </div>
             </Link>
           </div>
         </div>
+      </div>
 
-        {/* Carousel Interactors */}
-        {slides.length > 1 && (
-          <div className="absolute bottom-6 left-4 md:bottom-8 md:left-[60px] flex gap-2 md:gap-3">
+      {/* Navigation Indicators below the image */}
+      {slides.length > 1 && (
+        <div className="w-full bg-white flex items-center justify-center py-[24px]">
+          <div className="flex items-center gap-[12px]">
+             <button onClick={prevSlide} className="text-[#A1A1A1] hover:text-[#222222] transition-colors bg-transparent border-none">
+               <ChevronLeft size={20} strokeWidth={3} />
+             </button>
             {slides.map((_, i) => (
               <button
                 key={i}
                 onClick={() => setCurrent(i)}
-                className={`w-[36px] md:w-[45px] h-[6px] md:h-[8px] rounded-full transition-all ${
-                  i === current ? 'bg-brand-green w-[60px] md:w-[80px]' : 'bg-brand-green/30'
+                className={`transition-all rounded-full border-none cursor-pointer ${
+                  i === current 
+                    ? 'w-[32px] md:w-[40px] h-[8px] md:h-[8px] bg-[#1a5b23] shadow-sm' 
+                    : 'w-[8px] md:w-[8px] h-[8px] md:h-[8px] bg-[#E0E0E0] hover:bg-[#888888]'
                 }`}
                 aria-label={`Go to slide ${i + 1}`}
               />
             ))}
+             <button onClick={nextSlide} className="text-[#A1A1A1] hover:text-[#222222] transition-colors bg-transparent border-none">
+               <ChevronRight size={20} strokeWidth={3} />
+             </button>
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </section>
   );
 }

@@ -4,13 +4,21 @@ import { Instagram } from 'lucide-react';
 import Image from 'next/image';
 import { getInstagramPosts, getSiteContent } from '@/lib/api';
 
+const defaultReels = [
+  { img: '/609216963-17861980689559678-5190492068987603702-n-1@2x.png', link: 'https://www.instagram.com/reel/DTApeL7Errf/' },
+  { img: '/image-25@2x.png', link: 'https://www.instagram.com/reel/DS98mOKkZSI/' },
+  { img: '/image-27@2x.png', link: 'https://www.instagram.com/reel/DQ1hoOXEkap/' },
+  { img: '/image-24@2x.png', link: 'https://www.instagram.com/reel/DSpXmlXgZy-/' },
+  { img: '/image-K6ajnEunSyn0dpLf3ZXfW4cvI1dCO3-1@2x.png', link: 'https://www.instagram.com/reel/DSFS4A4Eud5/' }
+];
+
 export default function InstagramSection() {
   const [posts, setPosts] = useState<any[]>([]);
-  const [heading, setHeading] = useState('See How India is Snacking Better with Grainzz');
-  const [handle, setHandle] = useState('@grainzzbyvitalicious');
+  const [heading, setHeading] = useState('Follow us on Instagram');
+  const [handle, setHandle] = useState('grainzbyvitalicious');
 
   useEffect(() => {
-    getInstagramPosts().then((data) => { if (data.length > 0) setPosts(data); }).catch(() => {});
+    getInstagramPosts().then((data) => { if (data && data.length > 0) setPosts(data); }).catch(() => {});
     getSiteContent('instagram_section').then((content) => {
       if (content) {
         if (content.heading) setHeading(content.heading);
@@ -20,57 +28,52 @@ export default function InstagramSection() {
   }, []);
 
   return (
-    <section className="py-[80px] bg-white border-y border-[#E4E4E4]/50 overflow-hidden">
-      <div className="max-w-[1440px] mx-auto px-4 md:px-[80px]">
+    <section className="py-[40px] md:py-[60px] bg-white w-full overflow-hidden border-t border-[#f0f0f0]">
+      <div className="max-w-[1440px] mx-auto px-4 md:px-[60px] lg:px-[100px]">
         
-        <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-[48px] gap-[24px]">
-          <h2 className="text-[32px] md:text-[40px] font-bold text-brand-black leading-tight max-w-[600px]">
+        {/* Header Row */}
+        <div className="flex flex-col md:flex-row items-center justify-between gap-[24px] mb-[32px] md:mb-[40px]">
+          <h2 className="text-[28px] md:text-[36px] font-bold text-brand-black leading-[1.2] tracking-tight font-sans text-center md:text-left">
             {heading}
           </h2>
+
           <a
             href={`https://instagram.com/${handle.replace('@', '')}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-[10px] px-[28px] py-[14px] bg-white border-2 border-[#E4E4E4] rounded-full text-[16px] font-bold text-brand-black hover:border-brand-green hover:text-brand-green shadow-sm hover:shadow-md transition-all group"
+            className="flex flex-shrink-0 items-center justify-center gap-[10px] px-[28px] py-[14px] bg-[#1A1A1A] text-white rounded-full text-[15px] md:text-[16px] font-bold hover:bg-black transition-all group shadow-md"
           >
-            <Instagram size={20} className="text-brand-green group-hover:scale-110 transition-transform" /> 
+            <Instagram size={20} strokeWidth={2} />
             {handle}
           </a>
         </div>
-        
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-[16px] md:gap-[24px]">
-          {posts.length > 0 ? (
-            posts.slice(0, 6).map((post) => (
-              <a
-                key={post.id}
-                href={post.href || '#'}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="aspect-square rounded-[20px] overflow-hidden hover:opacity-90 hover:shadow-xl transition-all relative block group"
-              >
-                <Image
-                  src={post.image_url}
-                  alt="Instagram post"
-                  fill
-                  className="object-cover group-hover:scale-105 transition-transform duration-500"
-                  sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 16vw"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                   <Instagram size={32} className="text-white transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300" />
-                </div>
-              </a>
-            ))
-          ) : (
-            // Placeholder grid when no posts
-            Array(6).fill(null).map((_, i) => (
-              <div
-                key={i}
-                className="aspect-square bg-[#F7F7F7] rounded-[20px] overflow-hidden flex items-center justify-center hover:bg-brand-light transition-colors cursor-pointer border border-[#E4E4E4]"
-              >
-                <Instagram size={32} className="text-[#C4C4C4]" />
-              </div>
-            ))
-          )}
+
+        {/* Reels Container */}
+        <div className="w-full flex justify-center">
+          <div className="flex w-full gap-[16px] md:gap-[24px] overflow-x-auto pb-8 snap-x snap-mandatory scrollbar-hide">
+            {(posts.length > 0 ? posts.slice(0, 5) : defaultReels).map((item, idx) => {
+               const imageUrl = item.img || item.image_url;
+               const postHref = item.link || item.href || `https://instagram.com/${handle.replace('@', '')}`;
+               
+               return (
+                  <a
+                    key={idx}
+                    href={postHref}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex-shrink-0 w-[240px] md:w-1/5 aspect-[9/16] rounded-[16px] md:rounded-[20px] overflow-hidden relative block group shadow-sm hover:shadow-[0_12px_32px_rgba(0,0,0,0.12)] transition-all duration-500 snap-center"
+                  >
+                    <Image
+                      src={imageUrl}
+                      alt="Grainzz Instagram Reel"
+                      fill
+                      className="object-cover group-hover:scale-105 transition-transform duration-700"
+                      sizes="(max-width: 768px) 70vw, 20vw"
+                    />
+                  </a>
+               );
+            })}
+          </div>
         </div>
         
       </div>

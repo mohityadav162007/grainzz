@@ -38,85 +38,86 @@ export default function TestimonialsSection() {
   const next = () => setCurrent((c) => (c + 1) % testimonials.length);
 
   return (
-    <section className="py-16 bg-white overflow-hidden">
-      <div className="max-w-7xl mx-auto px-4 lg:px-8">
-        <div className="grid md:grid-cols-2 gap-8 items-stretch">
-          {/* Product card */}
-          <div className="bg-cream rounded-3xl p-6 flex flex-col items-center justify-center min-h-[360px] relative group">
-            {/* Product visual */}
-            <div className="w-36 h-48 bg-gradient-to-b from-green-400 to-green-600 rounded-2xl flex flex-col items-center justify-center text-white text-center shadow-xl mb-4 group-hover:scale-105 transition-transform duration-500">
-              <span className="text-[8px] font-bold tracking-widest opacity-70">VITALICIOUS</span>
-              <span className="font-brand text-lg font-black">GRAIN<span className="text-yellow-300">ZZ</span></span>
-              <div className="w-12 h-12 bg-white/20 rounded-full mt-2" />
-              <span className="text-[7px] mt-1 opacity-70">OATS CHIPS</span>
-              <span className="text-[6px] opacity-50">Peri Peri</span>
+    <section className="py-[40px] md:py-[80px] bg-white overflow-hidden w-full">
+      <div className="max-w-[1440px] mx-auto px-4 md:px-[80px]">
+        <div className="grid md:grid-cols-2 gap-[40px] md:gap-[60px] lg:gap-[100px] items-stretch">
+          
+          {/* Featured Product Block */}
+          <div className="bg-[#EEFBDC]/50 rounded-[24px] md:rounded-[32px] p-[24px] md:p-[32px] flex flex-col items-center justify-center min-h-[auto] md:min-h-[460px] relative group border border-brand-green/10">
+            <div className="w-[140px] h-[200px] md:w-[180px] md:h-[240px] bg-gradient-to-br from-[#1D5E20] to-[#2d7a31] rounded-[24px] flex flex-col items-center justify-center text-white text-center shadow-xl mb-[24px] group-hover:scale-105 transition-transform duration-500 transform -rotate-2">
+              <span className="text-[10px] font-bold tracking-[0.2em] opacity-80 mb-1 md:mb-2 text-center px-2">VITALICIOUS</span>
+              <span className="font-sans text-[20px] md:text-[28px] font-black tracking-tight leading-none mt-2">GRAIN<span className="text-brand-yellow">ZZ</span></span>
+              <div className="w-[48px] h-[48px] md:w-[60px] md:h-[60px] bg-white/20 rounded-full mt-4 flex items-center justify-center shadow-inner" />
+              <span className="text-[10px] md:text-[12px] mt-4 opacity-80 font-bold tracking-wider">OATS CHIPS</span>
             </div>
-            <p className="font-bold text-text-main text-sm">Oats Chips – Peri Peri</p>
-            <p className="text-xs text-text-muted">High-Fibre | No Palm Oil | Baked Crunch</p>
-            <div className="flex items-baseline gap-2 mt-2">
-              <span className="font-black text-primary">₹149</span>
-              <span className="text-text-muted line-through text-xs">MRP ₹199</span>
+            
+            <div className="flex flex-col items-center bg-white w-full max-w-[300px] md:max-w-none rounded-[16px] p-[16px] md:p-[20px] shadow-sm border border-[#E4E4E4] mx-auto text-center md:text-left">
+               <h3 className="font-bold text-brand-black text-[16px] md:text-[18px]">Oats Chips – Peri Peri</h3>
+               <p className="text-[12px] md:text-[14px] text-[#6B6B6B] mt-[4px]">High-Fibre | No Palm Oil | Baked</p>
+               <div className="flex items-center gap-[8px] md:gap-[12px] mt-[12px]">
+                 <span className="font-black text-[20px] md:text-[24px] text-brand-black">₹149</span>
+                 <span className="text-[12px] md:text-[14px] text-[#8E8E8E] line-through font-medium">MRP ₹199</span>
+               </div>
             </div>
-            <div className="absolute top-4 left-4 badge-discount">-25%</div>
+
+            <div className="absolute top-[16px] left-[16px] md:top-[32px] md:left-[32px] bg-brand-red text-white text-[12px] md:text-[14px] font-bold px-[10px] py-[4px] md:px-[12px] md:py-[6px] rounded-[6px] shadow-sm z-10 transform origin-top-left group-hover:rotate-3 transition-transform">
+               -25% Off
+            </div>
           </div>
 
           {/* Testimonial carousel */}
-          <div className="flex flex-col">
-            <h2 className="text-lg font-bold text-text-muted mb-4">What people are saying about Grainzz</h2>
-            <div className="bg-primary rounded-2xl p-6 md:p-8 flex-1 flex flex-col justify-between text-white">
+          <div className="flex flex-col justify-center text-center md:text-left">
+            <h2 className="text-[16px] md:text-[20px] font-extrabold text-brand-green mb-[16px] md:mb-[24px] uppercase tracking-wider">
+              Real Reviews
+            </h2>
+            <h3 className="text-[28px] md:text-[40px] font-bold text-brand-black leading-tight mb-[32px] md:mb-[40px]">
+              What people are saying about Grainzz
+            </h3>
+
+            <div className="bg-brand-green rounded-[24px] md:rounded-[32px] p-[24px] md:p-[48px] flex-1 flex flex-col justify-between text-white shadow-[0_20px_40px_rgba(29,94,32,0.15)] relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-[150px] h-[150px] md:w-[200px] md:h-[200px] bg-white opacity-5 rounded-full blur-[60px] md:blur-[80px]" />
+              
               {/* Stars */}
-              <div>
-                <div className="flex mb-4">
+              <div className="relative z-10 flex justify-center md:justify-start">
+                <div className="flex gap-[4px] md:gap-[6px] mb-[20px] md:mb-[24px]">
                   {Array(testimonials[current].rating).fill(0).map((_, i) => (
-                    <Star key={i} size={16} className="fill-yellow-400 text-yellow-400" />
+                    <Star key={i} className="fill-brand-yellow text-brand-yellow w-5 h-5 md:w-6 md:h-6" strokeWidth={0} />
                   ))}
                 </div>
+              </div>
 
-                {/* Quote */}
-                <p className="text-sm md:text-base leading-relaxed mb-6 opacity-95 min-h-[80px]" key={current}>
+              {/* Quote */}
+              <div className="relative z-10">
+                <p className="text-[16px] md:text-[22px] font-medium leading-[1.6] mb-[32px] md:mb-[40px] min-h-[140px] md:min-h-[120px] text-center md:text-left" key={current}>
                   &ldquo;{testimonials[current].text}&rdquo;
                 </p>
               </div>
 
-              {/* Author */}
-              <div>
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center font-bold text-sm">
+              {/* Author & Controls */}
+              <div className="relative z-10 flex flex-col md:flex-row items-center md:items-center justify-between gap-[24px] md:gap-[32px] mt-auto">
+                <div className="flex items-center gap-[12px] md:gap-[16px]">
+                  <div className="w-[48px] h-[48px] md:w-[56px] md:h-[56px] bg-white/20 rounded-full flex items-center justify-center font-bold text-[16px] md:text-[20px] shadow-sm backdrop-blur-sm border border-white/20">
                     {testimonials[current].author[0]}
                   </div>
-                  <div>
-                    <p className="text-sm font-bold">{testimonials[current].author}</p>
-                    <p className="text-xs text-white/60">{testimonials[current].role}</p>
+                  <div className="text-left">
+                    <p className="text-[16px] md:text-[18px] font-bold mb-[2px]">{testimonials[current].author}</p>
+                    <p className="text-[12px] md:text-[14px] text-white/80 font-medium">{testimonials[current].role}</p>
                   </div>
                 </div>
 
-                {/* Controls */}
-                <div className="flex items-center justify-between">
-                  <div className="flex gap-2">
-                    {testimonials.map((_, i) => (
-                      <button
-                        key={i}
-                        onClick={() => setCurrent(i)}
-                        className={`w-8 h-8 rounded-full border text-xs font-bold transition-all ${
-                          i === current ? 'bg-white text-primary border-white' : 'border-white/30 text-white/60 hover:border-white/60'
-                        }`}
-                      >
-                        {i + 1}
-                      </button>
-                    ))}
-                  </div>
-                  <div className="flex gap-2">
-                    <button onClick={prev} className="w-9 h-9 bg-white/20 hover:bg-white/30 rounded-full flex items-center justify-center transition-colors">
-                      <ChevronLeft size={16} />
-                    </button>
-                    <button onClick={next} className="w-9 h-9 bg-white/20 hover:bg-white/30 rounded-full flex items-center justify-center transition-colors">
-                      <ChevronRight size={16} />
-                    </button>
-                  </div>
+                {/* Navigation */}
+                <div className="flex items-center justify-center gap-[12px]">
+                   <button onClick={prev} className="w-[40px] h-[40px] md:w-[48px] md:h-[48px] bg-white/10 hover:bg-white/20 border border-white/20 rounded-full flex items-center justify-center transition-all group backdrop-blur-sm">
+                      <ChevronLeft className="w-5 h-5 md:w-6 md:h-6 group-hover:-translate-x-1 transition-transform" />
+                   </button>
+                   <button onClick={next} className="w-[40px] h-[40px] md:w-[48px] md:h-[48px] bg-white text-brand-green hover:bg-brand-light hover:shadow-lg rounded-full flex items-center justify-center transition-all group">
+                      <ChevronRight className="w-5 h-5 md:w-6 md:h-6 group-hover:translate-x-1 transition-transform" />
+                   </button>
                 </div>
               </div>
             </div>
           </div>
+
         </div>
       </div>
     </section>

@@ -4,6 +4,7 @@ import Link from 'next/link';
 import ProductCard from '@/components/products/ProductCard';
 import { supabase } from '@/lib/supabase';
 import { getSiteContent } from '@/lib/api';
+import { ChevronRight } from 'lucide-react';
 
 const tabs = [
   { label: 'Bestsellers', value: '' },
@@ -64,21 +65,25 @@ export default function ProductSegments() {
   }, [activeTab]);
 
   return (
-    <section className="py-16 bg-white">
-      <div className="max-w-7xl mx-auto px-4 lg:px-8">
-        <h2 className="section-title mb-3">{heading}</h2>
-        <p className="text-center text-text-muted text-sm md:text-base max-w-2xl mx-auto mb-8">{subheading}</p>
+    <section className="py-[40px] md:py-[80px] bg-white w-full">
+      <div className="max-w-[1440px] mx-auto px-4 md:px-[80px]">
+        <h2 className="text-[28px] md:text-[40px] font-bold text-center text-brand-black mb-[12px] md:mb-[16px] leading-tight tracking-tight">
+          {heading}
+        </h2>
+        <p className="text-center text-[#6B6B6B] text-[14px] md:text-[18px] max-w-3xl mx-auto mb-[32px] md:mb-[40px] leading-[1.4]">
+          {subheading}
+        </p>
 
         {/* Category tabs */}
-        <div className="flex flex-wrap gap-2 justify-center mb-10">
+        <div className="flex flex-wrap gap-[12px] md:gap-[16px] justify-center mb-[32px] md:mb-[48px]">
           {tabs.map((tab) => (
             <button
               key={tab.label}
               onClick={() => setActiveTab(tab.value)}
-              className={`px-5 py-2.5 rounded-full text-sm font-medium border transition-all duration-200
+              className={`px-[16px] py-[8px] md:px-[24px] md:py-[12px] rounded-full text-[14px] md:text-[16px] font-semibold transition-all duration-200 border
                 ${activeTab === tab.value
-                  ? 'bg-primary text-white border-primary'
-                  : 'border-gray-200 text-text-muted hover:border-primary hover:text-primary'
+                  ? 'bg-brand-green text-white border-brand-green shadow-md'
+                  : 'bg-[#F7F7F7] text-[#6B6B6B] border-transparent hover:border-brand-green hover:text-brand-green'
                 }`}
             >
               {tab.label}
@@ -88,23 +93,21 @@ export default function ProductSegments() {
 
         {/* Products grid */}
         {loading ? (
-          <div className="h-64 flex items-center justify-center text-text-muted">Loading products...</div>
+          <div className="h-[200px] md:h-[300px] flex items-center justify-center text-[#6B6B6B] text-[16px] md:text-[18px]">Loading products...</div>
         ) : products.length === 0 ? (
-          <div className="h-64 flex items-center justify-center text-text-muted">No products found in this category</div>
+          <div className="h-[200px] md:h-[300px] flex items-center justify-center text-[#6B6B6B] text-[16px] md:text-[18px]">No products found in this category</div>
         ) : (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-[16px] md:gap-[30px]">
             {products.map((product: any) => (
               <ProductCard key={product.id} product={product} />
             ))}
           </div>
         )}
 
-        <div className="text-center mt-10">
-          <Link href="/products" className="btn-primary">
+        <div className="flex justify-center mt-[32px] md:mt-[48px]">
+          <Link href="/products" className="inline-flex items-center gap-[8px] md:gap-[10px] bg-white border-2 border-brand-green text-brand-green px-[24px] py-[12px] md:px-[32px] md:py-[14px] rounded-full font-bold text-[16px] md:text-[18px] hover:bg-brand-green hover:text-white transition-all group">
             View All Products
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" className="ml-1">
-              <path d="M1 7h12M8 2l5 5-5 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
+            <ChevronRight size={20} className="group-hover:translate-x-1 transition-transform" />
           </Link>
         </div>
       </div>

@@ -20,36 +20,44 @@ export default function InstagramSection() {
   }, []);
 
   return (
-    <section className="py-16 bg-white">
-      <div className="max-w-7xl mx-auto px-4 lg:px-8">
-        <div className="flex items-center justify-between mb-8 flex-wrap gap-4">
-          <h2 className="section-title !text-left">{heading}</h2>
+    <section className="py-[80px] bg-white border-y border-[#E4E4E4]/50 overflow-hidden">
+      <div className="max-w-[1440px] mx-auto px-4 md:px-[80px]">
+        
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-[48px] gap-[24px]">
+          <h2 className="text-[32px] md:text-[40px] font-bold text-brand-black leading-tight max-w-[600px]">
+            {heading}
+          </h2>
           <a
             href={`https://instagram.com/${handle.replace('@', '')}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="btn-outline text-xs"
+            className="inline-flex items-center gap-[10px] px-[28px] py-[14px] bg-white border-2 border-[#E4E4E4] rounded-full text-[16px] font-bold text-brand-black hover:border-brand-green hover:text-brand-green shadow-sm hover:shadow-md transition-all group"
           >
-            <Instagram size={14} /> {handle}
+            <Instagram size={20} className="text-brand-green group-hover:scale-110 transition-transform" /> 
+            {handle}
           </a>
         </div>
-        <div className="grid grid-cols-3 md:grid-cols-6 gap-2">
+        
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-[16px] md:gap-[24px]">
           {posts.length > 0 ? (
-            posts.map((post) => (
+            posts.slice(0, 6).map((post) => (
               <a
                 key={post.id}
                 href={post.href || '#'}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="aspect-square rounded-xl overflow-hidden hover:opacity-80 transition-opacity relative"
+                className="aspect-square rounded-[20px] overflow-hidden hover:opacity-90 hover:shadow-xl transition-all relative block group"
               >
                 <Image
                   src={post.image_url}
                   alt="Instagram post"
                   fill
-                  className="object-cover"
-                  sizes="(max-width: 768px) 33vw, 16vw"
+                  className="object-cover group-hover:scale-105 transition-transform duration-500"
+                  sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 16vw"
                 />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                   <Instagram size={32} className="text-white transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300" />
+                </div>
               </a>
             ))
           ) : (
@@ -57,13 +65,14 @@ export default function InstagramSection() {
             Array(6).fill(null).map((_, i) => (
               <div
                 key={i}
-                className="aspect-square bg-cream rounded-xl overflow-hidden flex items-center justify-center hover:opacity-80 transition-opacity cursor-pointer"
+                className="aspect-square bg-[#F7F7F7] rounded-[20px] overflow-hidden flex items-center justify-center hover:bg-brand-light transition-colors cursor-pointer border border-[#E4E4E4]"
               >
-                <Instagram size={24} className="text-gray-300" />
+                <Instagram size={32} className="text-[#C4C4C4]" />
               </div>
             ))
           )}
         </div>
+        
       </div>
     </section>
   );

@@ -26,19 +26,25 @@ export default function StatsBar() {
   }, []);
 
   return (
-    <section className="bg-white py-10 md:py-14">
-      <div className="max-w-7xl mx-auto px-4 lg:px-8">
-        <h2 className="section-title mb-8">Our Numbers Talk</h2>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+    <section className="bg-brand-light py-[40px] md:py-[80px] border-y border-[#E4E4E4]/50 relative overflow-hidden">
+      <div className="absolute top-0 right-0 w-[200px] h-[200px] md:w-[400px] md:h-[400px] bg-brand-yellow/10 rounded-full blur-[60px] md:blur-[100px] pointer-events-none" />
+      <div className="absolute bottom-0 left-0 w-[150px] h-[150px] md:w-[300px] md:h-[300px] bg-brand-green/5 rounded-full blur-[40px] md:blur-[80px] pointer-events-none" />
+      
+      <div className="max-w-[1440px] mx-auto px-4 md:px-[80px] relative z-10">
+        <h2 className="text-[28px] md:text-[40px] font-bold text-center text-brand-black mb-[32px] md:mb-[48px] leading-tight max-w-[600px] mx-auto">
+          Our Numbers Talk
+        </h2>
+        
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-[16px] md:gap-[32px]">
           {stats.map((stat) => {
             const Icon = iconMap[stat.icon] || Heart;
             return (
-              <div key={stat.label} className="flex flex-col items-center text-center bg-cream-100 rounded-2xl py-6 px-4 border border-gray-100">
-                <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center mb-3">
-                  <Icon size={20} className="text-primary" />
+              <div key={stat.label} className="flex flex-col items-center text-center bg-white rounded-[16px] md:rounded-[24px] py-[24px] px-[12px] md:py-[40px] md:px-[24px] border border-[#E4E4E4] hover:shadow-[0_12px_24px_rgba(29,94,32,0.06)] hover:border-brand-green/30 transition-all duration-300 group">
+                <div className="w-[48px] h-[48px] md:w-[64px] md:h-[64px] bg-[#EEFBDC] border border-brand-green/20 rounded-[12px] md:rounded-[16px] flex items-center justify-center mb-[16px] md:mb-[24px] group-hover:bg-brand-green group-hover:border-brand-green transition-colors duration-300">
+                  <Icon className="text-brand-green w-6 h-6 md:w-8 md:h-8 group-hover:text-white transition-colors duration-300" strokeWidth={2} />
                 </div>
-                <span className="text-2xl md:text-3xl font-black text-text-main">{stat.value}</span>
-                <span className="text-sm text-text-muted mt-1">{stat.label}</span>
+                <span className="text-[24px] md:text-[40px] font-black text-brand-black leading-none mb-[4px] md:mb-[8px]">{stat.value}</span>
+                <span className="text-[12px] md:text-[16px] mt-[4px] font-bold text-[#6B6B6B] uppercase tracking-wider">{stat.label}</span>
               </div>
             );
           })}

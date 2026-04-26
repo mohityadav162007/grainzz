@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 
 export default function AnnouncementBar() {
-  const [text, setText] = useState('Choose better snacking this season – now shipping PAN India 🇮🇳');
+  const [text, setText] = useState('Start this year with a healthy choice: Shipping PAN India 🇮🇳');
 
   useEffect(() => {
     const fetchAnnouncement = async () => {
@@ -20,7 +20,7 @@ export default function AnnouncementBar() {
   }, []);
 
   return (
-    <div className="bg-primary text-white text-center text-sm py-2 px-4 font-medium tracking-wide">
+    <div className="bg-brand-green text-white flex items-center justify-center h-[44px] px-4 md:px-[80px] w-full text-[18px] font-medium leading-[132%] tracking-normal">
       {text}
     </div>
   );

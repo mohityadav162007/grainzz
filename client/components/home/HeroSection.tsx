@@ -1,6 +1,7 @@
 'use client';
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
+import { ChevronRight } from 'lucide-react';
 import { getHeroSlides } from '@/lib/api';
 
 const fallbackSlides = [
@@ -48,100 +49,58 @@ export default function HeroSection() {
   const slide = slides[current];
 
   return (
-    <section className="relative overflow-hidden" style={{ background: 'linear-gradient(135deg, #3D2517 0%, #5A3825 30%, #7A4E33 60%, #5A3825 100%)' }}>
-      {/* Decorative elements */}
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute -top-20 -right-20 w-96 h-96 bg-white/5 rounded-full blur-3xl" />
-        <div className="absolute -bottom-20 -left-20 w-80 h-80 bg-white/3 rounded-full blur-3xl" />
-        <div className="absolute inset-0" style={{ background: 'radial-gradient(circle at 70% 50%, rgba(255,255,255,0.05) 0%, transparent 60%)' }} />
-      </div>
+    <section className="w-full bg-[#FFFFFF] flex justify-center pb-[24px]">
+      <div 
+        className="w-full max-w-[1440px] h-[590px] md:h-[579px] relative md:mt-[24px] overflow-hidden md:mx-[80px] md:rounded-tr-[145px]"
+        style={{
+          background: slide.image_url 
+            ? `linear-gradient(89.96deg, rgba(238, 251, 220, 0.95) 10%, rgba(238, 251, 220, 0.6) 45%, rgba(238, 251, 220, 0) 70%), url(${slide.image_url}) center/cover no-repeat`
+            : `linear-gradient(89.96deg, rgba(238, 251, 220, 1) 0%, rgba(238, 251, 220, 0.5) 100%)`,
+        }}
+      >
+        <div className="absolute inset-0 flex items-center px-4 md:px-[60px]">
+          {/* Left / Text Content matching Figma Metrics */}
+          <div className="w-full max-w-[600px] animate-fade-in" key={current}>
+            
+            <div className="mb-4 md:mb-6 flex">
+              <span className="bg-brand-red text-white text-[16px] md:text-[22px] font-semibold px-4 py-1.5 md:px-6 md:py-2 rounded-full inline-flex tracking-tight">
+                {slide.top_line}
+              </span>
+            </div>
 
-      <div className="relative max-w-7xl mx-auto px-4 lg:px-8 py-12 md:py-16 lg:py-20">
-        <div className="grid md:grid-cols-2 gap-8 lg:gap-12 items-center min-h-[360px] md:min-h-[420px]">
-          {/* Left — Product Display */}
-          <div className="hidden md:flex items-center justify-center relative">
-            {slide.image_url ? (
-              <img
-                src={slide.image_url}
-                alt={slide.headline}
-                className="max-h-[380px] object-contain drop-shadow-2xl"
-              />
-            ) : (
-              <div className="relative w-full max-w-md">
-                <div className="flex items-end justify-center gap-3 relative">
-                  {/* Left product */}
-                  <div className="relative bg-white/10 backdrop-blur-sm rounded-2xl p-4 w-36 h-48 flex items-center justify-center transform -rotate-6 hover:rotate-0 transition-transform duration-500">
-                    <div className="w-24 h-36 bg-gradient-to-b from-green-400/80 to-green-600/80 rounded-xl flex flex-col items-center justify-center text-white text-center shadow-lg">
-                      <span className="text-[8px] font-bold tracking-wider mb-1 opacity-80">VITALICIOUS</span>
-                      <span className="font-brand text-sm font-black tracking-tight">GRAIN<span className="text-yellow-300">ZZ</span></span>
-                      <div className="w-10 h-10 bg-white/20 rounded-full mt-2" />
-                      <span className="text-[7px] mt-1 opacity-70">QUINOA PUFFS</span>
-                    </div>
-                  </div>
-
-                  {/* Center product (main, taller) */}
-                  <div className="relative bg-white/10 backdrop-blur-sm rounded-2xl p-4 w-40 h-56 flex items-center justify-center z-10 transform scale-105 hover:scale-110 transition-transform duration-500">
-                    <div className="w-28 h-44 bg-gradient-to-b from-green-500/90 to-green-700/90 rounded-xl flex flex-col items-center justify-center text-white text-center shadow-xl">
-                      <span className="text-[8px] font-bold tracking-wider mb-1 opacity-80">VITALICIOUS</span>
-                      <span className="font-brand text-lg font-black tracking-tight">GRAIN<span className="text-yellow-300">ZZ</span></span>
-                      <div className="w-12 h-12 bg-white/20 rounded-full mt-2" />
-                      <span className="text-[8px] mt-1 opacity-70">OATS CHIPS</span>
-                      <span className="text-[7px] opacity-60">Peri Peri</span>
-                    </div>
-                  </div>
-
-                  {/* Right product */}
-                  <div className="relative bg-white/10 backdrop-blur-sm rounded-2xl p-4 w-36 h-48 flex items-center justify-center transform rotate-6 hover:rotate-0 transition-transform duration-500">
-                    <div className="w-24 h-36 bg-gradient-to-b from-green-400/80 to-green-600/80 rounded-xl flex flex-col items-center justify-center text-white text-center shadow-lg">
-                      <span className="text-[8px] font-bold tracking-wider mb-1 opacity-80">VITALICIOUS</span>
-                      <span className="font-brand text-sm font-black tracking-tight">GRAIN<span className="text-yellow-300">ZZ</span></span>
-                      <div className="w-10 h-10 bg-white/20 rounded-full mt-2" />
-                      <span className="text-[7px] mt-1 opacity-70">BAJRA CHIPS</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Right — Text Content */}
-          <div className="text-white animate-fade-in" key={current}>
-            {/* Badge */}
-            <span className="inline-block bg-white/20 backdrop-blur-sm text-white text-xs font-bold px-4 py-1.5 rounded-full mb-4 uppercase tracking-wide">
-              {slide.top_line}
-            </span>
-
-            {/* Title */}
-            <h1 className="text-3xl md:text-4xl lg:text-5xl font-black leading-tight mb-4 whitespace-pre-line">
+            <h1 className="text-[36px] md:text-[54px] font-bold text-brand-black leading-[1.1] mb-4 md:mb-6 whitespace-pre-line tracking-tight">
               {slide.headline}
             </h1>
 
-            {/* Subtitle */}
-            <p className="text-white/70 text-sm md:text-base mb-6 max-w-md leading-relaxed">
+            <p className="text-[16px] md:text-[22px] font-normal text-brand-black mb-8 md:mb-10 max-w-lg leading-[1.4]">
               {slide.subheadline}
             </p>
 
-            {/* CTA */}
+            {/* CTA Button */}
             <Link
               href={slide.cta_href}
-              className="inline-flex items-center gap-2 bg-primary hover:bg-primary-600 text-white px-7 py-3.5 rounded-full font-semibold text-sm transition-all duration-200 active:scale-95 shadow-lg shadow-primary/30"
+              className="inline-flex items-center gap-2 md:gap-3 bg-brand-green hover:bg-[#154617] text-white px-2 py-2 rounded-full transition-all group shadow-lg"
             >
-              {slide.cta_text}
-              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" className="ml-1">
-                <path d="M1 7h12M8 2l5 5-5 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
+              <span className="text-[16px] md:text-[18px] font-semibold pl-4 md:pl-6 pr-1 md:pr-2 tracking-wide">
+                {slide.cta_text}
+              </span>
+              <div className="w-[36px] h-[36px] md:w-[45px] md:h-[45px] bg-white rounded-full flex items-center justify-center text-brand-green group-hover:bg-[#EEFBDC] transition-colors">
+                <ChevronRight size={20} strokeWidth={3} className="md:w-6 md:h-6" />
+              </div>
             </Link>
           </div>
         </div>
 
-        {/* Carousel Dots */}
+        {/* Carousel Interactors */}
         {slides.length > 1 && (
-          <div className="flex gap-2 justify-center mt-8 md:mt-10">
+          <div className="absolute bottom-6 left-4 md:bottom-8 md:left-[60px] flex gap-2 md:gap-3">
             {slides.map((_, i) => (
               <button
                 key={i}
                 onClick={() => setCurrent(i)}
-                className={`hero-dot ${i === current ? 'active' : 'inactive'}`}
+                className={`w-[36px] md:w-[45px] h-[6px] md:h-[8px] rounded-full transition-all ${
+                  i === current ? 'bg-brand-green w-[60px] md:w-[80px]' : 'bg-brand-green/30'
+                }`}
                 aria-label={`Go to slide ${i + 1}`}
               />
             ))}

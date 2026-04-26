@@ -41,24 +41,33 @@ export default function FAQSection() {
   }, []);
 
   return (
-    <section className="py-16 bg-white">
-      <div className="max-w-3xl mx-auto px-4 lg:px-8">
-        <h2 className="section-title mb-10">Frequently asked questions</h2>
-        <div className="space-y-3">
+    <section className="py-[40px] md:py-[80px] bg-[#F7F7F7]">
+      <div className="max-w-[800px] mx-auto px-4 lg:px-8">
+        <h2 className="text-[28px] md:text-[40px] font-bold text-center text-brand-black mb-[32px] md:mb-[48px] leading-tight">
+          Frequently asked questions
+        </h2>
+        
+        <div className="flex flex-col gap-[12px] md:gap-[16px]">
           {faqs.map((faq, i) => (
-            <div key={i} className="border border-gray-100 rounded-xl overflow-hidden">
+            <div key={i} className="bg-white border border-[#E4E4E4] rounded-[12px] md:rounded-[16px] overflow-hidden shadow-sm hover:border-brand-green/30 transition-colors">
               <button
                 onClick={() => setOpen(open === i ? null : i)}
-                className="w-full flex items-center justify-between px-6 py-4 text-left hover:bg-cream transition-colors"
+                className="w-full flex items-center justify-between px-[16px] py-[16px] md:px-[24px] md:py-[24px] text-left transition-colors group"
+                aria-expanded={open === i}
               >
-                <span className="text-sm font-semibold text-text-main">{faq.question}</span>
-                <span className="flex-shrink-0 ml-4">
-                  {open === i ? <Minus size={16} className="text-primary" /> : <Plus size={16} className="text-text-muted" />}
+                <span className={`text-[16px] md:text-[18px] font-bold transition-colors ${open === i ? 'text-brand-green' : 'text-brand-black group-hover:text-brand-green'}`}>
+                  {faq.question}
+                </span>
+                <span className={`flex-shrink-0 ml-[16px] md:ml-[24px] w-[28px] h-[28px] md:w-[32px] md:h-[32px] rounded-full flex items-center justify-center transition-colors ${open === i ? 'bg-brand-light text-brand-green' : 'bg-[#F7F7F7] text-[#6B6B6B] group-hover:bg-brand-light group-hover:text-brand-green'}`}>
+                  {open === i ? <Minus size={16} className="md:w-[18px] md:h-[18px]" strokeWidth={2.5} /> : <Plus size={16} className="md:w-[18px] md:h-[18px]" strokeWidth={2.5} />}
                 </span>
               </button>
+              
               {open === i && (
-                <div className="px-6 pb-5">
-                  <p className="text-sm text-text-muted leading-relaxed">{faq.answer}</p>
+                <div className="px-[16px] pb-[16px] md:px-[24px] md:pb-[24px] animate-fade-in">
+                  <p className="text-[14px] md:text-[16px] text-[#6B6B6B] leading-[1.6] pt-[4px] md:pt-[4px] border-t border-[#E4E4E4]/50 mt-[8px]">
+                    {faq.answer}
+                  </p>
                 </div>
               )}
             </div>

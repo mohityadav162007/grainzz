@@ -17,6 +17,14 @@ module.exports = {
           800: '#14391a',
           900: '#0d2611',
         },
+        'brand-green': '#1D5E20',
+        'brand-light': '#EEFBDC',
+        'brand-yellow': '#FFEBBA',
+        'brand-red': '#B00912',
+        'brand-black': '#1A1A1A',
+        'brand-peach-light': '#FFDFD6',
+        'brand-peach': '#FF8B68',
+        'brand-orange-light': '#FFF9EC',
         accent: '#D72638',
         cream: '#FFFDF5',
         'cream-100': '#FFF8E7',
@@ -27,7 +35,7 @@ module.exports = {
         'hero-dark': '#3D2517',
       },
       fontFamily: {
-        sans: ['Inter', 'system-ui', 'sans-serif'],
+        sans: ['Plus Jakarta Sans', 'system-ui', 'sans-serif'],
         brand: ['Georgia', 'Times New Roman', 'serif'],
       },
       animation: {

@@ -20,7 +20,7 @@ export default function AnnouncementBar() {
   }, []);
 
   return (
-    <div className="bg-brand-green text-white flex items-center justify-center h-[44px] px-4 md:px-[80px] w-full text-[18px] font-medium leading-[132%] tracking-normal">
+    <div className="hidden md:flex bg-brand-green text-white items-center justify-center h-[44px] px-4 md:px-[80px] w-full text-[18px] font-medium leading-[132%] tracking-normal">
       {text}
     </div>
   );

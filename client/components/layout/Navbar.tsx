@@ -254,28 +254,46 @@ export default function Navbar() {
 
       <MobileSearchOverlay isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
 
-      {/* Mobile Drawer */}
+      {/* Mobile Full-Screen Menu */}
       {mobileOpen && (
-        <div className="fixed inset-0 z-50 lg:hidden flex">
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setMobileOpen(false)} />
-          <div className="relative h-full w-[300px] bg-white shadow-2xl animate-slide-in-right flex flex-col">
-            <div className="flex items-center justify-between p-6 border-b border-[#f0f0f0]">
-              <span className="text-xl font-black text-brand-black font-brand uppercase tracking-widest">GRAIN<span className="text-brand-red">ZZ</span></span>
-              <button onClick={() => setMobileOpen(false)}><X size={24} strokeWidth={2.5} className="text-brand-black" /></button>
+        <div className="fixed inset-0 z-50 lg:hidden flex flex-col bg-[#FBF5EB] animate-fade-in">
+          {/* Header */}
+          <div className="flex w-full h-[64px] px-4 items-center justify-between flex-shrink-0">
+            <div className="flex items-center flex-1">
+              <button onClick={() => setMobileOpen(false)} className="p-1 -ml-1 text-[#222222]">
+                <X size={24} strokeWidth={2} />
+              </button>
             </div>
-            <nav className="flex flex-col p-4 gap-2">
-              {navLinks.map((link) => (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  onClick={() => setMobileOpen(false)}
-                  className={clsx("px-6 py-4 text-[16px] font-semibold rounded-xl hover:bg-brand-light transition-colors", link.className || 'text-brand-black')}
-                >
-                  {link.label}
-                </Link>
-              ))}
-            </nav>
+            <Link href="/" onClick={() => setMobileOpen(false)} className="flex-shrink-0 flex items-center justify-center flex-[2]">
+              <Image src="/image-2@2x.png" alt="Grainzz Logo" width={140} height={40} className="object-contain h-[32px]" priority />
+            </Link>
+            <div className="flex items-center justify-end gap-5 flex-1">
+              <button 
+                className="text-[#222222]" 
+                onClick={() => { setMobileOpen(false); setIsSearchOpen(true); }}
+              >
+                <Search size={24} strokeWidth={2} />
+              </button>
+              <button 
+                onClick={() => { setMobileOpen(false); openCart(); }} 
+                className="text-[#222222] relative pb-1"
+              >
+                <ShoppingCart size={24} strokeWidth={2} />
+                {count > 0 && <span className="absolute -top-1.5 -right-2 bg-brand-red text-white text-[10px] rounded-full w-4 h-4 flex items-center justify-center font-bold">{count}</span>}
+              </button>
+            </div>
           </div>
+
+          {/* Links */}
+          <nav className="flex flex-col px-4 mt-2">
+            <Link href="/products" onClick={() => setMobileOpen(false)} className="py-[16px] text-[15px] font-medium text-[#222222] border-b border-[#E5DFCC] w-full">Shop All</Link>
+            <Link href="/combos" onClick={() => setMobileOpen(false)} className="py-[16px] text-[15px] font-medium text-[#222222] border-b border-[#E5DFCC] w-full">Combos</Link>
+            <Link href="/sale" onClick={() => setMobileOpen(false)} className="py-[16px] text-[15px] font-semibold text-brand-red border-b border-[#E5DFCC] w-full">Sales!</Link>
+            <Link href="/about" onClick={() => setMobileOpen(false)} className="py-[16px] text-[15px] font-medium text-[#222222] border-b border-[#E5DFCC] w-full">About Us</Link>
+            <Link href="/faqs" onClick={() => setMobileOpen(false)} className="py-[16px] text-[15px] font-medium text-[#222222] border-b border-[#E5DFCC] w-full">FAQs</Link>
+            <Link href="/account" onClick={() => setMobileOpen(false)} className="py-[16px] text-[15px] font-medium text-[#222222] border-b border-[#E5DFCC] w-full">My account</Link>
+            <Link href="/contact" onClick={() => setMobileOpen(false)} className="py-[16px] text-[15px] font-medium text-[#222222] w-full">Contact Us</Link>
+          </nav>
         </div>
       )}
     </>

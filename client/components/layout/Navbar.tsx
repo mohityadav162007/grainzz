@@ -6,6 +6,7 @@ import { Search, ShoppingCart, User, Menu, X, ChevronDown, Heart } from 'lucide-
 import Image from 'next/image';
 import { useCartStore } from '@/store/cartStore';
 import clsx from 'clsx';
+import MobileSearchOverlay from './MobileSearchOverlay';
 
 const navLinks = [
   { 
@@ -222,11 +223,11 @@ export default function Navbar() {
         </div>
       </header>
 
-      {/* Floating Toggleable Search Bar */}
+      {/* Floating Toggleable Search Bar (Desktop Only) */}
       <div 
         className={clsx(
-          "fixed left-0 w-full bg-white border-b border-[#EAEAEA] shadow-md z-[35] flex items-center justify-center overflow-hidden transition-all duration-300 ease-in-out px-4",
-          isSearchOpen ? "top-[64px] lg:top-[80px] h-[80px] opacity-100" : "top-[64px] lg:top-[80px] h-0 opacity-0 pointer-events-none"
+          "fixed left-0 w-full bg-white border-b border-[#EAEAEA] shadow-md z-[35] hidden lg:flex items-center justify-center overflow-hidden transition-all duration-300 ease-in-out px-4",
+          isSearchOpen ? "top-[80px] h-[80px] opacity-100" : "top-[80px] h-0 opacity-0 pointer-events-none"
         )}
       >
         <div className="relative w-full max-w-[600px] h-[48px] border border-[#CCCCCC] rounded-full flex items-center px-4 bg-[#FAFAFA] focus-within:border-primary focus-within:bg-white transition-colors">
@@ -250,6 +251,8 @@ export default function Navbar() {
           </button>
         </div>
       </div>
+
+      <MobileSearchOverlay isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
 
       {/* Mobile Drawer */}
       {mobileOpen && (

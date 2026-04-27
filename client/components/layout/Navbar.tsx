@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation';
 import { Search, ShoppingCart, User, Menu, X, ChevronDown, Heart } from 'lucide-react';
 import Image from 'next/image';
 import { useCartStore } from '@/store/cartStore';
+import { useAuthStore } from '@/store/authStore';
 import clsx from 'clsx';
 import MobileSearchOverlay from './MobileSearchOverlay';
 
@@ -28,6 +29,7 @@ const navLinks = [
 
 export default function Navbar() {
   const { items, itemCount, openCart } = useCartStore();
+  const { user, setAuthModalOpen } = useAuthStore();
   const [count, setCount] = useState(0);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -55,6 +57,14 @@ export default function Navbar() {
   }, []);
 
   const isCompact = scrolled || pathname !== '/';
+
+  const handleAccountClick = (e: React.MouseEvent) => {
+    if (!user) {
+      e.preventDefault();
+      setAuthModalOpen(true);
+    }
+    setMobileOpen(false);
+  };
 
   return (
     <>
@@ -167,7 +177,11 @@ export default function Navbar() {
               <Link href="/wishlist" className="flex items-center group transition-transform hover:scale-110">
                 <Heart size={26} strokeWidth={2} className="text-[#222222] group-hover:text-brand-red transition-colors" />
               </Link>
-              <Link href="/account" className="flex items-center group transition-transform hover:scale-110">
+              <Link 
+                href="/account" 
+                onClick={handleAccountClick}
+                className="flex items-center group transition-transform hover:scale-110"
+              >
                 <User size={26} strokeWidth={2} className="text-[#222222] group-hover:text-primary transition-colors" />
               </Link>
               <button onClick={openCart} className="flex items-center relative group transition-transform hover:scale-110">
@@ -291,7 +305,7 @@ export default function Navbar() {
             <Link href="/sale" onClick={() => setMobileOpen(false)} className="py-[16px] text-[15px] font-semibold text-brand-red border-b border-[#E5DFCC] w-full">Sales!</Link>
             <Link href="/about" onClick={() => setMobileOpen(false)} className="py-[16px] text-[15px] font-medium text-[#222222] border-b border-[#E5DFCC] w-full">About Us</Link>
             <Link href="/faqs" onClick={() => setMobileOpen(false)} className="py-[16px] text-[15px] font-medium text-[#222222] border-b border-[#E5DFCC] w-full">FAQs</Link>
-            <Link href="/account" onClick={() => setMobileOpen(false)} className="py-[16px] text-[15px] font-medium text-[#222222] border-b border-[#E5DFCC] w-full">My account</Link>
+            <Link href="/account" onClick={handleAccountClick} className="py-[16px] text-[15px] font-medium text-[#222222] border-b border-[#E5DFCC] w-full">My account</Link>
             <Link href="/contact" onClick={() => setMobileOpen(false)} className="py-[16px] text-[15px] font-medium text-[#222222] w-full">Contact Us</Link>
           </nav>
         </div>

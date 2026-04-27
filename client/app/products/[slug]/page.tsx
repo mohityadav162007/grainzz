@@ -3,11 +3,11 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
-import { ChevronRight, Plus, Minus, Star, Heart } from 'lucide-react';
+import { ChevronRight, ChevronLeft, Plus, Minus, Star, Heart, Check } from 'lucide-react';
 import { getProductBySlug, getProductsByCategory } from '@/lib/api';
 import { useCartStore } from '@/store/cartStore';
 import ProductCard from '@/components/products/ProductCard';
-
+import CustomerTestimonials from '@/components/about/CustomerTestimonials';
 export default function ProductDetailPage() {
   const { slug } = useParams<{ slug: string }>();
   const [product, setProduct] = useState<any>(null);
@@ -88,15 +88,13 @@ export default function ProductDetailPage() {
     <div className="bg-[#FCF9F2] min-h-screen pb-[60px] md:pb-[100px]">
       <div className="max-w-[1440px] mx-auto px-4 md:px-[60px] lg:px-[120px] pt-[32px]">
         {/* Desktop Breadcrumb */}
-        <nav className="hidden lg:flex items-center gap-[8px] text-[14px] font-semibold text-[#8E8E8E] mb-[32px] tracking-wide">
-          <Link href="/" className="hover:text-brand-green transition-colors">Home</Link>
-          <ChevronRight size={14} />
-          <Link href="/products" className="hover:text-brand-green transition-colors">All Products</Link>
-          <ChevronRight size={14} />
-          <span className="text-brand-black">{product.name}</span>
+        <nav className="hidden lg:flex items-center gap-[6px] text-[13px] font-medium text-black mb-[32px] tracking-tight">
+          <Link href="/products" className="hover:text-brand-green transition-colors opacity-80">Shop All</Link>
+          <ChevronRight size={13} strokeWidth={1.5} className="opacity-60" />
+          <span className="opacity-100">{product.name}</span>
         </nav>
 
-        <div className="flex flex-col lg:flex-row gap-[24px] lg:gap-[48px] md:gap-[80px] mb-[80px]">
+        <div className="flex flex-col lg:flex-row lg:items-stretch gap-[24px] lg:gap-[60px] xl:gap-[80px] mb-[80px]">
           {/* Mobile Header elements (above image) */}
           <div className="flex lg:hidden flex-col items-start w-full order-1">
             <nav className="flex items-center gap-[8px] text-[13px] font-semibold text-[#8E8E8E] mb-3 tracking-wide">
@@ -107,7 +105,7 @@ export default function ProductDetailPage() {
             {product.tags?.length > 0 && (
               <div className="flex flex-wrap gap-[8px] mb-[12px]">
                 {product.tags.map((tag: string) => (
-                  <span key={tag} className="bg-[#FFF4E4] text-[#D89F43] text-[12px] font-bold px-[10px] py-[4px] rounded-[4px] uppercase tracking-wider">{tag}</span>
+                  <span key={tag} className="bg-[#FDF7E7] text-[#D89F43] text-[11px] font-bold px-[10px] py-[4px] rounded-[4px] uppercase tracking-wider shadow-sm">{tag}</span>
                 ))}
               </div>
             )}
@@ -117,215 +115,426 @@ export default function ProductDetailPage() {
             <p className="text-[#657B67] text-[14px] font-medium mb-[16px]">{product.category === 'Healthy Chips' ? 'Enjoy our healthy snack packed with nutrition.' : 'Delicious and wholesome everyday snacking.'}</p>
           </div>
 
-          {/* Left Column: Images */}
-          <div className="w-full lg:w-[600px] flex-shrink-0 order-2 lg:order-1">
-            <div className="relative aspect-[4/5] rounded-[24px] overflow-hidden bg-white shadow-sm border border-[#EAEAEA] mb-[16px]">
-              {product.images?.length > 0 ? (
-                <Image src={product.images[selectedImage]} alt={product.name} fill className="object-cover transition-transform duration-700 hover:scale-[1.03]" />
-              ) : (
-                <Image src="/Rectangle-10@2x.png" alt={product.name} fill className="object-cover" />
-              )}
-              {discount > 0 && (
-                <div className="absolute top-[20px] left-[20px] bg-brand-red text-white text-[14px] font-bold px-[12px] py-[6px] rounded-[6px] tracking-wide shadow-md">
-                  -{discount}%
+            {/* Left Column: Images & Descriptions */}
+            <div className="w-full lg:w-[46%] xl:w-[46%] flex-shrink-0 order-2 lg:order-1 flex flex-col justify-between gap-[24px]">
+              {/* Image Gallery */}
+              <div className="flex flex-col gap-[16px]">
+                
+                {/* Main Image */}
+                <div className="relative w-full aspect-square rounded-[24px] overflow-hidden bg-white shadow-sm border border-[#EAEAEA] order-1">
+                  {product.images?.length > 0 ? (
+                    <Image src={product.images[selectedImage % product.images.length]} alt={product.name} fill className="object-cover transition-transform duration-700 hover:scale-[1.03]" />
+                  ) : (
+                    <Image src="/Rectangle-10@2x.png" alt={product.name} fill className="object-cover" />
+                  )}
+                {discount > 0 && (
+                  <div className="absolute top-[20px] left-[20px] bg-brand-red text-white text-[13px] font-bold px-[14px] py-[6px] rounded-full tracking-wide shadow-sm z-10">
+                    -{discount}%
+                  </div>
+                )}
+                {/* Out of Stock Overlay */}
+                {product.stock === 0 && (
+                  <div className="absolute inset-0 bg-black/5 flex flex-col items-center justify-center z-10 backdrop-blur-[0.5px]">
+                    <div className="w-[130px] h-[130px] rounded-full bg-white flex items-center justify-center shadow-[0_8px_24px_rgba(0,0,0,0.08)] border border-white">
+                      <span className="text-[#1a1a1a] font-semibold text-[15px] tracking-tight">Out of Stock</span>
+                    </div>
+                  </div>
+                )}
+                {/* Veg Icon */}
+                <div className="absolute top-[20px] right-[20px] w-[22px] h-[22px] border-[1.5px] border-[#1E8A38] rounded-[3px] flex items-center justify-center bg-white z-10">
+                  <div className="w-[10px] h-[10px] bg-[#1E8A38] rounded-full" />
                 </div>
-              )}
-              {/* Veg Icon */}
-              <div className="absolute top-[20px] right-[20px] w-[32px] h-[32px] border-2 border-[#1E8A38] rounded-[6px] flex items-center justify-center bg-white shadow-sm">
-                <div className="w-[12px] h-[12px] bg-[#1E8A38] rounded-full" />
+              </div>
+
+              {/* Thumbnails (horizontal everywhere) */}
+              <div className="flex flex-col gap-[16px] order-2 w-full">
+                <div className="flex gap-[12px] overflow-x-auto pb-2 scrollbar-none justify-center lg:justify-start flex-shrink-0">
+                  {(product.images?.length > 0 ? [...Array(Math.max(5, product.images.length))].map((_, i) => ({
+                    img: product.images[i % product.images.length],
+                    index: i
+                  })) : [...Array(5)].map((_, i) => ({
+                    img: "/Rectangle-10@2x.png",
+                    index: i
+                  }))).slice(0, 5).map((item, i) => (
+                    <button
+                      key={i}
+                      onClick={() => setSelectedImage(i)}
+                      className={`relative w-[60px] h-[60px] md:w-[82px] md:h-[82px] rounded-[12px] overflow-hidden flex-shrink-0 transition-all 
+                        ${selectedImage === i ? 'border-[2px] border-brand-green shadow-sm' : 'border border-[#EAEAEA] opacity-80 hover:opacity-100'}`}
+                    >
+                      <Image src={item.img} alt="" fill className="object-cover" />
+                    </button>
+                  ))}
+                </div>
+                
+                {/* Mobile Image Navigation (Arrows & Dots) */}
+                <div className="flex lg:hidden items-center justify-center gap-[24px] mt-[4px]">
+                  <button className="text-[#999] hover:text-black transition-colors"><ChevronLeft size={24} strokeWidth={1.5} /></button>
+                  <div className="flex gap-[10px]">
+                    {[...Array(6)].map((_, i) => (
+                      <div key={i} className={`w-[10px] h-[10px] rounded-full ${i === selectedImage % 6 ? 'bg-brand-green' : 'bg-[#EAEAEA]'}`} />
+                    ))}
+                  </div>
+                  <button className="text-[#999] hover:text-black transition-colors"><ChevronRight size={24} strokeWidth={1.5} /></button>
+                </div>
               </div>
             </div>
-            
-            {/* Thumbnails */}
-            {product.images?.length > 1 && (
-              <div className="flex gap-[12px] overflow-x-auto pb-2 scrollbar-none justify-center lg:justify-start">
-                {product.images.map((img: string, i: number) => (
-                   <button
-                   key={i}
-                    onClick={() => setSelectedImage(i)}
-                    className={`relative w-[60px] h-[60px] md:w-[100px] md:h-[100px] rounded-[16px] overflow-hidden flex-shrink-0 transition-all 
-                     ${selectedImage === i ? 'border-[2px] border-brand-green shadow-md scale-[1.02]' : 'border border-[#EAEAEA] opacity-80 hover:opacity-100 hover:scale-[1.02]'}`}
-                 >
-                   <Image src={img} alt="" fill className="object-cover" />
-                 </button>
-                ))}
-              </div>
-            )}
           </div>
 
-          {/* Right Column: Info */}
-          <div className="flex-1 flex flex-col items-start pt-[12px] order-3 lg:order-2">
+          {/* Right Column: Info & Purchase */}
+          <div className="flex-1 flex flex-col justify-between items-start lg:pt-0 order-3 lg:order-2 w-full lg:min-h-full">
             
             {/* Desktop Tags & Title */}
             <div className="hidden lg:flex flex-col items-start w-full">
-              {product.tags?.length > 0 && (
-                <div className="flex flex-wrap gap-[8px] mb-[16px]">
-                  {product.tags.map((tag: string) => (
-                    <span key={tag} className="bg-[#FFF4E4] text-[#D89F43] text-[12px] font-bold px-[10px] py-[4px] rounded-[4px] uppercase tracking-wider">{tag}</span>
-                  ))}
-                </div>
-              )}
-              <h1 className="text-[45px] font-bold text-brand-black mb-[12px] leading-[1.2] tracking-tight font-sans">
+                {product.tags?.length > 0 && (
+                  <div className="flex flex-wrap gap-[8px] mb-[16px]">
+                    {product.tags.map((tag: string) => (
+                      <span key={tag} className="bg-[#FDF7E7] text-[#D89F43] text-[11px] font-bold px-[12px] py-[4px] rounded-[4px] uppercase tracking-wider shadow-sm">{tag}</span>
+                    ))}
+                  </div>
+                )}
+              <h1 className="text-[36px] lg:text-[45px] font-extrabold text-[#1D5E2E] mb-[8px] leading-[1.1] tracking-tight font-sans">
                 {product.name}
               </h1>
               <p className="text-[#657B67] text-[16px] font-medium mb-[24px]">{product.category === 'Healthy Chips' ? 'Enjoy our healthy snack packed with nutrition.' : 'Delicious and wholesome everyday snacking.'}</p>
             </div>
             
-            {/* Pack of Choice (Variants UI mock) */}
-            <div className="w-full mb-[32px]">
-              <h3 className="text-[18px] font-bold text-brand-black mb-[16px]">Pack of choice!</h3>
-              <div className="flex gap-[12px] overflow-x-auto pb-2 scrollbar-none w-full">
-                {/* Simulated variants */}
-                {[...Array(4)].map((_, i) => (
-                  <div key={i} className="flex-shrink-0 w-[110px] lg:w-[140px] flex flex-col items-center bg-transparent border border-[#CCCCCC] rounded-[12px] overflow-hidden group cursor-pointer hover:border-brand-green transition-colors">
-                    <div className="w-full aspect-[4/3] bg-white relative">
-                      <Image src={product.images?.[0] || '/Rectangle-10@2x.png'} alt="pack" fill className="object-cover group-hover:scale-105 transition-transform" />
+            {/* Pick your product (Variant Picker) */}
+            <div className="w-full flex flex-col items-start mb-[32px] order-1">
+              <h3 className="text-[16px] font-bold text-brand-black mb-[16px]">Pick your product</h3>
+              <div className="flex gap-[16px] overflow-x-auto w-full pb-2 scrollbar-none">
+                {[1,2,3,4].map((v) => (
+                  <div key={v} className="flex flex-col gap-[8px] flex-shrink-0 w-[110px]">
+                    <div className={`relative w-full aspect-square rounded-[12px] overflow-hidden border-[2px] transition-all ${v === 1 ? 'border-brand-green shadow-sm' : 'border-transparent bg-white shadow-sm'}`}>
+                      <Image src={product.images?.[0] || "/Rectangle-10@2x.png"} alt="" fill className="object-cover" />
                     </div>
-                    <div className="p-[8px] w-full text-center bg-white border-t border-[#EEEEEE]">
-                      <div className="text-[11px] font-bold text-brand-green truncate mb-[2px]">Roasted Chana</div>
-                      <div className="text-[10px] text-[#A0A0A0] line-through">₹199</div>
-                      <div className="text-[13px] font-bold text-brand-black text-center">₹149</div>
-                    </div>
+                    <span className={`text-[12px] font-bold text-center ${v === 1 ? 'text-brand-green' : 'text-[#8E8E8E]'}`}>Beetroot Chips</span>
                   </div>
                 ))}
               </div>
             </div>
 
-            {/* Price */}
-            <div className="flex flex-col gap-[4px] mb-[24px]">
-              <div className="flex items-center gap-[12px]">
-                <span className="text-[20px] font-bold text-brand-black mr-2">Price</span>
-                <span className="text-[20px] text-[#999999] font-medium line-through font-sans">₹{product.mrp}</span>
-                <span className="text-[28px] lg:text-[40px] font-bold text-brand-black leading-[1] font-sans">₹{product.price}</span>
-              </div>
-            </div>
-
-            {/* Purchase Controls */}
-            {product.stock > 0 ? (
-              <div className="w-full flex flex-col gap-[16px] mb-[40px]">
-                <div className="flex items-center gap-[16px] w-full">
-                  {/* Quantity */}
-                  <div className="flex items-center gap-[16px] w-[130px] justify-between border-[1.5px] border-[#CCCCCC] rounded-[40px] px-4 h-[50px] bg-white">
-                    <button onClick={() => setQty(Math.max(1, qty - 1))} className="w-[24px] h-[24px] rounded-full flex items-center justify-center text-brand-black"><Minus size={18} strokeWidth={2} /></button>
-                    <span className="text-[18px] font-bold text-brand-black">{qty}</span>
-                    <button onClick={() => setQty(qty + 1)} className="w-[24px] h-[24px] rounded-full flex items-center justify-center text-brand-black"><Plus size={18} strokeWidth={2} /></button>
-                  </div>
-
-                  {/* Add to Cart */}
-                  <button 
-                    onClick={handleAddToCart}
-                    className="flex-1 h-[50px] border-[1.5px] border-brand-green bg-transparent text-brand-green rounded-[40px] font-bold text-[16px] hover:bg-[#EEFBDC] transition-all cursor-pointer"
-                  >
-                    {added ? 'Added ✓' : 'Add to Cart'}
-                  </button>
+            {/* Notification Form if Out of Stock */}
+            {product.stock === 0 && (
+              <div className="w-full border border-[#EAEAEA] bg-white rounded-[20px] p-[32px] md:p-[48px] mb-[32px] shadow-[0_4px_24px_rgba(0,0,0,0.03)] border-black/5 order-2 lg:order-4">
+                <h3 className="text-[20px] md:text-[24px] text-brand-black leading-[1.3] mb-[32px] font-bold tracking-tight">
+                  Register to receive a notification when this item comes back in stock.
+                </h3>
+                <div className="mb-[28px]">
+                  <label className="text-[14px] font-bold text-brand-black mb-[10px] block">Email<span className="text-brand-red ml-0.5">*</span></label>
+                  <input 
+                    type="email" 
+                    placeholder="Enter your email"
+                    className="w-full h-[54px] border border-[#EAEAEA] rounded-[8px] px-[16px] outline-none focus:border-brand-green transition-colors text-[14px] font-medium placeholder:text-[#999]" 
+                  />
                 </div>
-
-                {/* Quick Buy */}
-                <button className="w-full h-[50px] bg-[#1a1a1a] text-white rounded-[40px] font-bold text-[16px] hover:bg-black transition-all cursor-pointer tracking-wide">
-                  Buy it now
+                <button className="w-full h-[56px] bg-[#1a1a1a] text-white rounded-full font-bold text-[16px] hover:bg-black transition-all shadow-lg active:scale-[0.98]">
+                  Notify Me
                 </button>
               </div>
-            ) : (
-              <div className="w-full py-[20px] bg-gray-100 rounded-[12px] text-center text-[#707070] font-bold mb-[40px]">Out of Stock</div>
             )}
 
-            {/* Custom Description Text */}
-            <div className="w-full flex flex-col gap-[20px] mb-[40px]">
-              <div>
-                <h3 className="text-[18px] font-bold text-brand-green mb-[8px]">{product.name}</h3>
-                <p className="text-[14px] text-[#4A4A4A] leading-[1.6]">Enjoy our healthy snack packed with nutrition. Roasted to perfection, absolutely no cholesterol or trans fat. It is the perfect binge-watching companion.</p>
-              </div>
-              <div>
-                <h3 className="text-[18px] font-bold text-brand-green mb-[8px]">Ingredients</h3>
-                <p className="text-[14px] text-[#4A4A4A] leading-[1.6]">{product.ingredients || 'Supergrains (Ragi, Bajra, Sorghum), Premium Spices, Salt, Edible Vegetable Oil (Rice Bran) & Love.'}</p>
-              </div>
-              <div>
-                <h3 className="text-[18px] font-bold text-brand-green mb-[8px]">Allergen Advice</h3>
-                <p className="text-[14px] text-[#4A4A4A] leading-[1.6]">Made in a facility that process tree nuts, peanuts, and dairy. Contains minor traces of soy.</p>
-              </div>
-              <div>
-                <h3 className="text-[18px] font-bold text-brand-green mb-[8px]">Storage</h3>
-                <p className="text-[14px] text-[#4A4A4A] leading-[1.6]">Store in a cool and dry place away from direct sunlight. Once opened, consume within 10 days.</p>
+            {/* Price (Repositioned for Mobile) */}
+            <div className="flex lg:hidden flex-col gap-[4px] mb-[28px] order-3">
+              <div className="flex items-center gap-[12px] mb-[8px]">
+                <span className="text-[28px] lg:text-[34px] font-bold text-brand-black leading-[1] font-sans">₹{product.price}</span>
+                <span className="text-[16px] text-[#999999] font-medium line-through font-sans">MRP ₹{product.mrp}</span>
               </div>
             </div>
 
-            {/* Nutritional Info Table */}
-            <div className="w-full mb-[40px] overflow-x-auto">
-              <table className="w-full border-collapse min-w-[300px] border border-[#144722]">
-                <thead className="bg-[#1D5E2E] text-white">
-                  <tr>
-                    <th className="py-2 px-3 text-left font-bold text-[13px] border border-[#144722]">Nutrients</th>
-                    <th className="py-2 px-3 text-left font-bold text-[13px] border border-[#144722]">per 100g</th>
-                    <th className="py-2 px-3 text-left font-bold text-[13px] border border-[#144722]">% RDA per serve</th>
-                  </tr>
-                </thead>
-                <tbody className="bg-transparent text-brand-black text-[13px] font-medium">
-                  {[['Energy (Kcal)', '412.3', '10.5%'],['Protein (g)', '14.5', '14.5%'],['Carbohydrates (g)', '68.5', '12%'],['Total Sugars (g)','2.5','-'],['Added Sugars (g)','0','0%'],['Dietary Fiber (g)','8.5','14.4%'],['Total Fat (g)','9.4','7.3%'],['Trans Fat (g)','0','0%'],['Sodium (mg)','320','8.6%']].map((row, i) => (
-                    <tr key={i} className="border-b border-[#EAEAEA]">
-                      <td className="py-2 px-3 border border-[#EAEAEA] font-bold">{row[0]}</td>
-                      <td className="py-2 px-3 border border-[#EAEAEA]">{row[1]}</td>
-                      <td className="py-2 px-3 border border-[#EAEAEA]">{row[2]}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+            {/* Desktop Price */}
+            <div className="hidden lg:flex flex-col gap-[4px] mb-[28px] order-2">
+              <div className="flex items-center gap-[12px] mb-[8px]">
+                <span className="text-[28px] lg:text-[34px] font-bold text-brand-black leading-[1] font-sans">₹{product.price}</span>
+                <span className="text-[16px] text-[#999999] font-medium line-through font-sans">MRP ₹{product.mrp}</span>
+              </div>
             </div>
-            
-            {/* Mock Reviews Section */}
-            <div className="w-full flex flex-col items-center border-t border-[#EAEAEA] py-[40px]">
-              <h2 className="text-[20px] font-bold text-brand-black uppercase tracking-wider mb-[24px]">Customer Reviews</h2>
-              <div className="flex flex-col w-full max-w-[400px]">
-                <div className="flex items-end gap-[12px]">
-                  <span className="text-[48px] font-bold text-brand-green leading-[1]">4.5</span>
+
+            {/* Accordions (Desktop Only) */}
+            {product.stock > 0 && (
+              <div className="hidden lg:flex flex-col mb-[32px] border-t border-[#EAEAEA] w-full">
+                {accordionItems.map((item) => (
+                  <div key={item.label} className="border-b border-[#EAEAEA]">
+                    <button 
+                      onClick={() => toggleSection(item.label)}
+                      className="w-full py-[18px] flex items-center justify-between font-bold text-[14px] text-brand-black hover:text-brand-green transition-colors uppercase tracking-wide"
+                    >
+                      {item.label}
+                      {openSections.has(item.label) ? <Minus size={20} strokeWidth={1} className="text-black"/> : <Plus size={20} strokeWidth={1} className="text-black"/>}
+                    </button>
+                    {openSections.has(item.label) && (
+                      <div className="pb-[16px] text-[#4A4A4A] text-[13px] leading-[1.6]">
+                         {item.label === 'Nutrition breakdown' ? (
+                            <div className="w-full mt-2 overflow-x-auto">
+                              <table className="w-full border-collapse min-w-[300px] border border-[#EAEAEA]">
+                                <thead className="bg-[#1D5E2E] text-white">
+                                  <tr>
+                                    <th className="py-2 px-3 text-left font-bold text-[12px] border border-[#EAEAEA]">Nutrients</th>
+                                    <th className="py-2 px-3 text-left font-bold text-[12px] border border-[#EAEAEA]">per 100g</th>
+                                    <th className="py-2 px-3 text-left font-bold text-[12px] border border-[#EAEAEA]">% RDA per serve</th>
+                                  </tr>
+                                </thead>
+                                <tbody className="bg-transparent text-brand-black text-[12px] font-medium border-x border-[#EAEAEA]">
+                                  {[['Energy (Kcal)', '412.3', '10.5%'],['Protein (g)', '14.5', '14.5%'],['Carbohydrates (g)', '68.5', '12%'],['Total Sugars (g)','2.5','-'],['Added Sugars (g)','0','0%'],['Dietary Fiber (g)','8.5','14.4%'],['Total Fat (g)','9.4','7.3%'],['Trans Fat (g)','0','0%'],['Sodium (mg)','320','8.6%']].map((row, i) => (
+                                    <tr key={i} className="border-b border-[#EAEAEA]">
+                                      <td className="py-2 px-3 border border-[#EAEAEA] font-bold">{row[0]}</td>
+                                      <td className="py-2 px-3 border border-[#EAEAEA]">{row[1]}</td>
+                                      <td className="py-2 px-3 border border-[#EAEAEA]">{row[2]}</td>
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                            </div>
+                         ) : (
+                            item.content
+                         )}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Flat Sections for Mobile (In-Stock Only) */}
+            {product.stock > 0 && (
+              <div className="flex lg:hidden flex-col gap-[32px] mb-[48px] w-full order-5">
+                <div className="flex flex-col gap-[12px]">
+                  <h2 className="text-[24px] font-bold text-brand-black leading-[1.2]">{product.name}</h2>
+                  <p className="text-[14px] text-[#4A4A4A] leading-[1.6]">
+                    {product.description || 'Enjoy our healthy snack packed with nutrition. Perfect for any time of the day.'}
+                  </p>
                 </div>
-                <div className="flex gap-[2px] mb-[16px]">
-                  {[1,2,3,4,5].map(i => <Star key={i} size={20} className={i !== 5 ? "fill-brand-green text-brand-green" : "text-brand-green"} />)}
+
+                <div className="flex flex-col gap-[8px]">
+                  <h3 className="text-[18px] font-bold text-brand-green">Ingredients</h3>
+                  <p className="text-[14px] text-[#4A4A4A] leading-[1.6]">{product.ingredients || 'Supergrains (Ragi, Bajra, Sorghum), Vegetable Oil, Salt.'}</p>
+                </div>
+
+                <div className="flex flex-col gap-[12px]">
+                  <h3 className="text-[18px] font-bold text-brand-black mt-2">Allergen Advice</h3>
+                  <p className="text-[14px] text-[#4A4A4A] leading-[1.6]">Contains gluten. Processed in a facility that also handles nuts and dairy.</p>
+                </div>
+
+                <div className="flex flex-col gap-[8px]">
+                  <h3 className="text-[18px] font-bold text-brand-green">Storage</h3>
+                  <p className="text-[14px] text-[#4A4A4A] leading-[1.6]">Store in a cool, dry place. Once opened, consume within 10 days for best quality.</p>
+                </div>
+
+                {/* Detailed Nutrition Table */}
+                <div className="w-full overflow-x-auto mt-4 rounded-[12px] border border-[#EAEAEA]">
+                  <table className="w-full border-collapse min-w-[340px]">
+                    <thead className="bg-[#1D5E2E] text-white">
+                      <tr>
+                        <th className="py-3 px-3 text-left font-bold text-[12px] border-r border-white/20 uppercase tracking-tight">Nutrients</th>
+                        <th className="py-3 px-3 text-left font-bold text-[12px] border-r border-white/20 uppercase tracking-tight">per 100g</th>
+                        <th className="py-3 px-3 text-left font-bold text-[12px] border-r border-white/20 uppercase tracking-tight">per Serving</th>
+                        <th className="py-3 px-3 text-left font-bold text-[12px] uppercase tracking-tight">% RDA*</th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white text-brand-black text-[11px] font-medium uppercase tracking-tight">
+                      {[
+                        ['Energy (Kcal)', '412.3', '123.7', '10.5%'],
+                        ['Protein (g)', '14.5', '4.4', '14.5%'],
+                        ['Carbohydrates (g)', '68.5', '20.6', '12%'],
+                        ['Total Sugars (g)', '2.5', '0.7', '-'],
+                        ['Added Sugars (g)', '0', '0', '0%'],
+                        ['Dietary Fiber (g)', '8.5', '2.6', '14.4%'],
+                        ['Total Fat (g)', '9.4', '2.8', '7.3%'],
+                        ['Saturated Fat (g)', '3.2', '1.0', '4.5%'],
+                        ['Trans Fat (g)', '0', '0', '0%'],
+                        ['Sodium (mg)', '320', '96', '8.6%'],
+                        ['Iron (mg)', '4.2', '1.3', '7.6%'],
+                        ['Calcium (mg)', '150', '45', '6.2%']
+                      ].map((row, i) => (
+                        <tr key={i} className="border-b border-[#F5F5F5] last:border-0 hover:bg-[#F9FAF9] transition-colors">
+                          <td className="py-3 px-3 font-bold border-r border-[#F0F0F0] whitespace-nowrap">{row[0]}</td>
+                          <td className="py-3 px-3 border-r border-[#F0F0F0] text-center">{row[1]}</td>
+                          <td className="py-3 px-3 border-r border-[#F0F0F0] text-center">{row[2]}</td>
+                          <td className="py-3 px-3 text-center">{row[3]}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
+
+
+            {/* Purchase Controls */}
+            <div className="w-full flex flex-col gap-[16px] mb-0 order-4">
+              <div className="flex items-center gap-[24px] w-full">
+                {/* Quantity */}
+                <div className={`flex items-center gap-[16px] h-[50px] ${product.stock === 0 ? 'opacity-30 pointer-events-none' : ''}`}>
+                  <button onClick={() => setQty(Math.max(1, qty - 1))} className="w-[44px] h-[44px] rounded-full border border-[#4A4A4A] flex items-center justify-center text-[#4A4A4A] hover:bg-[#F2F2F2] transition-colors"><Minus size={18} strokeWidth={1.5} /></button>
+                  <span className="text-[18px] font-bold text-brand-black w-[16px] text-center">{qty}</span>
+                  <button onClick={() => setQty(qty + 1)} className="w-[44px] h-[44px] rounded-full border border-[#4A4A4A] flex items-center justify-center text-[#4A4A4A] hover:bg-[#F2F2F2] transition-colors"><Plus size={18} strokeWidth={1.5} /></button>
+                </div>
+
+                {/* Add to Cart */}
+                <button 
+                  onClick={product.stock > 0 ? handleAddToCart : undefined}
+                  disabled={product.stock === 0}
+                  className={`flex-1 h-[54px] border-[1.5px] rounded-full font-bold text-[15px] transition-all ${
+                    product.stock === 0 
+                      ? 'border-[#B6C9B0] text-[#B6C9B0] bg-transparent cursor-not-allowed'
+                      : 'border-[#1D5E2E]/40 bg-[#FCF9F2] text-[#1D5E2E] hover:bg-white hover:border-[#1D5E2E] cursor-pointer'
+                  }`}
+                >
+                  {added ? 'Added ✓' : 'Add to Cart'}
+                </button>
+              </div>
+
+              {/* Quick Buy */}
+              <button 
+                disabled={product.stock === 0}
+                className={`w-full h-[54px] rounded-full font-bold text-[16px] transition-all tracking-wide ${
+                  product.stock === 0 
+                    ? 'bg-[#908F8B] text-white cursor-not-allowed'
+                    : 'bg-[#1D5E2E] text-white hover:bg-[#154617] cursor-pointer shadow-md'
+                }`}
+              >
+                Quick Buy
+              </button>
+            </div>
+
+            
+          </div>
+        </div>
+
+        <div className="w-full flex justify-center border-t border-[#EAEAEA] py-[60px] lg:pt-[100px] lg:pb-[80px]">
+          <div className="w-full max-w-[1240px] flex flex-col items-center">
+            <h2 className="text-[28px] lg:text-[40px] font-bold text-brand-black tracking-tight mb-[60px] text-center font-sans uppercase">Customer Reviews</h2>
+            
+            <div className="flex flex-col lg:flex-row gap-[60px] lg:gap-[120px] w-full px-4 lg:px-0">
+              {/* Left Column: Review List & Stats */}
+              <div className="flex-1 flex flex-col w-full max-w-[540px] mx-auto lg:mx-0">
+                <div className="flex items-center gap-[24px] mb-[32px]">
+                  <span className="text-[60px] lg:text-[72px] font-bold text-brand-green leading-[1]">3.8</span>
+                  <div className="flex flex-col gap-[2px]">
+                    <div className="flex gap-[4px]">
+                      {[1,2,3,4,5].map(i => (
+                        <Star key={i} size={24} className={i <= 4 ? "fill-brand-green text-brand-green" : "text-[#CCCCCC]"} />
+                      ))}
+                    </div>
+                    <span className="text-[14px] text-[#707070] font-medium">149 Reviews</span>
+                  </div>
                 </div>
                 
                 {/* Bars */}
-                <div className="flex flex-col gap-[8px] mb-[32px] text-[14px] text-brand-black font-semibold">
-                  <div className="flex items-center gap-[8px]"><span className="w-2">5</span> <Star size={12} className="fill-brand-black text-brand-black"/> <div className="flex-1 h-[10px] bg-[#EAEAEA] rounded-full overflow-hidden"><div className="w-[85%] h-full bg-[#1D5E2E]" /></div></div>
-                  <div className="flex items-center gap-[8px]"><span className="w-2">4</span> <Star size={12} className="fill-brand-black text-brand-black"/> <div className="flex-1 h-[10px] bg-[#EAEAEA] rounded-full overflow-hidden"><div className="w-[10%] h-full bg-[#1D5E2E]" /></div></div>
-                  <div className="flex items-center gap-[8px]"><span className="w-2">3</span> <Star size={12} className="fill-brand-black text-brand-black"/> <div className="flex-1 h-[10px] bg-[#EAEAEA] rounded-full overflow-hidden"><div className="w-[5%] h-full bg-[#1D5E2E]" /></div></div>
-                  <div className="flex items-center gap-[8px]"><span className="w-2">2</span> <Star size={12} className="fill-brand-black text-brand-black"/> <div className="flex-1 h-[10px] bg-[#EAEAEA] rounded-full overflow-hidden"><div className="w-[0%] h-full bg-[#1D5E2E]" /></div></div>
-                  <div className="flex items-center gap-[8px]"><span className="w-2">1</span> <Star size={12} className="fill-brand-black text-brand-black"/> <div className="flex-1 h-[10px] bg-[#EAEAEA] rounded-full overflow-hidden"><div className="w-[0%] h-full bg-[#1D5E2E]" /></div></div>
+                <div className="flex flex-col gap-[14px] mb-[48px] w-full">
+                  {[
+                    { stars: 5, width: '85%' },
+                    { stars: 4, width: '35%' },
+                    { stars: 3, width: '8%' },
+                    { stars: 2, width: '0%' },
+                    { stars: 1, width: '0%' }
+                  ].map((row) => (
+                    <div key={row.stars} className="flex items-center gap-[16px] text-[15px] font-bold text-brand-black">
+                      <div className="flex items-center gap-[4px] w-[50px]">
+                        <span>{row.stars}</span>
+                        <Star size={14} className="fill-brand-black text-brand-black -mt-0.5"/>
+                      </div>
+                      <div className="flex-1 h-[10px] bg-[#F5F5F5] rounded-full overflow-hidden">
+                        <div className={`h-full bg-brand-green rounded-full`} style={{ width: row.width }} />
+                      </div>
+                    </div>
+                  ))}
                 </div>
-
-                {/* Filter */}
-                <div className="flex gap-[8px] mb-[24px]">
-                  <span className="px-[12px] py-[6px] bg-brand-green text-white text-[13px] font-bold rounded-full">Photos (12)</span>
-                  <span className="px-[12px] py-[6px] border border-brand-green text-brand-green text-[13px] font-bold rounded-full">Videos (4)</span>
+                
+                {/* Toggle Buttons */}
+                <div className="flex gap-[16px] mb-[48px]">
+                  <button className="px-[24px] py-[10px] bg-[#1D5E2E] text-white text-[15px] font-bold rounded-full shadow-md">Reviews (10)</button>
+                  <button className="px-[24px] py-[10px] border border-[#EEEEEE] bg-white text-[#707070] text-[15px] font-bold rounded-full hover:bg-[#F9FAF9] transition-colors">Enquiries (0)</button>
                 </div>
 
                 {/* Reviews List */}
-                <div className="flex flex-col gap-[24px]">
-                  <div className="pb-[24px] border-b border-[#EAEAEA]">
-                    <div className="flex gap-[2px] mb-[8px]">{[1,2,3,4,5].map(i => <Star key={i} size={14} className="fill-brand-green text-brand-green" />)}</div>
-                    <h4 className="font-bold text-[15px] text-brand-black mb-[4px]">Best healthy snack itself</h4>
-                    <p className="text-[14px] text-[#4A4A4A] leading-[1.5] mb-[12px]">I like the taste, and the ingredients list looks promising. Exactly what I needed for my late night cravings.</p>
-                    <div className="flex gap-[8px] mt-[12px]">
-                      <Image src={product.images?.[0] || "/Rectangle-10@2x.png"} alt="review img" width={80} height={80} className="rounded-[8px] object-cover" />
+                <div className="flex flex-col gap-[40px] pt-[24px] border-t border-[#EAEAEA]">
+                  {[1,2].map((review) => (
+                    <div key={review} className="pb-[40px] border-b border-[#F0F0F0] last:border-0">
+                      <div className="flex gap-[4px] mb-[12px]">
+                        {[1,2,3,4,5].map(i => <Star key={i} size={18} className="fill-brand-green text-brand-green" />)}
+                      </div>
+                      <div className="flex items-center gap-[8px] mb-[12px]">
+                        <h4 className="font-bold text-[18px] text-brand-black">Great for snacks!</h4>
+                        <div className="flex items-center gap-1 bg-[#EEFBDC] text-brand-green px-2 py-0.5 rounded-full text-[11px] font-bold">
+                          <Check size={12} strokeWidth={3}/> Verified Buyer
+                        </div>
+                      </div>
+                      <p className="text-[15px] text-[#4A4A4A] leading-[1.6] mb-[20px]">I didn't expect such a burst of flavour from a healthy snacks. Simply loved it!</p>
+                      
+                      {review === 2 && (
+                        <div className="flex gap-[12px] mb-[20px]">
+                           <div className="relative w-[120px] h-[120px] rounded-[16px] overflow-hidden border border-[#EAEAEA]">
+                             <Image src="/Rectangle-10@2x.png" alt="review" fill className="object-cover" />
+                           </div>
+                        </div>
+                      )}
+
+                      <div className="flex justify-between items-center text-[13px] text-[#888888] font-bold">
+                        <div className="flex items-center gap-4">
+                          <span className="hover:text-brand-green cursor-pointer">Share</span>
+                          <span>January, 03 2025</span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+
+                  {/* Pagination Footer */}
+                  <div className="flex justify-between items-center pt-[20px]">
+                    <span className="text-[14px] text-[#888888] font-bold tracking-tight">1–8 of 149 Reviews</span>
+                    <div className="flex gap-[12px]">
+                      <button className="w-[44px] h-[44px] rounded-full border border-[#EAEAEA] flex items-center justify-center hover:bg-white transition-all shadow-sm">
+                        <ChevronLeft size={20} className="text-black" />
+                      </button>
+                      <button className="w-[44px] h-[44px] rounded-full bg-brand-green text-white flex items-center justify-center hover:bg-[#154617] transition-all shadow-md">
+                        <ChevronRight size={20} className="text-white" />
+                      </button>
                     </div>
                   </div>
                 </div>
+              </div>
 
-                {/* Write a review form */}
-                <div className="w-full flex flex-col items-center mt-[40px] pt-[40px] border-t border-dashed border-[#CCCCCC]">
-                  <h2 className="text-[18px] font-bold text-brand-black uppercase tracking-wider mb-[24px]">Leave us a review!</h2>
-                  <div className="w-full flex flex-col gap-[16px]">
+              {/* Right Column: Write a review form */}
+              <div className="flex-1 flex w-full justify-center lg:justify-start pt-8 lg:pt-0">
+                <div className="w-full max-w-[500px] h-fit flex flex-col">
+                  <h2 className="text-[28px] font-bold text-brand-black mb-[44px] tracking-tight uppercase">Leave us an enquiry!</h2>
+                  <div className="flex flex-col gap-[24px]">
                     <div>
-                      <span className="text-[13px] font-bold text-brand-black">Rating:</span>
-                      <div className="flex gap-[4px] mt-[4px]">
-                        {[1,2,3,4,5].map(i => <Star key={i} size={24} className="text-brand-green cursor-pointer transition-colors" />)}
+                      <span className="text-[14px] font-bold text-brand-black">Overall Rating<span className="text-brand-red ml-1">*</span></span>
+                      <div className="flex gap-[10px] mt-[12px]">
+                        {[1,2,3,4,5].map(i => <Star key={i} size={28} strokeWidth={1} className="text-[#CCCCCC] cursor-pointer hover:text-brand-green transition-all" />)}
                       </div>
                     </div>
-                    <input type="text" placeholder="Your review *" className="w-full h-[48px] border-b border-[#CCCCCC] bg-transparent outline-none focus:border-brand-green text-[14px]" />
-                    <input type="text" placeholder="Name *" className="w-full h-[48px] border-b border-[#CCCCCC] bg-transparent outline-none focus:border-brand-green text-[14px]" />
-                    <div className="w-full h-[100px] border border-dashed border-[#CCCCCC] rounded-[8px] flex items-center justify-center text-[13px] font-bold text-[#888888] cursor-pointer mt-2 bg-white/50">
-                      <span className="text-brand-green text-[20px] mr-2">+</span> Add Photo or Video File
+                    <div>
+                      <span className="text-[14px] font-bold text-brand-black">Enquiry<span className="text-brand-red ml-1">*</span></span>
+                      <textarea placeholder="You" className="w-full h-[100px] border border-[#EAEAEA] rounded-[8px] bg-white outline-none focus:border-brand-green text-[14px] mt-[10px] p-[16px] resize-none placeholder:text-[#999]" />
+                      <textarea placeholder="Your question" className="w-full h-[80px] border border-[#EAEAEA] rounded-[8px] bg-transparent outline-none border-t-0 -mt-1 rounded-t-none text-[14px] p-[16px] resize-none text-[#707070] opacity-60" disabled />
                     </div>
-                    <button className="w-full h-[50px] border-[1.5px] border-brand-green text-brand-green font-bold text-[15px] rounded-full hover:bg-[#EEFBDC] transition-colors mt-2">
-                      Submit
+                    <div>
+                      <span className="text-[14px] font-bold text-brand-black">Name<span className="text-brand-red ml-1">*</span></span>
+                      <input type="text" className="w-full h-[52px] border border-[#EAEAEA] rounded-[8px] bg-white outline-none focus:border-brand-green text-[14px] mt-[10px] px-[16px]" />
+                    </div>
+                    <div>
+                      <span className="text-[14px] font-bold text-brand-black">Email<span className="text-brand-red ml-1">*</span></span>
+                      <input type="email" className="w-full h-[52px] border border-[#EAEAEA] rounded-[8px] bg-white outline-none focus:border-brand-green text-[14px] mt-[10px] px-[16px]" />
+                    </div>
+                    
+                    {/* Placeholder for reCAPTCHA */}
+                    <div className="w-full h-[76px] bg-[#F9F9F9] border border-[#EAEAEA] rounded-[4px] flex items-center px-4 gap-4 mt-2">
+                       <div className="w-6 h-6 border-2 border-[#C1C1C1] rounded-[2px]" />
+                       <span className="text-[14px] font-medium text-[#4D4D4D]">I'm not a robot</span>
+                       <div className="ml-auto flex flex-col items-center">
+                          <img src="https://www.gstatic.com/recaptcha/api2/logo_48.png" alt="recaptcha" width={24} height={24} />
+                          <span className="text-[8px] text-[#555] font-bold -mt-1">reCAPTCHA</span>
+                       </div>
+                    </div>
+
+                    <button className="flex items-center gap-[12px] bg-[#1a1a1a] text-white font-bold text-[16px] rounded-full pl-[36px] pr-[12px] py-[12px] self-start hover:bg-black transition-all shadow-lg mt-[12px]">
+                      Submit 
+                      <div className="w-[32px] h-[32px] bg-white rounded-full flex items-center justify-center text-black">
+                        <ChevronRight size={18} strokeWidth={3}/>
+                      </div>
                     </button>
                   </div>
                 </div>
@@ -334,10 +543,11 @@ export default function ProductDetailPage() {
           </div>
         </div>
 
+
         {/* You may also like */}
         {relatedProducts.length > 0 && (
-          <section className="mb-[80px]">
-            <h2 className="text-[24px] md:text-[36px] font-bold mb-[24px] text-brand-black tracking-tight font-sans text-center">
+          <section className="mb-[60px] lg:mb-[80px]">
+            <h2 className="text-[24px] md:text-[32px] font-bold mb-[32px] text-brand-black tracking-tight font-sans">
               You may also like
             </h2>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-[16px] md:gap-[32px]">
@@ -348,6 +558,9 @@ export default function ProductDetailPage() {
           </section>
         )}
       </div>
+      
+      {/* Testimonials */}
+      <CustomerTestimonials />
     </div>
   );
 }

@@ -297,3 +297,28 @@ export const checkPaymentStatus = async (merchantTransactionId: string) => {
   if (error) throw new Error(error.message);
   return data;
 };
+
+// ─── Enquiries ───────────────────────────────────────────────────────────────
+
+export const submitEnquiry = async (body: {
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  subject: string;
+  orderId?: string;
+  message: string;
+}) => {
+  const { data, error } = await supabase.from('enquiries').insert({
+    first_name: body.firstName,
+    last_name: body.lastName,
+    email: body.email,
+    phone: body.phone,
+    subject: body.subject,
+    order_id: body.orderId || '',
+    message: body.message,
+  });
+
+  if (error) throw new Error(error.message);
+  return { success: true, data };
+};

@@ -85,30 +85,28 @@ export default function ProductCard({ product }: ProductCardProps) {
           )}
 
           {/* Veg Icon */}
-          <div className="absolute top-[10px] right-[10px] w-[18px] h-[18px] bg-white rounded-[3px] flex items-center justify-center z-10 border border-[#E0E0E0]">
-            <div className="w-[10px] h-[10px] border-[1.5px] border-green-600 rounded-[2px] flex items-center justify-center">
-              <div className="w-[5px] h-[5px] bg-green-600 rounded-full" />
-            </div>
+          <div className="absolute top-[8px] right-[8px] w-[20px] h-[20px] border-[1.5px] border-[#1E8A38] rounded-[3px] flex items-center justify-center bg-white z-10">
+            <div className="w-[8px] h-[8px] bg-[#1E8A38] rounded-full" />
           </div>
 
           {/* Out of Stock Overlay */}
           {isOutOfStock && (
             <div className="absolute inset-0 bg-white/60 flex items-center justify-center z-20">
-              <span className="text-[13px] font-semibold text-[#555] bg-white/90 px-[16px] py-[8px] rounded-full border border-[#E0E0E0] shadow-sm">
+              <span className="text-[12px] font-bold text-[#555] bg-white/95 px-[14px] py-[6px] rounded-full border border-[#EAEAEA] shadow-sm tracking-tight">
                 Out of Stock
               </span>
             </div>
           )}
 
-          {/* Add to Cart Button */}
+          {/* Add to Cart Button (Black Circle) */}
           {!isOutOfStock && (
             <button
               onClick={handleAddToCart}
-              className="absolute bottom-[10px] right-[10px] w-[40px] h-[40px] bg-white text-brand-black rounded-full flex items-center justify-center
-                hover:bg-brand-green hover:text-white transition-colors duration-200 shadow-[0_2px_8px_rgba(0,0,0,0.12)] active:scale-90 z-10 border border-[#E8E8E8]"
+              className="absolute bottom-[10px] right-[10px] w-[36px] h-[36px] bg-[#1a1a1a] text-white rounded-full flex items-center justify-center
+                hover:bg-black transition-all duration-200 shadow-lg active:scale-90 z-10"
               aria-label="Add to cart"
             >
-              <Plus size={20} strokeWidth={2.5} />
+              <Plus size={18} strokeWidth={3} />
             </button>
           )}
         </div>
@@ -129,12 +127,12 @@ export default function ProductCard({ product }: ProductCardProps) {
             )}
           </div>
 
-          {/* Tag Badges */}
-          <div className="flex items-center gap-[6px] mt-[8px]">
+          {/* Tag Badges (Premium Gold Style) */}
+          <div className="flex items-center gap-[8px] mt-[10px]">
             {tagBadges.map((tag, idx) => (
               <span
                 key={idx}
-                className="text-[11px] font-medium text-[#666] bg-[#F5F3EF] px-[8px] py-[3px] rounded-[4px]"
+                className="text-[10px] font-bold text-[#D89F43] bg-[#FDF7E7] px-[8px] py-[3px] rounded-[4px] uppercase tracking-wider shadow-sm"
               >
                 {tag}
               </span>

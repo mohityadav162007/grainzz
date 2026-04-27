@@ -1,13 +1,31 @@
-import type { Metadata } from 'next';
+'use client';
+import { useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { ChevronRight, User, MapPin, Package, Settings, LogOut } from 'lucide-react';
-
-export const metadata: Metadata = {
-  title: 'My Account – Grainzz',
-  description: 'Manage your Grainzz account, orders, and addresses.',
-};
+import { useAuthStore } from '@/store/authStore';
 
 export default function AccountPage() {
+  const { user, loading, signOut, setAuthModalOpen } = useAuthStore();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!loading && !user) {
+      setAuthModalOpen(true);
+      router.push('/');
+    }
+  }, [user, loading, router, setAuthModalOpen]);
+
+  if (loading) {
+    return (
+      <div className="bg-[#FCF9F2] min-h-screen flex items-center justify-center">
+        <div className="animate-pulse text-brand-green font-bold text-[20px]">Loading...</div>
+      </div>
+    );
+  }
+
+  if (!user) return null;
+
   return (
     <div className="bg-[#FCF9F2] min-h-screen pb-[100px]">
       <div className="max-w-[1440px] mx-auto px-4 md:px-[60px] lg:px-[120px] pt-[32px]">
@@ -27,11 +45,11 @@ export default function AccountPage() {
           <div className="w-full lg:w-[280px] flex-shrink-0 bg-white rounded-[20px] border border-[#EAEAEA] shadow-sm p-6 flex flex-col gap-2 h-fit">
             <div className="flex items-center gap-4 mb-6 pb-6 border-b border-[#EAEAEA]">
                <div className="w-[50px] h-[50px] bg-brand-green text-white rounded-full flex items-center justify-center font-bold text-[20px]">
-                 G
+                 {user.user_metadata?.full_name?.[0] || user.email?.[0]?.toUpperCase() || 'U'}
                </div>
-               <div>
-                  <h3 className="font-bold text-brand-black text-[18px]">Guest User</h3>
-                  <p className="text-[13px] font-medium text-[#7A7A7A]">guest@grainzz.com</p>
+               <div className="overflow-hidden">
+                  <h3 className="font-bold text-brand-black text-[18px] truncate">{user.user_metadata?.full_name || 'User'}</h3>
+                  <p className="text-[13px] font-medium text-[#7A7A7A] truncate">{user.email}</p>
                </div>
             </div>
             
@@ -52,7 +70,10 @@ export default function AccountPage() {
                <span>Account Settings</span>
             </button>
             <div className="mt-4 pt-4 border-t border-[#EAEAEA]">
-              <button className="flex items-center gap-3 w-full text-left px-4 py-3 rounded-xl hover:bg-[#FFF0F0] text-brand-red font-bold transition-colors">
+              <button 
+                onClick={() => { signOut(); router.push('/'); }}
+                className="flex items-center gap-3 w-full text-left px-4 py-3 rounded-xl hover:bg-[#FFF0F0] text-brand-red font-bold transition-colors"
+              >
                  <LogOut size={20} strokeWidth={2.5}/>
                  <span>Sign Out</span>
               </button>
@@ -66,15 +87,15 @@ export default function AccountPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-[24px] max-w-[600px]">
               <div className="flex flex-col gap-2">
                 <label className="text-[14px] font-semibold text-[#888888]">Full Name</label>
-                <div className="px-4 py-3 rounded-xl border border-[#EAEAEA] bg-[#FAFAFA] font-medium text-brand-black cursor-not-allowed">Guest User</div>
+                <div className="px-4 py-3 rounded-xl border border-[#EAEAEA] bg-[#FAFAFA] font-medium text-brand-black">{user.user_metadata?.full_name || 'Not provided'}</div>
               </div>
               <div className="flex flex-col gap-2">
                 <label className="text-[14px] font-semibold text-[#888888]">Email Address</label>
-                <div className="px-4 py-3 rounded-xl border border-[#EAEAEA] bg-[#FAFAFA] font-medium text-brand-black cursor-not-allowed">guest@grainzz.com</div>
+                <div className="px-4 py-3 rounded-xl border border-[#EAEAEA] bg-[#FAFAFA] font-medium text-brand-black">{user.email}</div>
               </div>
               <div className="flex flex-col gap-2 md:col-span-2">
                 <label className="text-[14px] font-semibold text-[#888888]">Phone Number</label>
-                <div className="px-4 py-3 rounded-xl border border-[#EAEAEA] bg-[#FAFAFA] font-medium text-[#A1A1A1] cursor-not-allowed">Not provided</div>
+                <div className="px-4 py-3 rounded-xl border border-[#EAEAEA] bg-[#FAFAFA] font-medium text-brand-black">{user.phone || 'Not provided'}</div>
               </div>
             </div>
             

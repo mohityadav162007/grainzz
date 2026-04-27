@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { Phone, Mail, MapPin, ArrowRight, HelpCircle, RefreshCw, Truck, Loader2 } from 'lucide-react';
 import Link from 'next/link';
+import { submitEnquiry } from '@/lib/api';
 
 const helpCards = [
   { icon: HelpCircle, title: 'Support', desc: 'Already purchased and have a question about your product? Try our FAQs.', cta: 'FAQs', href: '/faqs' },
@@ -28,9 +29,16 @@ export default function ContactPage() {
     const errs = validate();
     if (Object.keys(errs).length > 0) { setErrors(errs); return; }
     setLoading(true);
-    await new Promise((r) => setTimeout(r, 1000)); // simulate submission
-    setSubmitted(true);
-    setLoading(false);
+    setErrors({});
+    
+    try {
+      await submitEnquiry(form);
+      setSubmitted(true);
+    } catch (err: any) {
+      setErrors({ server: err.message || 'Failed to submit message. Please try again.' });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -98,6 +106,11 @@ export default function ContactPage() {
           ) : (
             <div className="pt-[20px]">
               <form onSubmit={handleSubmit} className="space-y-[24px]">
+                {errors.server && (
+                  <div className="p-4 bg-brand-red/10 border border-brand-red/20 rounded-2xl text-brand-red text-[14px] font-bold">
+                    {errors.server}
+                  </div>
+                )}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-[24px]">
                   <div>
                     <label className="block text-[14px] font-bold mb-[8px] text-brand-black uppercase tracking-wider">First Name*</label>

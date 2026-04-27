@@ -6,6 +6,9 @@ import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
 import CartDrawer from '@/components/cart/CartDrawer';
 
+import AuthInitializer from '@/components/auth/AuthInitializer';
+import AuthModal from '@/components/auth/AuthModal';
+
 const jakarta = Plus_Jakarta_Sans({ subsets: ['latin'], display: 'swap', adjustFontFallback: false });
 
 export const metadata: Metadata = {
@@ -24,11 +27,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en">
       <body className={`${jakarta.className} bg-white text-brand-black`}>
+        <AuthInitializer />
         <AnnouncementBar />
         <Navbar />
         <main className="min-h-screen">{children}</main>
         <Footer />
         <CartDrawer />
+        <AuthModal />
       </body>
     </html>
   );

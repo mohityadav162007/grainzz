@@ -4,6 +4,7 @@ import { useSearchParams } from 'next/navigation';
 import { SlidersHorizontal, ChevronDown, ChevronUp, X } from 'lucide-react';
 import ProductCard from '@/components/products/ProductCard';
 import { getProducts } from '@/lib/api';
+import clsx from 'clsx';
 
 const productCategories = ['Puffed Rice', 'Healthy Chips', 'Grain Puffs'];
 const bundleCategories = ['Combos', 'Gift Packs'];
@@ -94,7 +95,7 @@ function ProductsContent() {
   };
 
   const Checkbox = ({ checked, onChange, label }: { checked: boolean; onChange: () => void; label: string }) => (
-    <label className="flex items-center gap-[10px] cursor-pointer group py-[2px]">
+    <label className="flex items-center gap-[10px] cursor-pointer group py-[6px] px-[8px] -mx-[8px] rounded-[8px] hover:bg-[#EEFBDC]/50 transition-colors">
       <div
         onClick={(e) => { e.preventDefault(); onChange(); }}
         className={`w-[18px] h-[18px] rounded-[3px] border-[1.5px] flex items-center justify-center flex-shrink-0 transition-colors ${
@@ -103,7 +104,7 @@ function ProductsContent() {
       >
         {checked && <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>}
       </div>
-      <span className={`text-[14px] transition-colors ${checked ? 'text-brand-black font-medium' : 'text-[#555] font-normal'}`}>{label}</span>
+      <span className={`text-[14px] transition-colors ${checked ? 'text-brand-green font-semibold' : 'text-[#555] group-hover:text-brand-green font-normal'}`}>{label}</span>
     </label>
   );
 
@@ -113,6 +114,45 @@ function ProductsContent() {
       {open ? <ChevronUp size={16} className="text-[#999]" /> : <ChevronDown size={16} className="text-[#999]" />}
     </button>
   );
+
+  const SortDropdown = ({ value, onChange, options }: { value: string; onChange: (v: string) => void; options: typeof sortOptions }) => {
+    const [isOpen, setIsOpen] = useState(false);
+    const selectedLabel = options.find(o => o.value === value)?.label || 'Best Selling';
+
+    return (
+      <div className="relative">
+        <button
+          onClick={() => setIsOpen(!isOpen)}
+          className="w-full flex items-center justify-between bg-white border border-[#D1D1D1] rounded-[8px] px-[14px] py-[10px] text-[14px] font-medium text-brand-black focus:outline-none focus:border-brand-green transition-colors"
+        >
+          <span className="truncate">{selectedLabel}</span>
+          <ChevronDown size={14} className={clsx("text-[#999] transition-transform", isOpen && "rotate-180")} />
+        </button>
+        
+        {isOpen && (
+          <>
+            <div className="fixed inset-0 z-[60]" onClick={() => setIsOpen(false)} />
+            <div className="absolute top-[calc(100%+4px)] left-0 w-full bg-white border border-[#EAEAEA] rounded-[12px] shadow-lg py-2 z-[70] animate-scale-in origin-top">
+              {options.map((o) => (
+                <button
+                  key={o.value}
+                  onClick={() => { onChange(o.value); setIsOpen(false); }}
+                  className={clsx(
+                    "w-[calc(100%-16px)] mx-2 text-left px-3 py-2.5 rounded-[8px] text-[14px] font-medium transition-all block mb-0.5 last:mb-0",
+                    value === o.value 
+                      ? "bg-[#EEFBDC] text-brand-green" 
+                      : "text-[#7A7A7A] hover:bg-[#EEFBDC] hover:text-brand-green"
+                  )}
+                >
+                  {o.label}
+                </button>
+              ))}
+            </div>
+          </>
+        )}
+      </div>
+    );
+  };
 
   return (
     <div className="bg-white min-h-screen pb-[80px]">
@@ -131,18 +171,7 @@ function ProductsContent() {
                 <SectionHeader title="Sort by" open={sortOpen} toggle={() => setSortOpen(!sortOpen)} />
                 {sortOpen && (
                   <div className="mt-[12px]">
-                    <div className="relative">
-                      <select
-                        value={sort}
-                        onChange={(e) => setSort(e.target.value)}
-                        className="w-full appearance-none bg-white border border-[#D1D1D1] rounded-[6px] px-[14px] py-[10px] text-[14px] font-medium text-brand-black focus:outline-none focus:border-brand-green cursor-pointer"
-                      >
-                        {sortOptions.map((o) => (
-                          <option key={o.value} value={o.value}>{o.label}</option>
-                        ))}
-                      </select>
-                      <ChevronDown size={14} className="absolute right-[12px] top-[12px] pointer-events-none text-[#999]" />
-                    </div>
+                    <SortDropdown value={sort} onChange={setSort} options={sortOptions} />
                   </div>
                 )}
               </div>
@@ -298,15 +327,7 @@ function ProductsContent() {
               {/* Sort */}
               <div>
                 <span className="text-[15px] font-semibold text-brand-black block mb-[10px]">Sort by</span>
-                <select
-                  value={sort}
-                  onChange={(e) => setSort(e.target.value)}
-                  className="w-full appearance-none bg-white border border-[#D1D1D1] rounded-[6px] px-[14px] py-[10px] text-[14px] font-medium text-brand-black focus:outline-none focus:border-brand-green"
-                >
-                  {sortOptions.map((o) => (
-                    <option key={o.value} value={o.value}>{o.label}</option>
-                  ))}
-                </select>
+                <SortDropdown value={sort} onChange={setSort} options={sortOptions} />
               </div>
               <div className="w-full h-[1px] bg-[#E8E8E8]" />
               {/* Categories */}

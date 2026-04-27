@@ -430,6 +430,25 @@ export const deleteHeroSlide = async (id: string) => {
   if (error) throw new Error(error.message);
 };
 
+export const uploadHeroImage = async (file: File): Promise<string> => {
+  const fileName = `${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
+  const { data, error } = await supabase.storage
+    .from('hero-images')
+    .upload(fileName, file, { contentType: file.type, upsert: false });
+  if (error) throw new Error(error.message);
+  const { data: urlData } = supabase.storage.from('hero-images').getPublicUrl(data.path);
+  return urlData.publicUrl;
+};
+
+export const deleteHeroImage = async (url: string) => {
+  if (!url) return;
+  const parts = url.split('/hero-images/');
+  const path = parts[1];
+  if (path) {
+    await supabase.storage.from('hero-images').remove([decodeURIComponent(path)]);
+  }
+};
+
 // ─── Trust Metrics ───────────────────────────────────────────────────────────
 
 export const getTrustMetrics = async () => {

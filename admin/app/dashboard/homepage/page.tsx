@@ -1,12 +1,14 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import {
   Save, Loader2, Plus, Trash2, GripVertical,
-  Type, Image, BarChart3, Star, MessageSquare, HelpCircle, Globe, ShoppingBag
+  Type, Image, BarChart3, Star, MessageSquare, HelpCircle, Globe, ShoppingBag,
+  Upload, ImageIcon, X, Eye
 } from 'lucide-react';
 import {
   getAllSiteContent, upsertSiteContent,
   getHeroSlides, createHeroSlide, updateHeroSlide, deleteHeroSlide,
+  uploadHeroImage, deleteHeroImage,
   getTrustMetrics, updateTrustMetric,
   getBenefits, updateBenefit,
   getAvailabilityLogos, createAvailabilityLogo, updateAvailabilityLogo, deleteAvailabilityLogo,
@@ -225,10 +227,43 @@ function AnnouncementEditor({ value, onSave, saving }: any) {
 function HeroSlidesEditor({ slides, onRefresh }: any) {
   const [items, setItems] = useState(slides);
   const [saving, setSaving] = useState<string | null>(null);
+  const [uploading, setUploading] = useState<string | null>(null);
+  const [dragOver, setDragOver] = useState<string | null>(null);
+  const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
   const updateField = (i: number, field: string, val: string) => {
     setItems((prev: any[]) => prev.map((s: any, idx: number) => idx === i ? { ...s, [field]: val } : s));
   };
+
+  const handleImageUpload = useCallback(async (slideId: string, slideIndex: number, file: File, field: 'image_url' | 'mobile_image_url' = 'image_url') => {
+    if (!file.type.startsWith('image/')) { alert('Please select an image file'); return; }
+    if (file.size > 5 * 1024 * 1024) { alert('Image must be under 5MB'); return; }
+    setUploading(`${slideId}-${field}`);
+    try {
+      const oldUrl = items[slideIndex]?.[field];
+      if (oldUrl && oldUrl.includes('hero-images')) {
+        await deleteHeroImage(oldUrl).catch(() => {});
+      }
+      const publicUrl = await uploadHeroImage(file);
+      setItems((prev: any[]) => prev.map((s: any, idx: number) => idx === slideIndex ? { ...s, [field]: publicUrl } : s));
+    } catch (err: any) { alert('Upload failed: ' + err.message); }
+    finally { setUploading(null); }
+  }, [items]);
+
+  const handleRemoveImage = async (slideIndex: number, field: 'image_url' | 'mobile_image_url' = 'image_url') => {
+    const url = items[slideIndex]?.[field];
+    if (url && url.includes('hero-images')) {
+      await deleteHeroImage(url).catch(() => {});
+    }
+    setItems((prev: any[]) => prev.map((s: any, idx: number) => idx === slideIndex ? { ...s, [field]: '' } : s));
+  };
+
+  const handleDrop = useCallback((e: React.DragEvent, slideId: string, slideIndex: number, field: 'image_url' | 'mobile_image_url' = 'image_url') => {
+    e.preventDefault();
+    setDragOver(null);
+    const file = e.dataTransfer.files[0];
+    if (file) handleImageUpload(slideId, slideIndex, file, field);
+  }, [handleImageUpload]);
 
   const handleSave = async (slide: any) => {
     setSaving(slide.id);
@@ -237,6 +272,7 @@ function HeroSlidesEditor({ slides, onRefresh }: any) {
         top_line: slide.top_line, headline: slide.headline,
         subheadline: slide.subheadline, cta_text: slide.cta_text,
         cta_href: slide.cta_href, image_url: slide.image_url,
+        mobile_image_url: slide.mobile_image_url || '',
         is_active: slide.is_active, sort_order: slide.sort_order,
       });
     } catch (err: any) { alert(err.message); }
@@ -244,43 +280,207 @@ function HeroSlidesEditor({ slides, onRefresh }: any) {
   };
 
   const handleAdd = async () => {
-    if (items.length >= 5) { alert('Max 5 slides'); return; }
+    if (items.length >= 5) { alert('Max 5 slides allowed'); return; }
     try {
-      await createHeroSlide({ top_line: 'New Slide', headline: 'New Headline', sort_order: items.length + 1 });
+      await createHeroSlide({ top_line: 'New Slide', headline: 'New Headline', subheadline: '', cta_text: 'Shop Now', cta_href: '/products', sort_order: items.length + 1 });
       onRefresh();
     } catch (err: any) { alert(err.message); }
   };
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = async (id: string, imageUrl: string) => {
     if (!confirm('Delete this slide?')) return;
-    try { await deleteHeroSlide(id); onRefresh(); } catch (err: any) { alert(err.message); }
+    try {
+      if (imageUrl && imageUrl.includes('hero-images')) {
+        await deleteHeroImage(imageUrl).catch(() => {});
+      }
+      await deleteHeroSlide(id);
+      onRefresh();
+    } catch (err: any) { alert(err.message); }
   };
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="font-bold text-gray-900">Hero Slides ({items.length}/5)</h3>
-        <button onClick={handleAdd} className="admin-btn text-sm"><Plus size={14} /> Add Slide</button>
+      <div className="flex items-center justify-between mb-5">
+        <div>
+          <h3 className="font-bold text-gray-900">Hero Slides ({items.length}/5)</h3>
+          <p className="text-xs text-gray-400 mt-0.5">Upload images and edit text for the homepage carousel. Max 5 slides.</p>
+        </div>
+        <button
+          onClick={handleAdd}
+          disabled={items.length >= 5}
+          className={`admin-btn text-sm ${items.length >= 5 ? 'opacity-50 cursor-not-allowed' : ''}`}
+        >
+          <Plus size={14} /> Add Slide
+        </button>
       </div>
-      <div className="space-y-4">
+
+      {items.length === 0 && (
+        <div className="text-center py-12 text-gray-400 border-2 border-dashed border-gray-200 rounded-xl">
+          <ImageIcon size={32} className="mx-auto mb-2 opacity-50" />
+          <p className="text-sm">No hero slides yet. Click "Add Slide" to get started.</p>
+        </div>
+      )}
+
+      <div className="space-y-5">
         {items.map((s: any, i: number) => (
-          <div key={s.id} className="border border-gray-200 rounded-xl p-4">
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-xs font-bold text-gray-400">Slide {i + 1}</span>
-              <div className="flex gap-2">
-                <button onClick={() => handleSave(s)} disabled={saving === s.id} className="admin-btn text-xs py-1">
+          <div key={s.id} className="border border-gray-200 rounded-xl overflow-hidden bg-white shadow-sm">
+            {/* Slide header */}
+            <div className="flex items-center justify-between px-4 py-3 bg-gray-50 border-b border-gray-100">
+              <div className="flex items-center gap-2">
+                <GripVertical size={14} className="text-gray-300" />
+                <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Slide {i + 1}</span>
+                {s.is_active === false && <span className="text-[10px] bg-yellow-100 text-yellow-700 px-1.5 py-0.5 rounded font-medium">Inactive</span>}
+              </div>
+              <div className="flex items-center gap-2">
+                <button onClick={() => handleSave(s)} disabled={saving === s.id} className="admin-btn text-xs py-1.5 px-3">
                   {saving === s.id ? <Loader2 size={12} className="animate-spin" /> : <Save size={12} />} Save
                 </button>
-                <button onClick={() => handleDelete(s.id)} className="text-red-500 text-xs hover:underline"><Trash2 size={12} /></button>
+                <button
+                  onClick={() => handleDelete(s.id, s.image_url)}
+                  className="flex items-center gap-1 text-red-500 hover:text-red-700 text-xs font-medium px-2 py-1.5 rounded-lg hover:bg-red-50 transition-colors"
+                >
+                  <Trash2 size={12} /> Delete
+                </button>
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-3">
-              <input placeholder="Top line" value={s.top_line || ''} onChange={e => updateField(i, 'top_line', e.target.value)} className="admin-input text-xs" />
-              <input placeholder="CTA text" value={s.cta_text || ''} onChange={e => updateField(i, 'cta_text', e.target.value)} className="admin-input text-xs" />
-              <input placeholder="Headline" value={s.headline || ''} onChange={e => updateField(i, 'headline', e.target.value)} className="admin-input text-xs col-span-2" />
-              <input placeholder="Subheadline" value={s.subheadline || ''} onChange={e => updateField(i, 'subheadline', e.target.value)} className="admin-input text-xs col-span-2" />
-              <input placeholder="CTA link" value={s.cta_href || ''} onChange={e => updateField(i, 'cta_href', e.target.value)} className="admin-input text-xs" />
-              <input placeholder="Image URL" value={s.image_url || ''} onChange={e => updateField(i, 'image_url', e.target.value)} className="admin-input text-xs" />
+
+            <div className="p-4">
+              {/* Desktop Image upload section */}
+              <div className="mb-4">
+                <label className="text-xs font-semibold text-gray-600 mb-2 block flex items-center gap-1">
+                  <ImageIcon size={12} /> Desktop Image
+                  <span className="text-[10px] text-gray-400 font-normal ml-1">1440×600 recommended</span>
+                </label>
+
+                {s.image_url ? (
+                  <div className="relative group rounded-xl overflow-hidden border border-gray-200" style={{ maxWidth: '100%' }}>
+                    <div className="aspect-[16/6] bg-gray-100 relative">
+                      <img src={s.image_url} alt={`Slide ${i + 1} desktop`} className="w-full h-full object-cover" onError={(e) => { (e.target as HTMLImageElement).src = ''; }} />
+                      <div className="absolute inset-0 bg-black/30 flex items-center justify-end pr-8 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div className="text-white text-right">
+                          <p className="text-[10px] font-bold uppercase tracking-wide opacity-80">{s.top_line}</p>
+                          <p className="text-sm font-bold leading-tight mt-0.5">{(s.headline || '').split('\n')[0]}</p>
+                          <p className="text-[10px] mt-1 opacity-70">{(s.subheadline || '').split('\n')[0]}</p>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="absolute top-2 right-2 flex gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <button onClick={() => fileInputRefs.current[s.id]?.click()} className="flex items-center gap-1 bg-white/90 backdrop-blur text-gray-700 text-[10px] font-medium px-2.5 py-1.5 rounded-lg shadow-sm hover:bg-white transition-colors">
+                        <Upload size={10} /> Replace
+                      </button>
+                      <button onClick={() => handleRemoveImage(i, 'image_url')} className="flex items-center gap-1 bg-red-500/90 backdrop-blur text-white text-[10px] font-medium px-2.5 py-1.5 rounded-lg shadow-sm hover:bg-red-600 transition-colors">
+                        <X size={10} /> Remove
+                      </button>
+                    </div>
+                    {uploading === `${s.id}-image_url` && (
+                      <div className="absolute inset-0 bg-white/70 flex items-center justify-center"><Loader2 size={24} className="animate-spin text-gray-600" /></div>
+                    )}
+                  </div>
+                ) : (
+                  <div
+                    onDragOver={(e) => { e.preventDefault(); setDragOver(s.id); }}
+                    onDragLeave={() => setDragOver(null)}
+                    onDrop={(e) => handleDrop(e, s.id, i, 'image_url')}
+                    onClick={() => fileInputRefs.current[s.id]?.click()}
+                    className={`aspect-[16/5] border-2 border-dashed rounded-xl flex flex-col items-center justify-center cursor-pointer transition-all ${
+                      dragOver === s.id ? 'border-green-400 bg-green-50' : 'border-gray-200 bg-gray-50 hover:border-gray-300 hover:bg-gray-100'
+                    }`}
+                  >
+                    {uploading === `${s.id}-image_url` ? (
+                      <><Loader2 size={28} className="animate-spin text-gray-400 mb-2" /><span className="text-xs text-gray-500">Uploading...</span></>
+                    ) : (
+                      <><Upload size={28} className={`mb-2 ${dragOver === s.id ? 'text-green-500' : 'text-gray-300'}`} />
+                        <span className="text-xs font-medium text-gray-500">{dragOver === s.id ? 'Drop image here' : 'Click or drag & drop a desktop image'}</span>
+                        <span className="text-[10px] text-gray-400 mt-1">JPG, PNG, WebP · Max 5MB · 1440×600</span>
+                      </>
+                    )}
+                  </div>
+                )}
+                <input ref={(el) => { fileInputRefs.current[s.id] = el; }} type="file" accept="image/jpeg,image/png,image/webp" className="hidden"
+                  onChange={(e) => { const file = e.target.files?.[0]; if (file) handleImageUpload(s.id, i, file, 'image_url'); e.target.value = ''; }}
+                />
+              </div>
+
+              {/* Mobile Image upload section */}
+              <div className="mb-4">
+                <label className="text-xs font-semibold text-gray-600 mb-2 block flex items-center gap-1">
+                  <ImageIcon size={12} /> Mobile Image
+                  <span className="text-[10px] text-gray-400 font-normal ml-1">750×1200 recommended · Optional</span>
+                </label>
+
+                {s.mobile_image_url ? (
+                  <div className="relative group rounded-xl overflow-hidden border border-gray-200" style={{ maxWidth: '240px' }}>
+                    <div className="aspect-[9/16] bg-gray-100 relative">
+                      <img src={s.mobile_image_url} alt={`Slide ${i + 1} mobile`} className="w-full h-full object-cover" onError={(e) => { (e.target as HTMLImageElement).src = ''; }} />
+                    </div>
+                    <div className="absolute top-2 right-2 flex gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <button onClick={() => fileInputRefs.current[`${s.id}-mobile`]?.click()} className="flex items-center gap-1 bg-white/90 backdrop-blur text-gray-700 text-[10px] font-medium px-2.5 py-1.5 rounded-lg shadow-sm hover:bg-white transition-colors">
+                        <Upload size={10} /> Replace
+                      </button>
+                      <button onClick={() => handleRemoveImage(i, 'mobile_image_url')} className="flex items-center gap-1 bg-red-500/90 backdrop-blur text-white text-[10px] font-medium px-2.5 py-1.5 rounded-lg shadow-sm hover:bg-red-600 transition-colors">
+                        <X size={10} /> Remove
+                      </button>
+                    </div>
+                    {uploading === `${s.id}-mobile_image_url` && (
+                      <div className="absolute inset-0 bg-white/70 flex items-center justify-center"><Loader2 size={24} className="animate-spin text-gray-600" /></div>
+                    )}
+                  </div>
+                ) : (
+                  <div
+                    onDragOver={(e) => { e.preventDefault(); setDragOver(`${s.id}-mobile`); }}
+                    onDragLeave={() => setDragOver(null)}
+                    onDrop={(e) => handleDrop(e, s.id, i, 'mobile_image_url')}
+                    onClick={() => fileInputRefs.current[`${s.id}-mobile`]?.click()}
+                    className={`w-[240px] aspect-[9/10] border-2 border-dashed rounded-xl flex flex-col items-center justify-center cursor-pointer transition-all ${
+                      dragOver === `${s.id}-mobile` ? 'border-green-400 bg-green-50' : 'border-gray-200 bg-gray-50 hover:border-gray-300 hover:bg-gray-100'
+                    }`}
+                  >
+                    {uploading === `${s.id}-mobile_image_url` ? (
+                      <><Loader2 size={24} className="animate-spin text-gray-400 mb-2" /><span className="text-xs text-gray-500">Uploading...</span></>
+                    ) : (
+                      <><Upload size={24} className={`mb-2 ${dragOver === `${s.id}-mobile` ? 'text-green-500' : 'text-gray-300'}`} />
+                        <span className="text-xs font-medium text-gray-500 text-center px-4">{dragOver === `${s.id}-mobile` ? 'Drop image here' : 'Click or drag & drop a mobile image'}</span>
+                        <span className="text-[10px] text-gray-400 mt-1">750×1200 · Optional</span>
+                      </>
+                    )}
+                  </div>
+                )}
+                <input ref={(el) => { fileInputRefs.current[`${s.id}-mobile`] = el; }} type="file" accept="image/jpeg,image/png,image/webp" className="hidden"
+                  onChange={(e) => { const file = e.target.files?.[0]; if (file) handleImageUpload(s.id, i, file, 'mobile_image_url'); e.target.value = ''; }}
+                />
+              </div>
+
+              {/* Text fields */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1 block">Top Line</label>
+                  <input placeholder="e.g. Upto 40% OFF" value={s.top_line || ''} onChange={e => updateField(i, 'top_line', e.target.value)} className="admin-input text-xs w-full" />
+                </div>
+                <div>
+                  <label className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1 block">CTA Button Text</label>
+                  <input placeholder="e.g. Shop Now" value={s.cta_text || ''} onChange={e => updateField(i, 'cta_text', e.target.value)} className="admin-input text-xs w-full" />
+                </div>
+                <div className="col-span-2">
+                  <label className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1 block">Headline</label>
+                  <textarea placeholder="Main heading (use Enter for line breaks)" value={s.headline || ''} onChange={e => updateField(i, 'headline', e.target.value)} className="admin-input text-xs w-full" rows={2} />
+                </div>
+                <div className="col-span-2">
+                  <label className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1 block">Subheadline</label>
+                  <textarea placeholder="Supporting text (use Enter for line breaks)" value={s.subheadline || ''} onChange={e => updateField(i, 'subheadline', e.target.value)} className="admin-input text-xs w-full" rows={2} />
+                </div>
+                <div>
+                  <label className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1 block">CTA Link</label>
+                  <input placeholder="e.g. /products" value={s.cta_href || ''} onChange={e => updateField(i, 'cta_href', e.target.value)} className="admin-input text-xs w-full" />
+                </div>
+                <div>
+                  <label className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1 block">Desktop Image URL</label>
+                  <input placeholder="Auto-filled on upload" value={s.image_url || ''} onChange={e => updateField(i, 'image_url', e.target.value)} className="admin-input text-xs w-full bg-gray-50" />
+                </div>
+                <div>
+                  <label className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1 block">Mobile Image URL</label>
+                  <input placeholder="Auto-filled on upload" value={s.mobile_image_url || ''} onChange={e => updateField(i, 'mobile_image_url', e.target.value)} className="admin-input text-xs w-full bg-gray-50" />
+                </div>
+              </div>
             </div>
           </div>
         ))}

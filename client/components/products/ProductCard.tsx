@@ -27,6 +27,21 @@ export default function ProductCard({ product }: ProductCardProps) {
   const isOutOfStock = product.stock === 0;
   const discount = product.discount_percent || Math.round(((product.mrp - product.price) / product.mrp) * 100);
 
+  // Derive weight/type info from tags or category
+  const tagBadges: string[] = [];
+  if (product.category === 'Combos' || product.category === 'Gift Packs') {
+    tagBadges.push('Combo');
+  } else {
+    tagBadges.push('Jar');
+  }
+  // Try to extract weight from tags
+  const weightTag = product.tags?.find((t: string) => /\d+\s*g/i.test(t));
+  if (weightTag) {
+    tagBadges.push(weightTag);
+  } else {
+    tagBadges.push('150g');
+  }
+
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -44,83 +59,89 @@ export default function ProductCard({ product }: ProductCardProps) {
 
   return (
     <Link href={`/products/${product.slug}`} className="group block h-full">
-      <div className="bg-white rounded-[16px] overflow-hidden shadow-[0_2px_8px_rgba(0,0,0,0.04)] h-full flex flex-col hover:shadow-[0_12px_24px_rgba(29,94,32,0.12)] transition-shadow duration-300">
-        
+      <div className="h-full flex flex-col">
+
         {/* Image Container */}
-        <div className="relative border-b border-gray-100 aspect-square overflow-hidden bg-[#F7F7F7] w-full p-2 lg:p-4">
+        <div className="relative aspect-square overflow-hidden rounded-[8px] bg-[#F5F3EF] w-full">
           {product.images?.[0] ? (
-            <div className="relative w-full h-full rounded-[12px] overflow-hidden bg-[#F7F7F7] mix-blend-multiply border border-black/5">
-              <Image
-                src={product.images[0]}
-                alt={product.name}
-                fill
-                className="object-contain group-hover:scale-[1.05] transition-transform duration-300"
-                sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
-              />
-            </div>
+            <Image
+              src={product.images[0]}
+              alt={product.name}
+              fill
+              className="object-cover group-hover:scale-[1.03] transition-transform duration-300"
+              sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
+            />
           ) : (
-            <div className="w-full h-full flex items-center justify-center bg-[#F7F7F7] rounded-[12px]">
-              <ShoppingCart size={40} className="text-[#E4E4E4]" />
+            <div className="w-full h-full flex items-center justify-center bg-[#F5F3EF]">
+              <ShoppingCart size={36} className="text-[#D4D4D4]" />
             </div>
           )}
 
           {/* Discount Badge */}
           {discount > 0 && !isOutOfStock && (
-            <div className="absolute top-[16px] left-[16px] bg-brand-red text-white text-[12px] font-bold px-[8px] py-[4px] rounded-[4px] shadow-sm z-10 tracking-wide">
+            <div className="absolute top-[10px] left-[10px] bg-[#D32F2F] text-white text-[11px] font-bold px-[8px] py-[3px] rounded-[4px] z-10">
               -{discount}%
             </div>
           )}
 
           {/* Veg Icon */}
-          <div className="absolute top-[16px] right-[16px] w-[20px] h-[20px] bg-white rounded-full flex items-center justify-center shadow-sm z-10">
-            <div className="w-[12px] h-[12px] border-[1.5px] border-green-600 rounded-[2px] flex items-center justify-center">
-              <div className="w-[6px] h-[6px] bg-green-600 rounded-full" />
+          <div className="absolute top-[10px] right-[10px] w-[18px] h-[18px] bg-white rounded-[3px] flex items-center justify-center z-10 border border-[#E0E0E0]">
+            <div className="w-[10px] h-[10px] border-[1.5px] border-green-600 rounded-[2px] flex items-center justify-center">
+              <div className="w-[5px] h-[5px] bg-green-600 rounded-full" />
             </div>
           </div>
 
           {/* Out of Stock Overlay */}
           {isOutOfStock && (
-            <div className="absolute inset-0 bg-white/70 flex items-center justify-center z-20 backdrop-blur-[2px]">
-              <span className="text-[14px] font-bold text-[#6B6B6B] bg-white px-4 py-2 rounded-full border border-[#E4E4E4] shadow-sm uppercase tracking-wider">
+            <div className="absolute inset-0 bg-white/60 flex items-center justify-center z-20">
+              <span className="text-[13px] font-semibold text-[#555] bg-white/90 px-[16px] py-[8px] rounded-full border border-[#E0E0E0] shadow-sm">
                 Out of Stock
               </span>
             </div>
           )}
 
-          {/* Add Button overlapping the bottom right of the image block */}
+          {/* Add to Cart Button */}
           {!isOutOfStock && (
             <button
               onClick={handleAddToCart}
-              className="absolute bottom-[16px] right-[16px] w-[44px] h-[44px] bg-white text-brand-green rounded-full flex items-center justify-center
-                hover:bg-brand-green hover:text-white transition-colors duration-200 shadow-[0_4px_16px_rgba(0,0,0,0.12)] active:scale-95 z-30"
+              className="absolute bottom-[10px] right-[10px] w-[40px] h-[40px] bg-white text-brand-black rounded-full flex items-center justify-center
+                hover:bg-brand-green hover:text-white transition-colors duration-200 shadow-[0_2px_8px_rgba(0,0,0,0.12)] active:scale-90 z-10 border border-[#E8E8E8]"
               aria-label="Add to cart"
             >
-              <Plus size={24} strokeWidth={2.5} />
+              <Plus size={20} strokeWidth={2.5} />
             </button>
           )}
         </div>
 
         {/* Info */}
-        <div className="p-[16px] flex flex-col justify-between flex-grow bg-white">
-          <div className="flex flex-col gap-1 mt-1">
-            <h3 className="text-[16px] lg:text-[18px] font-bold text-brand-black leading-[1.3] group-hover:text-brand-green transition-colors line-clamp-2 font-sans tracking-tight">
-              {product.name}
-            </h3>
-            <p className="text-[13px] text-[#666666] font-medium font-sans">
-              Jar | 150g
-            </p>
+        <div className="pt-[12px] flex flex-col flex-grow">
+          <h3 className="text-[15px] lg:text-[16px] font-semibold text-brand-black leading-[1.35] group-hover:text-brand-green transition-colors line-clamp-2 tracking-[-0.01em]">
+            {product.name}
+          </h3>
+
+          {/* Price Row */}
+          <div className="flex items-baseline gap-[8px] mt-[6px]">
+            <span className="text-[17px] lg:text-[18px] font-bold text-brand-black">₹{product.price}</span>
+            {product.mrp > product.price && (
+              <span className="text-[13px] text-[#999] font-medium">
+                MRP <span className="line-through">₹{product.mrp}</span>
+              </span>
+            )}
           </div>
 
-          <div className="flex flex-col mt-4 mb-1">
-            <div className="flex items-center gap-[8px]">
-              <span className="text-[18px] lg:text-[20px] font-bold text-brand-black font-sans">₹{product.price}</span>
-              {product.mrp > product.price && (
-                <span className="text-[13px] lg:text-[14px] text-[#8E8E8E] font-medium line-through font-sans">MRP ₹{product.mrp}</span>
-              )}
-            </div>
+          {/* Tag Badges */}
+          <div className="flex items-center gap-[6px] mt-[8px]">
+            {tagBadges.map((tag, idx) => (
+              <span
+                key={idx}
+                className="text-[11px] font-medium text-[#666] bg-[#F5F3EF] px-[8px] py-[3px] rounded-[4px]"
+              >
+                {tag}
+              </span>
+            ))}
           </div>
         </div>
-        
+
       </div>
     </Link>
   );

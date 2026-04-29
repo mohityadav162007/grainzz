@@ -1,8 +1,9 @@
 'use client';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Plus, ShoppingCart } from 'lucide-react';
+import { Plus, ShoppingCart, Heart } from 'lucide-react';
 import { useCartStore } from '@/store/cartStore';
+import { useWishlistStore } from '@/store/wishlistStore';
 
 interface Product {
   id: string;
@@ -23,8 +24,10 @@ interface ProductCardProps {
 }
 
 export default function ProductCard({ product }: ProductCardProps) {
-  const { addItem } = useCartStore();
+  const { addItem: addCartItem } = useCartStore();
+  const { hasItem, addItem: addWishlistItem, removeItem: removeWishlistItem } = useWishlistStore();
   const isOutOfStock = product.stock === 0;
+  const isWishlisted = hasItem(product.id);
   const discount = product.discount_percent || Math.round(((product.mrp - product.price) / product.mrp) * 100);
 
   // Derive weight/type info from tags or category
@@ -46,7 +49,7 @@ export default function ProductCard({ product }: ProductCardProps) {
     e.preventDefault();
     e.stopPropagation();
     if (isOutOfStock) return;
-    addItem({
+    addCartItem({
       id: product.id,
       name: product.name,
       price: product.price,
@@ -55,6 +58,16 @@ export default function ProductCard({ product }: ProductCardProps) {
       quantity: 1,
       tags: product.tags,
     });
+  };
+
+  const handleToggleWishlist = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (isWishlisted) {
+      removeWishlistItem(product.id);
+    } else {
+      addWishlistItem(product.id);
+    }
   };
 
   return (
@@ -68,7 +81,7 @@ export default function ProductCard({ product }: ProductCardProps) {
               src={product.images[0]}
               alt={product.name}
               fill
-              className="object-cover group-hover:scale-[1.03] transition-transform duration-300"
+              className={`object-cover transition-transform duration-300 ${isOutOfStock ? 'grayscale opacity-75' : 'group-hover:scale-[1.03]'}`}
               sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
             />
           ) : (
@@ -84,6 +97,15 @@ export default function ProductCard({ product }: ProductCardProps) {
             </div>
           )}
 
+          {/* Wishlist Icon */}
+          <button
+            onClick={handleToggleWishlist}
+            className="absolute top-[8px] right-[36px] w-[28px] h-[28px] bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-sm z-10 hover:scale-110 hover:bg-white transition-all active:scale-95"
+            aria-label={isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
+          >
+            <Heart size={16} strokeWidth={isWishlisted ? 0 : 2} className={isWishlisted ? 'fill-brand-red text-brand-red' : 'text-[#555]'} />
+          </button>
+
           {/* Veg Icon */}
           <div className="absolute top-[8px] right-[8px] w-[20px] h-[20px] border-[1.5px] border-[#1E8A38] rounded-[3px] flex items-center justify-center bg-white z-10">
             <div className="w-[8px] h-[8px] bg-[#1E8A38] rounded-full" />
@@ -92,7 +114,7 @@ export default function ProductCard({ product }: ProductCardProps) {
           {/* Out of Stock Overlay */}
           {isOutOfStock && (
             <div className="absolute inset-0 bg-white/60 flex items-center justify-center z-20">
-              <span className="text-[12px] font-bold text-[#555] bg-white/95 px-[14px] py-[6px] rounded-full border border-[#EAEAEA] shadow-sm tracking-tight">
+              <span className="text-[14px] uppercase font-black text-brand-red bg-white/95 px-[16px] py-[8px] rounded-[6px] border border-brand-red/30 shadow-md tracking-wider">
                 Out of Stock
               </span>
             </div>
@@ -112,7 +134,7 @@ export default function ProductCard({ product }: ProductCardProps) {
         </div>
 
         {/* Info */}
-        <div className="pt-[12px] flex flex-col flex-grow">
+        <div className={`pt-[12px] flex flex-col flex-grow ${isOutOfStock ? 'opacity-60 grayscale' : ''}`}>
           <h3 className="text-[15px] lg:text-[16px] font-semibold text-brand-black leading-[1.35] group-hover:text-brand-green transition-colors line-clamp-2 tracking-[-0.01em]">
             {product.name}
           </h3>

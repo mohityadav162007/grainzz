@@ -12,7 +12,7 @@ INSERT INTO products (name, slug, description, price, mrp, images, category, sto
   'oats-chips-peri-peri',
   'We believe snacking shouldn''t be a choice between a greasy bag of chips or a boring diet. By perfecting a roasted process, we created a snack that is fun, functional, & 100% guilt-free.',
   149, 199,
-  ARRAY['https://res.cloudinary.com/dy9vdjxmm/image/upload/v1/grainzz/products/placeholder.jpg'],
+  ARRAY['https://res.cloudinary.com//image/upload/v1/grainzz/products/placeholder.jpg'],
   'Healthy Chips', 100, true,
   ARRAY['Jar', '150g'],
   'High-Fibre | No Palm Oil | Baked Crunch',
@@ -74,7 +74,7 @@ INSERT INTO products (name, slug, description, price, mrp, images, category, sto
   'Mixed Grains, Turmeric, Ginger, Salt'
 );
 
--- Seed homepage sections
+-- Seed homepage sectionsdy9vdjxmm
 INSERT INTO homepage_sections (section_type, title, product_ids, sort_order, is_active) VALUES
 ('bestsellers', 'Best Sellers', '{}', 1, true),
 ('featured', 'Featured Products', '{}', 2, true),

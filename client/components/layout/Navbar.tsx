@@ -1,6 +1,6 @@
 'use client';
 import Link from 'next/link';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { usePathname } from 'next/navigation';
 import { Search, ShoppingCart, User, Menu, X, ChevronDown, Heart } from 'lucide-react';
 import Image from 'next/image';
@@ -36,22 +36,20 @@ export default function Navbar() {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const pathname = usePathname();
   const [scrolled, setScrolled] = useState(false);
+  const scrolledRef = useRef(false);
 
   useEffect(() => { setCount(itemCount()); }, [items]);
 
   useEffect(() => {
-    let ticking = false;
     const handleScroll = () => {
-      if (!ticking) {
-        window.requestAnimationFrame(() => {
-          setScrolled(window.scrollY > 80);
-          ticking = false;
-        });
-        ticking = true;
+      const shouldBeCompact = window.scrollY > 80;
+      // Only trigger re-render if value actually changed
+      if (shouldBeCompact !== scrolledRef.current) {
+        scrolledRef.current = shouldBeCompact;
+        setScrolled(shouldBeCompact);
       }
     };
     window.addEventListener('scroll', handleScroll, { passive: true });
-    // Run once to initialize state based on scroll position if starting partway down
     handleScroll();
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
@@ -70,9 +68,10 @@ export default function Navbar() {
     <>
       <header 
         className={clsx(
-          "bg-white sticky top-0 z-40 w-full flex flex-col items-center transition-all duration-300 ease-in-out",
+          "bg-white sticky top-0 z-40 w-full flex flex-col items-center",
           isCompact ? "shadow-md" : "shadow-sm"
         )}
+        style={{ willChange: 'auto' }}
       >
         {/* Mobile View (Always Minimal Style) */}
         <div className="flex lg:hidden w-full h-[64px] px-4 md:px-[60px] items-center justify-between border-b border-[#EAEAEA]">
@@ -94,20 +93,24 @@ export default function Navbar() {
         </div>
 
         {/* Desktop View (Morphing Header) */}
-        <div className="hidden lg:block w-full max-w-[1440px] transition-all duration-300 ease-in-out">
+        <div className="hidden lg:block w-full max-w-[1440px]">
           
           <div 
             className={clsx(
-              "w-full flex items-center justify-between px-[60px] lg:px-[100px] transition-all duration-300 ease-in-out relative",
+              "w-full flex items-center justify-between px-[60px] lg:px-[100px] relative",
               isCompact ? "h-[80px]" : "h-[98px]"
             )}
+            style={{ transition: 'height 280ms cubic-bezier(0.4,0,0.2,1)' }}
           >
             
             {/* Left Nav (Compact only) */}
-            <div className={clsx(
-              "flex-1 flex items-center justify-start gap-[40px] transition-all duration-300 ease-in-out",
-               !isCompact && "opacity-0 pointer-events-none -translate-x-4" 
-            )}>
+            <div 
+              className={clsx(
+                "flex-1 flex items-center justify-start gap-[40px]",
+                 !isCompact && "opacity-0 pointer-events-none -translate-x-4" 
+              )}
+              style={{ transition: 'opacity 250ms ease, transform 250ms ease', willChange: 'opacity, transform' }}
+            >
               <div className="relative group">
                 <div className="flex items-center gap-1 cursor-pointer text-[#222222] group-hover:text-primary transition-colors py-2">
                   <Link href="/products" className="text-[16px] font-medium tracking-wide" tabIndex={isCompact ? 0 : -1}>Shop</Link>
@@ -139,10 +142,13 @@ export default function Navbar() {
 
 
             {/* Search Bar (Expanded mode) */}
-            <div className={clsx(
-              "absolute left-1/2 -translate-x-1/2 flex items-center justify-center transition-all duration-300 ease-in-out will-change-[width,opacity]",
-              isCompact ? "w-0 opacity-0 pointer-events-none" : "w-[400px] xl:w-[500px] opacity-100 pointer-events-auto"
-            )}>
+            <div 
+              className={clsx(
+                "absolute left-1/2 -translate-x-1/2 flex items-center justify-center",
+                isCompact ? "w-0 opacity-0 pointer-events-none" : "w-[400px] xl:w-[500px] opacity-100 pointer-events-auto"
+              )}
+              style={{ transition: 'width 280ms cubic-bezier(0.4,0,0.2,1), opacity 200ms ease', willChange: 'width, opacity' }}
+            >
               <div className="relative w-full h-[48px] border border-[#CCCCCC] rounded-full flex items-center px-5 bg-white shadow-[0_2px_8px_rgba(0,0,0,0.04)] focus-within:border-primary">
                 <Search size={20} strokeWidth={2} className="text-[#666666] shrink-0" />
                 <input
@@ -165,10 +171,13 @@ export default function Navbar() {
             <div className="flex-1 flex items-center justify-end gap-[30px]">
               
               {/* Search Icon button (Compact only) */}
-              <div className={clsx(
-                "transition-all duration-300 flex items-center justify-center overflow-hidden",
-                isCompact ? "w-[26px] opacity-100 scale-100 pointer-events-auto" : "w-0 opacity-0 scale-75 pointer-events-none"
-              )}>
+              <div 
+                className={clsx(
+                  "flex items-center justify-center overflow-hidden",
+                  isCompact ? "w-[26px] opacity-100 scale-100 pointer-events-auto" : "w-0 opacity-0 scale-75 pointer-events-none"
+                )}
+                style={{ transition: 'width 250ms ease, opacity 200ms ease, transform 200ms ease', willChange: 'opacity, transform' }}
+              >
                 <button className="group" onClick={() => setIsSearchOpen(!isSearchOpen)}>
                   <Search size={26} strokeWidth={2} className="text-[#222222] group-hover:text-primary transition-colors hover:scale-110" />
                 </button>
@@ -192,10 +201,13 @@ export default function Navbar() {
           </div>
 
           {/* Full Navigation Row (Expanded only) */}
-          <div className={clsx(
-            "w-full flex items-center justify-center overflow-hidden transition-all duration-300 ease-in-out origin-top border-[#EAEAEA]",
-            isCompact ? "h-0 opacity-0 border-t-0" : "h-[62px] opacity-100 border-t"
-          )}>
+          <div 
+            className={clsx(
+              "w-full flex items-center justify-center overflow-hidden origin-top border-[#EAEAEA]",
+              isCompact ? "h-0 opacity-0 border-t-0" : "h-[62px] opacity-100 border-t"
+            )}
+            style={{ transition: 'height 280ms cubic-bezier(0.4,0,0.2,1), opacity 220ms ease', willChange: 'height, opacity' }}
+          >
             <nav className="flex items-center gap-[52px]">
               {navLinks.map((link) => (
                 <div key={link.href} className="relative group flex items-center h-full">

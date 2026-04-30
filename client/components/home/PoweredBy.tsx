@@ -1,14 +1,16 @@
 'use client';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
 import Image from 'next/image';
+import { getPoweredByCards } from '@/lib/api';
 
-const categories = [
+const fallbackCategories = [
   { 
     title: 'Vegetable Chips', 
     subtitle: 'upto 40% off', 
-    topBg: 'bg-[#C68356]', // Earthy warm color 
-    bottomBg: 'bg-[#FDECE7]', // Light peach
+    topBg: 'bg-[#C68356]', 
+    bottomBg: 'bg-[#FDECE7]', 
     image: '/Rectangle-10@2x.png',
     link: '/collections/vegetable-chips'
   },
@@ -16,7 +18,7 @@ const categories = [
     title: 'Vegetable Chips', 
     subtitle: 'upto 40% off', 
     topBg: 'bg-[#C68356]', 
-    bottomBg: 'bg-[#EEFCD3]', // Light pale green
+    bottomBg: 'bg-[#EEFCD3]', 
     image: '/Rectangle-10@2x.png',
     link: '/collections/popped-chips'
   },
@@ -24,13 +26,30 @@ const categories = [
     title: 'Vegetable Chips', 
     subtitle: 'upto 40% off', 
     topBg: 'bg-[#C68356]', 
-    bottomBg: 'bg-[#FDECE7]', // Light peach
+    bottomBg: 'bg-[#FDECE7]', 
     image: '/Rectangle-10@2x.png',
     link: '/collections/grain-puffs'
   }
 ];
 
 export default function PoweredBy() {
+  const [cards, setCards] = useState<any[]>(fallbackCategories);
+
+  useEffect(() => {
+    getPoweredByCards().then(data => {
+      if (data && data.length > 0) {
+        setCards(data.map((c: any) => ({
+          title: c.title,
+          subtitle: c.subtitle,
+          topBg: c.top_bg_color || 'bg-[#C68356]',
+          bottomBg: c.bottom_bg_color || 'bg-[#FDECE7]',
+          image: c.image_url || '/Rectangle-10@2x.png',
+          link: c.link || '#'
+        })));
+      }
+    }).catch(() => {});
+  }, []);
+
   return (
     <section className="py-16 bg-white w-full">
       <div className="max-w-[1100px] mx-auto px-4 md:px-10">
@@ -40,10 +59,10 @@ export default function PoweredBy() {
         </h2>
       
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8">
-          {categories.map((cat, idx) => (
+          {cards.map((cat, idx) => (
             <div key={idx} className="flex flex-col w-full rounded-xl overflow-hidden shadow-[0_2px_12px_rgba(0,0,0,0.06)] hover:shadow-[0_8px_24px_rgba(0,0,0,0.12)] transition-shadow duration-300">
               {/* Top Image Section */}
-              <div className={`w-full aspect-square md:aspect-auto md:h-[280px] lg:h-[320px] relative flex flex-col justify-end items-center ${cat.topBg} pt-8 pb-4`}>
+              <div className={`w-full aspect-square md:aspect-auto md:h-[280px] lg:h-[320px] relative flex flex-col justify-end items-center ${cat.topBg?.startsWith('#') ? '' : cat.topBg} pt-8 pb-4`} style={cat.topBg?.startsWith('#') ? { backgroundColor: cat.topBg } : {}}>
                  <div className="h-[90%] w-full relative">
                    <Image 
                      src={cat.image} 
@@ -55,7 +74,7 @@ export default function PoweredBy() {
               </div>
 
               {/* Bottom Content Section */}
-              <div className={`w-full flex flex-col items-center text-center px-6 py-6 ${cat.bottomBg}`}>
+              <div className={`w-full flex flex-col items-center text-center px-6 py-6 ${cat.bottomBg?.startsWith('#') ? '' : cat.bottomBg}`} style={cat.bottomBg?.startsWith('#') ? { backgroundColor: cat.bottomBg } : {}}>
                 <p className="text-[13px] font-medium text-[#7A7A7A] mb-1">
                   {cat.subtitle}
                 </p>

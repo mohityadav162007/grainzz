@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
 import ProductCard from '@/components/products/ProductCard';
-import { getProducts } from '@/lib/api';
+import { supabase } from '@/lib/supabase';
 
 export default function TeamFavourites() {
   const [products, setProducts] = useState<any[]>([]);
@@ -11,8 +11,51 @@ export default function TeamFavourites() {
   useEffect(() => {
     (async () => {
       try {
-        const res = await getProducts({ limit: '4', sort: 'best-selling' });
-        setProducts(res.data || []);
+        // Find the 'Team Favourites' section
+        const { data: section } = await supabase
+          .from('homepage_sections')
+          .select('product_ids')
+          .eq('title', 'Team Favourites')
+          .eq('is_active', true)
+          .single();
+
+        if (section && section.product_ids && section.product_ids.length > 0) {
+          const { data } = await supabase
+            .from('products')
+            .select('*')
+            .in('id', section.product_ids)
+            .eq('is_active', true)
+            .limit(4);
+          
+          if (data) {
+             const sanitized = data.map((prod: any) => {
+               if (prod && Array.isArray(prod.images)) {
+                 prod.images = prod.images.map((img: string) => img.includes('placeholder.jpg') ? '/image-2@2x.png' : img);
+               }
+               return prod;
+             });
+             setProducts(sanitized);
+             return;
+          }
+        }
+        
+        // Fallback if no section or products found
+        const { data: fbData } = await supabase
+          .from('products')
+          .select('*')
+          .eq('is_active', true)
+          .order('views', { ascending: false })
+          .limit(4);
+          
+        if (fbData) {
+           const sanitized = fbData.map((prod: any) => {
+               if (prod && Array.isArray(prod.images)) {
+                 prod.images = prod.images.map((img: string) => img.includes('placeholder.jpg') ? '/image-2@2x.png' : img);
+               }
+               return prod;
+             });
+           setProducts(sanitized);
+        }
       } catch {}
     })();
   }, []);

@@ -23,9 +23,14 @@ export default function MobileSearchOverlay({ isOpen, onClose }: MobileSearchOve
   useEffect(() => { setCount(itemCount()); }, [items, itemCount]);
 
   useEffect(() => {
+    // Only apply overflow hidden and focus stealing if it's actually mobile view
+    const isMobile = window.innerWidth < 1024;
+    
     if (isOpen) {
-      document.body.style.overflow = 'hidden';
-      setTimeout(() => inputRef.current?.focus(), 100);
+      if (isMobile) {
+        document.body.style.overflow = 'hidden';
+        setTimeout(() => inputRef.current?.focus(), 100);
+      }
     } else {
       document.body.style.overflow = '';
       setSearchQuery('');

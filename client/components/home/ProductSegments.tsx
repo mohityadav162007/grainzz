@@ -7,17 +7,18 @@ import { getSiteContent } from '@/lib/api';
 import { ChevronRight } from 'lucide-react';
 
 const tabs = [
-  { label: 'Bestsellers', value: '' },
-  { label: 'Jar Combos', value: 'Combos' },
-  { label: 'Puffed Rice Combos', value: 'Puffed Rice' },
-  { label: 'Shop All Jars', value: 'all-jars' },
+  { label: 'Bestsellers', value: 'bestsellers' },
+  { label: 'Jar Combos', value: 'jar-combos' },
+  { label: 'Puffed Rice Combos', value: 'puffed-rice-combos' },
+  { label: 'Shop All Jars', value: 'shop-all-jars' },
 ];
 
 export default function ProductSegments() {
-  const [activeTab, setActiveTab] = useState('');
+  const [activeTab, setActiveTab] = useState('bestsellers');
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [heading, setHeading] = useState('Our Product Segments');
+  const [dbSections, setDbSections] = useState<any[]>([]);
 
   // Fetch heading content
   useEffect(() => {
@@ -26,6 +27,11 @@ export default function ProductSegments() {
         if (content.heading) setHeading(content.heading);
       }
     }).catch(() => {});
+
+    // Fetch Sections
+    supabase.from('homepage_sections').select('*').eq('is_active', true).then(({ data }) => {
+      if (data) setDbSections(data);
+    });
   }, []);
 
   // Fetch products based on tab
@@ -33,17 +39,27 @@ export default function ProductSegments() {
     const fetchProducts = async () => {
       setLoading(true);
       try {
+        const activeLabel = tabs.find(t => t.value === activeTab)?.label;
+        const section = dbSections.find((s: any) => s.title === activeLabel);
+
         let query = supabase
           .from('products')
           .select('*')
           .eq('is_active', true);
 
-        if (activeTab === '') {
-          query = query.order('views', { ascending: false });
-        } else if (activeTab === 'all-jars') {
-          query = query.in('category', ['Healthy Chips', 'Grain Puffs']);
+        if (section && section.product_ids && section.product_ids.length > 0) {
+          query = query.in('id', section.product_ids);
         } else {
-          query = query.eq('category', activeTab);
+          // Fallbacks for empty sections
+          if (activeTab === 'bestsellers') {
+            query = query.order('views', { ascending: false });
+          } else if (activeTab === 'shop-all-jars') {
+            query = query.in('category', ['Healthy Chips', 'Grain Puffs']);
+          } else if (activeTab === 'jar-combos') {
+            query = query.eq('category', 'Combos');
+          } else if (activeTab === 'puffed-rice-combos') {
+            query = query.eq('category', 'Puffed Rice');
+          }
         }
 
         query = query.limit(4);
@@ -66,8 +82,10 @@ export default function ProductSegments() {
         setLoading(false);
       }
     };
-    fetchProducts();
-  }, [activeTab]);
+    if (dbSections.length > 0 || activeTab) {
+      fetchProducts();
+    }
+  }, [activeTab, dbSections]);
 
   return (
     <section className="py-[40px] md:py-[60px] bg-white w-full">

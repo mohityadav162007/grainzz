@@ -14,18 +14,22 @@ import {
   getAvailabilityLogos, createAvailabilityLogo, updateAvailabilityLogo, deleteAvailabilityLogo,
   getTestimonials, createTestimonial, updateTestimonial, deleteTestimonial,
   getFaqs, createFaq, updateFaq, deleteFaq,
-  getHomepageSections, updateHomepageSection, getProducts,
+  getHomepageSections, createHomepageSection, updateHomepageSection, getProducts,
+  getPoweredByCards, createPoweredByCard, updatePoweredByCard, deletePoweredByCard,
+  getInstagramPostsAdmin, upsertInstagramPost, deleteInstagramPost
 } from '@/lib/api';
 
 const tabs = [
   { id: 'announcement', label: 'Announcement', icon: Type },
   { id: 'hero', label: 'Hero Slides', icon: Image },
+  { id: 'powered-by', label: 'Powered By', icon: Image },
   { id: 'metrics', label: 'Trust Metrics', icon: BarChart3 },
   { id: 'products', label: 'Product Tabs', icon: ShoppingBag },
   { id: 'benefits', label: 'Benefits', icon: Star },
   { id: 'logos', label: 'Availability', icon: Globe },
   { id: 'featured', label: 'Featured Product', icon: ShoppingBag },
   { id: 'testimonials', label: 'Testimonials', icon: MessageSquare },
+  { id: 'instagram', label: 'Instagram', icon: ImageIcon },
   { id: 'faqs', label: 'FAQs', icon: HelpCircle },
 ];
 
@@ -45,6 +49,8 @@ export default function HomepageEditorPage() {
   const [faqs, setFaqs] = useState<any[]>([]);
   const [sections, setSections] = useState<any[]>([]);
   const [products, setProducts] = useState<any[]>([]);
+  const [poweredByCards, setPoweredByCards] = useState<any[]>([]);
+  const [instagramPosts, setInstagramPosts] = useState<any[]>([]);
 
   useEffect(() => {
     loadAll();
@@ -53,7 +59,7 @@ export default function HomepageEditorPage() {
   const loadAll = async () => {
     setLoading(true);
     try {
-      const [sc, hs, tm, bn, lg, ts, fq, sec, prods] = await Promise.all([
+      const [sc, hs, tm, bn, lg, ts, fq, sec, prods, pwrbd, ig] = await Promise.all([
         getAllSiteContent(),
         getHeroSlides(),
         getTrustMetrics(),
@@ -63,6 +69,8 @@ export default function HomepageEditorPage() {
         getFaqs(),
         getHomepageSections().then(r => r.data),
         getProducts().then(r => r.data),
+        getPoweredByCards(),
+        getInstagramPostsAdmin().then(r => r.data)
       ]);
       const contentMap: Record<string, any> = {};
       sc.forEach((item: any) => { contentMap[item.key] = item.value; });
@@ -75,6 +83,8 @@ export default function HomepageEditorPage() {
       setFaqs(fq);
       setSections(sec);
       setProducts(prods);
+      setPoweredByCards(pwrbd);
+      setInstagramPosts(ig);
     } catch (err: any) {
       console.error('Load error:', err);
     } finally {
@@ -149,6 +159,14 @@ export default function HomepageEditorPage() {
           />
         )}
 
+        {/* ─── Powered By Cards ─── */}
+        {activeTab === 'powered-by' && (
+          <PoweredByEditor
+            cards={poweredByCards}
+            onRefresh={loadAll}
+          />
+        )}
+
         {/* ─── Trust Metrics ─── */}
         {activeTab === 'metrics' && (
           <MetricsEditor
@@ -197,7 +215,18 @@ export default function HomepageEditorPage() {
 
         {/* ─── Testimonials ─── */}
         {activeTab === 'testimonials' && (
-          <TestimonialsEditor testimonials={testimonials} onRefresh={loadAll} />
+          <TestimonialsEditor testimonials={testimonials} products={products} onRefresh={loadAll} />
+        )}
+
+        {/* ─── Instagram ─── */}
+        {activeTab === 'instagram' && (
+          <InstagramEditor 
+            posts={instagramPosts} 
+            config={siteContent.instagram_config || { is_active: true }} 
+            onSaveConfig={(c: any) => handleSaveSiteContent('instagram_config', c)}
+            onRefresh={loadAll} 
+            saving={saving}
+          />
         )}
 
         {/* ─── FAQs ─── */}
@@ -489,6 +518,107 @@ function HeroSlidesEditor({ slides, onRefresh }: any) {
   );
 }
 
+function PoweredByEditor({ cards, onRefresh }: any) {
+  const [items, setItems] = useState(cards);
+  const [saving, setSaving] = useState<string | null>(null);
+
+  const updateField = (i: number, field: string, val: string) => {
+    setItems((prev: any[]) => prev.map((s: any, idx: number) => idx === i ? { ...s, [field]: val } : s));
+  };
+
+  const handleSave = async (card: any) => {
+    setSaving(card.id);
+    try {
+      await updatePoweredByCard(card.id, {
+        title: card.title, subtitle: card.subtitle,
+        top_bg_color: card.top_bg_color, bottom_bg_color: card.bottom_bg_color,
+        link: card.link, image_url: card.image_url,
+        is_active: card.is_active, sort_order: card.sort_order,
+      });
+    } catch (err: any) { alert(err.message); }
+    finally { setSaving(null); }
+  };
+
+  const handleAdd = async () => {
+    if (items.length >= 3) { alert('Max 3 cards allowed'); return; }
+    try {
+      await createPoweredByCard({ title: 'New Card', subtitle: 'upto 40% off', top_bg_color: 'bg-[#C68356]', bottom_bg_color: 'bg-[#FDECE7]', link: '#', image_url: '', sort_order: items.length + 1 });
+      onRefresh();
+    } catch (err: any) { alert(err.message); }
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!confirm('Delete this card?')) return;
+    try {
+      await deletePoweredByCard(id);
+      onRefresh();
+    } catch (err: any) { alert(err.message); }
+  };
+
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-5">
+        <div>
+          <h3 className="font-bold text-gray-900">Powered By Cards ({items.length}/3)</h3>
+          <p className="text-xs text-gray-400 mt-0.5">Edit cards for the Powered By Real Grains section. Max 3 cards.</p>
+        </div>
+        <button
+          onClick={handleAdd}
+          disabled={items.length >= 3}
+          className={`admin-btn text-sm ${items.length >= 3 ? 'opacity-50 cursor-not-allowed' : ''}`}
+        >
+          <Plus size={14} /> Add Card
+        </button>
+      </div>
+
+      <div className="space-y-5">
+        {items.map((c: any, i: number) => (
+          <div key={c.id} className="border border-gray-200 rounded-xl p-4 bg-white shadow-sm space-y-3">
+             <div className="flex items-center justify-between mb-2">
+                <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Card {i + 1}</span>
+                <div className="flex gap-2">
+                  <button onClick={() => handleSave(c)} disabled={saving === c.id} className="admin-btn text-xs py-1.5 px-3">
+                    {saving === c.id ? <Loader2 size={12} className="animate-spin" /> : <Save size={12} />} Save
+                  </button>
+                  <button onClick={() => handleDelete(c.id)} className="text-red-500 text-xs px-2 py-1.5 rounded-lg hover:bg-red-50 transition-colors">
+                    <Trash2 size={12} /> Delete
+                  </button>
+                </div>
+             </div>
+             
+             <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1 block">Title</label>
+                  <input placeholder="Title" value={c.title || ''} onChange={e => updateField(i, 'title', e.target.value)} className="admin-input text-xs w-full" />
+                </div>
+                <div>
+                  <label className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1 block">Subtitle</label>
+                  <input placeholder="Subtitle" value={c.subtitle || ''} onChange={e => updateField(i, 'subtitle', e.target.value)} className="admin-input text-xs w-full" />
+                </div>
+                <div>
+                  <label className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1 block">Top BG Color (Tailwind)</label>
+                  <input placeholder="e.g. bg-[#C68356]" value={c.top_bg_color || ''} onChange={e => updateField(i, 'top_bg_color', e.target.value)} className="admin-input text-xs w-full" />
+                </div>
+                <div>
+                  <label className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1 block">Bottom BG Color (Tailwind)</label>
+                  <input placeholder="e.g. bg-[#FDECE7]" value={c.bottom_bg_color || ''} onChange={e => updateField(i, 'bottom_bg_color', e.target.value)} className="admin-input text-xs w-full" />
+                </div>
+                <div>
+                  <label className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1 block">Link</label>
+                  <input placeholder="URL" value={c.link || ''} onChange={e => updateField(i, 'link', e.target.value)} className="admin-input text-xs w-full" />
+                </div>
+                <div>
+                  <label className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1 block">Image URL</label>
+                  <input placeholder="Image URL" value={c.image_url || ''} onChange={e => updateField(i, 'image_url', e.target.value)} className="admin-input text-xs w-full" />
+                </div>
+             </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function MetricsEditor({ metrics, onRefresh }: any) {
   const [items, setItems] = useState(metrics);
   const [saving, setSaving] = useState<string | null>(null);
@@ -546,6 +676,14 @@ function ProductSectionsEditor({ sections, products, heading, onSaveHeading, onR
     finally { setSectionSaving(null); }
   };
 
+  const handleAddSection = async () => {
+    try {
+      const data = await createHomepageSection({ title: 'New Section', section_type: 'custom', product_ids: [] });
+      setItems((prev: any[]) => [...prev, data]);
+      onRefresh();
+    } catch (err: any) { alert(err.message); }
+  };
+
   return (
     <div>
       <h3 className="font-bold text-gray-900 mb-4">Product Tabs Section</h3>
@@ -556,7 +694,10 @@ function ProductSectionsEditor({ sections, products, heading, onSaveHeading, onR
           {saving ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />} Save Heading
         </button>
       </div>
-      <h4 className="font-semibold text-gray-700 text-sm mb-3">Product Sections</h4>
+      <div className="flex items-center justify-between mb-3">
+        <h4 className="font-semibold text-gray-700 text-sm">Product Sections</h4>
+        <button onClick={handleAddSection} className="admin-btn text-xs py-1 px-2"><Plus size={12} className="mr-1" /> Add Section</button>
+      </div>
       {items.map((section: any) => (
         <div key={section.id} className="border border-gray-200 rounded-xl p-4 mb-3">
           <div className="flex items-center justify-between mb-2">
@@ -694,7 +835,7 @@ function FeaturedProductEditor({ config, products, onSave, saving }: any) {
   );
 }
 
-function TestimonialsEditor({ testimonials, onRefresh }: any) {
+function TestimonialsEditor({ testimonials, products, onRefresh }: any) {
   const [items, setItems] = useState(testimonials);
   const [saving, setSaving] = useState<string | null>(null);
 
@@ -705,7 +846,7 @@ function TestimonialsEditor({ testimonials, onRefresh }: any) {
 
   const handleSave = async (t: any) => {
     setSaving(t.id);
-    try { await updateTestimonial(t.id, { text: t.text, author: t.author, role: t.role, rating: t.rating }); }
+    try { await updateTestimonial(t.id, { text: t.text, author: t.author, role: t.role, rating: t.rating, product_id: t.product_id }); }
     catch (err: any) { alert(err.message); }
     finally { setSaving(null); }
   };
@@ -732,11 +873,115 @@ function TestimonialsEditor({ testimonials, onRefresh }: any) {
                 {[5,4,3,2,1].map(r => <option key={r} value={r}>{r} Stars</option>)}
               </select>
             </div>
+            <div>
+              <label className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1 block">Link Product (for interactive review section)</label>
+              <select 
+                value={t.product_id || ''} 
+                onChange={e => setItems((p: any[]) => p.map((x: any, idx: number) => idx === i ? { ...x, product_id: e.target.value || null } : x))}
+                className="admin-input text-xs w-full"
+              >
+                <option value="">No product linked</option>
+                {products.map((p: any) => <option key={p.id} value={p.id}>{p.name}</option>)}
+              </select>
+            </div>
             <div className="flex gap-2">
               <button onClick={() => handleSave(t)} disabled={saving === t.id} className="admin-btn text-xs py-1">
                 {saving === t.id ? <Loader2 size={12} className="animate-spin" /> : <Save size={12} />} Save
               </button>
               <button onClick={() => handleDelete(t.id)} className="text-red-500 text-xs"><Trash2 size={12} /></button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function InstagramEditor({ posts, config, onSaveConfig, onRefresh, saving }: any) {
+  const [items, setItems] = useState(posts);
+  const [upserting, setUpserting] = useState<string | null>(null);
+
+  useEffect(() => {
+    setItems(posts);
+  }, [posts]);
+
+  const handleAdd = () => {
+    setItems([...items, { id: 'new-' + Date.now(), image_url: '', post_url: '', sort_order: items.length + 1, is_active: true }]);
+  };
+
+  const handleSave = async (post: any) => {
+    setUpserting(post.id);
+    try {
+      const { id, ...data } = post;
+      await upsertInstagramPost(id.toString().startsWith('new-') ? data : post);
+      onRefresh();
+    } catch (err: any) { alert(err.message); }
+    finally { setUpserting(null); }
+  };
+
+  const handleDelete = async (id: string) => {
+    if (id.toString().startsWith('new-')) {
+      setItems(items.filter((x: any) => x.id !== id));
+      return;
+    }
+    if (!confirm('Delete this post?')) return;
+    try { await deleteInstagramPost(id); onRefresh(); } catch (err: any) { alert(err.message); }
+  };
+
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h3 className="font-bold text-gray-900">Instagram Posts</h3>
+          <p className="text-xs text-gray-500">Manage the shots on homepage</p>
+        </div>
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 mr-4 border-r pr-4">
+            <input 
+              type="checkbox" 
+              checked={config.is_active !== false} 
+              onChange={e => onSaveConfig({ ...config, is_active: e.target.checked })} 
+              className="w-4 h-4 rounded border-gray-300"
+            />
+            <label className="text-sm font-semibold text-gray-700">Section Visible</label>
+          </div>
+          <button onClick={handleAdd} className="admin-btn text-sm"><Plus size={14} /> Add Post</button>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        {items.map((post: any, i: number) => (
+          <div key={post.id} className="border border-gray-200 rounded-xl p-3 space-y-2 bg-gray-50/30">
+            <div className="aspect-square bg-gray-100 rounded-lg overflow-hidden border">
+              {post.image_url ? (
+                <img src={post.image_url} alt="" className="w-full h-full object-cover" />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-gray-300"><ImageIcon size={32} /></div>
+              )}
+            </div>
+            <input 
+              placeholder="Image URL" 
+              value={post.image_url} 
+              onChange={e => setItems((p: any[]) => p.map((x: any, idx: number) => idx === i ? { ...x, image_url: e.target.value } : x))} 
+              className="admin-input text-[10px] w-full" 
+            />
+            <input 
+              placeholder="Post URL (Link)" 
+              value={post.post_url} 
+              onChange={e => setItems((p: any[]) => p.map((x: any, idx: number) => idx === i ? { ...x, post_url: e.target.value } : x))} 
+              className="admin-input text-[10px] w-full" 
+            />
+            <div className="flex items-center justify-between gap-2 pt-1">
+               <button 
+                onClick={() => handleSave(post)} 
+                disabled={upserting === post.id} 
+                className="admin-btn text-[10px] py-1 flex-1"
+               >
+                 {upserting === post.id ? <Loader2 size={10} className="animate-spin" /> : <Save size={10} />} Save
+               </button>
+               <button onClick={() => handleDelete(post.id)} className="text-red-500 p-1.5 hover:bg-red-50 rounded-lg">
+                 <Trash2 size={12} />
+               </button>
             </div>
           </div>
         ))}

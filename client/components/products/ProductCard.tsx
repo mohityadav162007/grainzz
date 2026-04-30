@@ -113,9 +113,9 @@ export default function ProductCard({ product }: ProductCardProps) {
 
           {/* Out of Stock Overlay */}
           {isOutOfStock && (
-            <div className="absolute inset-0 bg-white/60 flex items-center justify-center z-20">
-              <span className="text-[14px] uppercase font-black text-brand-red bg-white/95 px-[16px] py-[8px] rounded-[6px] border border-brand-red/30 shadow-md tracking-wider">
-                Out of Stock
+            <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px] flex items-center justify-center z-20">
+              <span className="text-[14px] uppercase font-black text-[#555] bg-white/95 px-[16px] py-[8px] rounded-full border border-gray-200 shadow-md tracking-wider">
+                Sold Out
               </span>
             </div>
           )}

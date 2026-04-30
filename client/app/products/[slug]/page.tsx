@@ -4,10 +4,10 @@ import { useParams } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 import { ChevronRight, ChevronLeft, Plus, Minus, Star, Heart, Check } from 'lucide-react';
-import { getProductBySlug, getProductsByCategory } from '@/lib/api';
+import { getProductBySlug, getProductsByCategory, getProductReviews } from '@/lib/api';
 import { useCartStore } from '@/store/cartStore';
 import ProductCard from '@/components/products/ProductCard';
-import CustomerTestimonials from '@/components/about/CustomerTestimonials';
+import CustomerTestimonials from '@/components/home/TestimonialsSection';
 export default function ProductDetailPage() {
   const { slug } = useParams<{ slug: string }>();
   const [product, setProduct] = useState<any>(null);
@@ -17,6 +17,7 @@ export default function ProductDetailPage() {
   const [openSections, setOpenSections] = useState<Set<string>>(new Set(['Description']));
   const [added, setAdded] = useState(false);
   const [relatedProducts, setRelatedProducts] = useState<any[]>([]);
+  const [reviews, setReviews] = useState<any[]>([]);
   const { addItem } = useCartStore();
 
   useEffect(() => {
@@ -30,6 +31,8 @@ export default function ProductDetailPage() {
               setRelatedProducts(related.filter((p: any) => p.id !== res.data.id).slice(0, 4));
             }).catch(() => {});
         }
+        // Fetch reviews
+        getProductReviews(res.data.id).then(revs => setReviews(revs)).catch(() => {});
       })
       .catch(() => setProduct(null))
       .finally(() => setLoading(false));
@@ -264,8 +267,9 @@ export default function ProductDetailPage() {
                     </button>
                     {openSections.has(item.label) && (
                       <div className="pb-[16px] text-[#4A4A4A] text-[13px] leading-[1.6]">
-                         {item.label === 'Nutrition breakdown' ? (
-                            <div className="w-full mt-2 overflow-x-auto">
+                        {item.label === 'Nutrition breakdown' ? (
+                          <div className="w-full mt-2 overflow-x-auto">
+                            {product.nutrition_table && product.nutrition_table.length > 0 ? (
                               <table className="w-full border-collapse min-w-[300px] border border-[#EAEAEA]">
                                 <thead className="bg-[#1D5E2E] text-white">
                                   <tr>
@@ -275,19 +279,22 @@ export default function ProductDetailPage() {
                                   </tr>
                                 </thead>
                                 <tbody className="bg-transparent text-brand-black text-[12px] font-medium border-x border-[#EAEAEA]">
-                                  {[['Energy (Kcal)', '412.3', '10.5%'],['Protein (g)', '14.5', '14.5%'],['Carbohydrates (g)', '68.5', '12%'],['Total Sugars (g)','2.5','-'],['Added Sugars (g)','0','0%'],['Dietary Fiber (g)','8.5','14.4%'],['Total Fat (g)','9.4','7.3%'],['Trans Fat (g)','0','0%'],['Sodium (mg)','320','8.6%']].map((row, i) => (
+                                  {product.nutrition_table.map((row: any, i: number) => (
                                     <tr key={i} className="border-b border-[#EAEAEA]">
-                                      <td className="py-2 px-3 border border-[#EAEAEA] font-bold">{row[0]}</td>
-                                      <td className="py-2 px-3 border border-[#EAEAEA]">{row[1]}</td>
-                                      <td className="py-2 px-3 border border-[#EAEAEA]">{row[2]}</td>
+                                      <td className="py-2 px-3 border border-[#EAEAEA] font-bold">{row.nutrient}</td>
+                                      <td className="py-2 px-3 border border-[#EAEAEA]">{row.per_100g}</td>
+                                      <td className="py-2 px-3 border border-[#EAEAEA]">{row.rda_percent}</td>
                                     </tr>
                                   ))}
                                 </tbody>
                               </table>
-                            </div>
-                         ) : (
-                            item.content
-                         )}
+                            ) : (
+                              <p className="text-xs italic text-gray-400">Nutrition information not available for this product.</p>
+                            )}
+                          </div>
+                        ) : (
+                          item.content
+                        )}
                       </div>
                     )}
                   </div>
@@ -322,39 +329,28 @@ export default function ProductDetailPage() {
 
                 {/* Detailed Nutrition Table */}
                 <div className="w-full overflow-x-auto mt-4 rounded-[12px] border border-[#EAEAEA]">
-                  <table className="w-full border-collapse min-w-[340px]">
-                    <thead className="bg-[#1D5E2E] text-white">
-                      <tr>
-                        <th className="py-3 px-3 text-left font-bold text-[12px] border-r border-white/20 uppercase tracking-tight">Nutrients</th>
-                        <th className="py-3 px-3 text-left font-bold text-[12px] border-r border-white/20 uppercase tracking-tight">per 100g</th>
-                        <th className="py-3 px-3 text-left font-bold text-[12px] border-r border-white/20 uppercase tracking-tight">per Serving</th>
-                        <th className="py-3 px-3 text-left font-bold text-[12px] uppercase tracking-tight">% RDA*</th>
-                      </tr>
-                    </thead>
-                    <tbody className="bg-white text-brand-black text-[11px] font-medium uppercase tracking-tight">
-                      {[
-                        ['Energy (Kcal)', '412.3', '123.7', '10.5%'],
-                        ['Protein (g)', '14.5', '4.4', '14.5%'],
-                        ['Carbohydrates (g)', '68.5', '20.6', '12%'],
-                        ['Total Sugars (g)', '2.5', '0.7', '-'],
-                        ['Added Sugars (g)', '0', '0', '0%'],
-                        ['Dietary Fiber (g)', '8.5', '2.6', '14.4%'],
-                        ['Total Fat (g)', '9.4', '2.8', '7.3%'],
-                        ['Saturated Fat (g)', '3.2', '1.0', '4.5%'],
-                        ['Trans Fat (g)', '0', '0', '0%'],
-                        ['Sodium (mg)', '320', '96', '8.6%'],
-                        ['Iron (mg)', '4.2', '1.3', '7.6%'],
-                        ['Calcium (mg)', '150', '45', '6.2%']
-                      ].map((row, i) => (
-                        <tr key={i} className="border-b border-[#F5F5F5] last:border-0 hover:bg-[#F9FAF9] transition-colors">
-                          <td className="py-3 px-3 font-bold border-r border-[#F0F0F0] whitespace-nowrap">{row[0]}</td>
-                          <td className="py-3 px-3 border-r border-[#F0F0F0] text-center">{row[1]}</td>
-                          <td className="py-3 px-3 border-r border-[#F0F0F0] text-center">{row[2]}</td>
-                          <td className="py-3 px-3 text-center">{row[3]}</td>
+                  {product.nutrition_table && product.nutrition_table.length > 0 ? (
+                    <table className="w-full border-collapse min-w-[340px]">
+                      <thead className="bg-[#1D5E2E] text-white">
+                        <tr>
+                          <th className="py-3 px-3 text-left font-bold text-[12px] border-r border-white/20 uppercase tracking-tight">Nutrients</th>
+                          <th className="py-3 px-3 text-left font-bold text-[12px] border-r border-white/20 uppercase tracking-tight">per 100g</th>
+                          <th className="py-3 px-3 text-left font-bold text-[12px] uppercase tracking-tight">% RDA*</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                      </thead>
+                      <tbody className="bg-white text-brand-black text-[11px] font-medium uppercase tracking-tight">
+                        {product.nutrition_table.map((row: any, i: number) => (
+                          <tr key={i} className="border-b border-[#F5F5F5] last:border-0 hover:bg-[#F9FAF9] transition-colors">
+                            <td className="py-3 px-3 font-bold border-r border-[#F0F0F0] whitespace-nowrap">{row.nutrient}</td>
+                            <td className="py-3 px-3 border-r border-[#F0F0F0] text-center">{row.per_100g}</td>
+                            <td className="py-3 px-3 text-center">{row.rda_percent}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  ) : (
+                    <p className="p-4 text-xs italic text-center text-gray-400">Nutrition information not available.</p>
+                  )}
                 </div>
               </div>
             )}
@@ -410,14 +406,16 @@ export default function ProductDetailPage() {
               {/* Left Column: Review List & Stats */}
               <div className="flex-1 flex flex-col w-full max-w-[540px] mx-auto lg:mx-0">
                 <div className="flex items-center gap-[24px] mb-[32px]">
-                  <span className="text-[60px] lg:text-[72px] font-bold text-brand-green leading-[1]">3.8</span>
+                  <span className="text-[60px] lg:text-[72px] font-bold text-brand-green leading-[1]">
+                    {reviews.length > 0 ? (reviews.reduce((acc, r) => acc + r.rating, 0) / reviews.length).toFixed(1) : '5.0'}
+                  </span>
                   <div className="flex flex-col gap-[2px]">
                     <div className="flex gap-[4px]">
                       {[1,2,3,4,5].map(i => (
-                        <Star key={i} size={24} className={i <= 4 ? "fill-brand-green text-brand-green" : "text-[#CCCCCC]"} />
+                        <Star key={i} size={24} className={i <= (reviews.length > 0 ? Math.round(reviews.reduce((acc, r) => acc + r.rating, 0) / reviews.length) : 5) ? "fill-brand-green text-brand-green" : "text-[#CCCCCC]"} />
                       ))}
                     </div>
-                    <span className="text-[14px] text-[#707070] font-medium">149 Reviews</span>
+                    <span className="text-[14px] text-[#707070] font-medium">{reviews.length} Reviews</span>
                   </div>
                 </div>
                 
@@ -444,54 +442,49 @@ export default function ProductDetailPage() {
                 
                 {/* Toggle Buttons */}
                 <div className="flex gap-[16px] mb-[48px]">
-                  <button className="px-[24px] py-[10px] bg-[#1D5E2E] text-white text-[15px] font-bold rounded-full shadow-md">Reviews (10)</button>
+                  <button className="px-[24px] py-[10px] bg-[#1D5E2E] text-white text-[15px] font-bold rounded-full shadow-md">Reviews ({reviews.length})</button>
                   <button className="px-[24px] py-[10px] border border-[#EEEEEE] bg-white text-[#707070] text-[15px] font-bold rounded-full hover:bg-[#F9FAF9] transition-colors">Enquiries (0)</button>
                 </div>
 
                 {/* Reviews List */}
                 <div className="flex flex-col gap-[40px] pt-[24px] border-t border-[#EAEAEA]">
-                  {[1,2].map((review) => (
-                    <div key={review} className="pb-[40px] border-b border-[#F0F0F0] last:border-0">
+                  {reviews.length > 0 ? reviews.map((review) => (
+                    <div key={review.id} className="pb-[40px] border-b border-[#F0F0F0] last:border-0 text-left">
                       <div className="flex gap-[4px] mb-[12px]">
-                        {[1,2,3,4,5].map(i => <Star key={i} size={18} className="fill-brand-green text-brand-green" />)}
+                        {[1,2,3,4,5].map(i => <Star key={i} size={18} className={i <= (review.rating || 5) ? "fill-brand-green text-brand-green" : "text-[#CCCCCC]"} />)}
                       </div>
                       <div className="flex items-center gap-[8px] mb-[12px]">
-                        <h4 className="font-bold text-[18px] text-brand-black">Great for snacks!</h4>
+                        <h4 className="font-bold text-[18px] text-brand-black">{review.name || 'Customer'}'s review</h4>
                         <div className="flex items-center gap-1 bg-[#EEFBDC] text-brand-green px-2 py-0.5 rounded-full text-[11px] font-bold">
                           <Check size={12} strokeWidth={3}/> Verified Buyer
                         </div>
                       </div>
-                      <p className="text-[15px] text-[#4A4A4A] leading-[1.6] mb-[20px]">I didn't expect such a burst of flavour from a healthy snacks. Simply loved it!</p>
+                      <p className="text-[15px] text-[#4A4A4A] leading-[1.6] mb-[20px]">{review.review_text}</p>
                       
-                      {review === 2 && (
-                        <div className="flex gap-[12px] mb-[20px]">
-                           <div className="relative w-[120px] h-[120px] rounded-[16px] overflow-hidden border border-[#EAEAEA]">
-                             <Image src="/Rectangle-10@2x.png" alt="review" fill className="object-cover" />
-                           </div>
-                        </div>
-                      )}
-
                       <div className="flex justify-between items-center text-[13px] text-[#888888] font-bold">
                         <div className="flex items-center gap-4">
-                          <span className="hover:text-brand-green cursor-pointer">Share</span>
-                          <span>January, 03 2025</span>
+                          <span>{review.created_at ? new Date(review.created_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : 'Recently'}</span>
                         </div>
                       </div>
                     </div>
-                  ))}
+                  )) : (
+                    <p className="py-10 text-center text-gray-400 italic">No reviews yet. Be the first to review!</p>
+                  )}
 
                   {/* Pagination Footer */}
-                  <div className="flex justify-between items-center pt-[20px]">
-                    <span className="text-[14px] text-[#888888] font-bold tracking-tight">1–8 of 149 Reviews</span>
-                    <div className="flex gap-[12px]">
-                      <button className="w-[44px] h-[44px] rounded-full border border-[#EAEAEA] flex items-center justify-center hover:bg-white transition-all shadow-sm">
-                        <ChevronLeft size={20} className="text-black" />
-                      </button>
-                      <button className="w-[44px] h-[44px] rounded-full bg-brand-green text-white flex items-center justify-center hover:bg-[#154617] transition-all shadow-md">
-                        <ChevronRight size={20} className="text-white" />
-                      </button>
+                  {reviews.length > 8 && (
+                    <div className="flex justify-between items-center pt-[20px]">
+                      <span className="text-[14px] text-[#888888] font-bold tracking-tight">1–8 of {reviews.length} Reviews</span>
+                      <div className="flex gap-[12px]">
+                        <button className="w-[44px] h-[44px] rounded-full border border-[#EAEAEA] flex items-center justify-center hover:bg-white transition-all shadow-sm">
+                          <ChevronLeft size={20} className="text-black" />
+                        </button>
+                        <button className="w-[44px] h-[44px] rounded-full bg-brand-green text-white flex items-center justify-center hover:bg-[#154617] transition-all shadow-md">
+                          <ChevronRight size={20} className="text-white" />
+                        </button>
+                      </div>
                     </div>
-                  </div>
+                  )}
                 </div>
               </div>
 

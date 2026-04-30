@@ -16,16 +16,26 @@ export default function InstagramSection() {
   const [posts, setPosts] = useState<any[]>([]);
   const [heading, setHeading] = useState('Follow us on Instagram');
   const [handle, setHandle] = useState('grainzbyvitalicious');
+  const [isActive, setIsActive] = useState(true);
 
   useEffect(() => {
     getInstagramPosts().then((data) => { if (data && data.length > 0) setPosts(data); }).catch(() => {});
+    
     getSiteContent('instagram_section').then((content) => {
       if (content) {
         if (content.heading) setHeading(content.heading);
         if (content.handle) setHandle(content.handle);
       }
     }).catch(() => {});
+
+    getSiteContent('instagram_config').then((config) => {
+      if (config && config.is_active === false) {
+        setIsActive(false);
+      }
+    }).catch(() => {});
   }, []);
+
+  if (!isActive) return null;
 
   return (
     <section className="py-[40px] md:py-[60px] bg-white w-full overflow-hidden border-t border-[#f0f0f0]">

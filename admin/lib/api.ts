@@ -63,9 +63,11 @@ export const createProduct = async (formData: FormData) => {
   const category = formData.get('category') as string;
   const stock = Number(formData.get('stock') || 0);
   const isSale = formData.get('isSale') === 'true';
+  const isActive = formData.get('isActive') !== 'false';
   const tagsStr = formData.get('tags') as string;
   const tags = tagsStr ? tagsStr.split(',').map((t) => t.trim()) : [];
-  const nutritionInfo = (formData.get('nutritionInfo') as string) || '';
+  const nutritionTableStr = formData.get('nutritionTable') as string;
+  const nutritionTable = nutritionTableStr ? JSON.parse(nutritionTableStr) : [];
   const ingredients = (formData.get('ingredients') as string) || '';
 
   // Generate slug
@@ -112,8 +114,10 @@ export const createProduct = async (formData: FormData) => {
       category,
       stock,
       is_sale: isSale,
+      is_active: isActive,
       tags,
       nutrition_info: nutritionInfo,
+      nutrition_table: nutritionTable,
       ingredients,
     })
     .select()
@@ -147,11 +151,17 @@ export const updateProduct = async (id: string, formData: FormData) => {
   const isSale = formData.get('isSale');
   if (isSale !== null) updates.is_sale = isSale === 'true';
 
+  const isActive = formData.get('isActive');
+  if (isActive !== null) updates.is_active = isActive === 'true';
+
   const tagsStr = formData.get('tags') as string;
   if (tagsStr) updates.tags = tagsStr.split(',').map((t) => t.trim());
 
   const nutritionInfo = formData.get('nutritionInfo');
   if (nutritionInfo !== null) updates.nutrition_info = nutritionInfo;
+
+  const nutritionTableStr = formData.get('nutritionTable') as string;
+  if (nutritionTableStr !== null) updates.nutrition_table = JSON.parse(nutritionTableStr);
 
   const ingredients = formData.get('ingredients');
   if (ingredients !== null) updates.ingredients = ingredients;
@@ -191,9 +201,41 @@ export const updateProduct = async (id: string, formData: FormData) => {
 };
 
 export const deleteProduct = async (id: string) => {
-  const { error } = await supabase.from('products').update({ is_active: false }).eq('id', id);
+  const { error } = await supabase.from('products').delete().eq('id', id);
   if (error) throw new Error(error.message);
-  return { success: true, message: 'Product deleted' };
+  return { success: true, message: 'Product deleted permanently' };
+};
+
+export const setProductVisibility = async (id: string, isActive: boolean) => {
+  const { error } = await supabase.from('products').update({ is_active: isActive }).eq('id', id);
+  if (error) throw new Error(error.message);
+  return { success: true };
+};
+
+// ─── Categories ──────────────────────────────────────────────────────────────
+
+export const getCategories = async () => {
+  const { data, error } = await supabase.from('categories').select('*').order('sort_order', { ascending: true });
+  if (error) throw new Error(error.message);
+  return { success: true, data: data || [] };
+};
+
+export const createCategory = async (category: any) => {
+  const { data, error } = await supabase.from('categories').insert(category).select().single();
+  if (error) throw new Error(error.message);
+  return { success: true, data };
+};
+
+export const updateCategory = async (id: string, category: any) => {
+  const { data, error } = await supabase.from('categories').update(category).eq('id', id).select().single();
+  if (error) throw new Error(error.message);
+  return { success: true, data };
+};
+
+export const deleteCategory = async (id: string) => {
+  const { error } = await supabase.from('categories').delete().eq('id', id);
+  if (error) throw new Error(error.message);
+  return { success: true };
 };
 
 // ─── Orders ──────────────────────────────────────────────────────────────────
@@ -359,6 +401,17 @@ export const getHomepageSections = async () => {
   return { success: true, data: data || [] };
 };
 
+export const createHomepageSection = async (section: any) => {
+  const { data, error } = await supabase
+    .from('homepage_sections')
+    .insert(section)
+    .select()
+    .single();
+
+  if (error) throw new Error(error.message);
+  return data;
+};
+
 export const updateHomepageSection = async (
   id: string,
   body: { title?: string; product_ids?: string[]; is_active?: boolean; sort_order?: number }
@@ -449,6 +502,35 @@ export const deleteHeroImage = async (url: string) => {
   }
 };
 
+// ─── Powered By Cards ────────────────────────────────────────────────────────
+
+export const getPoweredByCards = async () => {
+  const { data, error } = await supabase
+    .from('powered_by_cards')
+    .select('*')
+    .order('sort_order', { ascending: true });
+  if (error) throw new Error(error.message);
+  return data || [];
+};
+
+export const createPoweredByCard = async (card: any) => {
+  const { data, error } = await supabase.from('powered_by_cards').insert(card).select().single();
+  if (error) throw new Error(error.message);
+  return data;
+};
+
+export const updatePoweredByCard = async (id: string, card: any) => {
+  const { data, error } = await supabase.from('powered_by_cards').update(card).eq('id', id).select().single();
+  if (error) throw new Error(error.message);
+  return data;
+};
+
+export const deletePoweredByCard = async (id: string) => {
+  const { error } = await supabase.from('powered_by_cards').delete().eq('id', id);
+  if (error) throw new Error(error.message);
+};
+
+
 // ─── Trust Metrics ───────────────────────────────────────────────────────────
 
 export const getTrustMetrics = async () => {
@@ -525,6 +607,48 @@ export const updateTestimonial = async (id: string, testimonial: any) => {
 export const deleteTestimonial = async (id: string) => {
   const { error } = await supabase.from('testimonials').delete().eq('id', id);
   if (error) throw new Error(error.message);
+};
+
+// ─── Product Reviews (Admin Control) ──────────────────────────────────────────
+
+export const getAllProductReviews = async (params?: Record<string, string>) => {
+  let query = supabase.from('product_reviews').select('*, products(name)').order('created_at', { ascending: false });
+  if (params?.product_id) query = query.eq('product_id', params.product_id);
+  const { data, error } = await query;
+  if (error) throw new Error(error.message);
+  return { success: true, data: data || [] };
+};
+
+export const updateProductReviewVisibility = async (id: string, isActive: boolean) => {
+  const { data, error } = await supabase.from('product_reviews').update({ is_active: isActive }).eq('id', id).select().single();
+  if (error) throw new Error(error.message);
+  return { success: true, data };
+};
+
+export const deleteProductReview = async (id: string) => {
+  const { error } = await supabase.from('product_reviews').delete().eq('id', id);
+  if (error) throw new Error(error.message);
+  return { success: true };
+};
+
+// ─── Instagram Section ────────────────────────────────────────────────────────
+
+export const getInstagramPostsAdmin = async () => {
+  const { data, error } = await supabase.from('instagram_posts').select('*').order('sort_order', { ascending: true });
+  if (error) throw new Error(error.message);
+  return { success: true, data: data || [] };
+};
+
+export const upsertInstagramPost = async (post: any) => {
+  const { data, error } = await supabase.from('instagram_posts').upsert(post).select().single();
+  if (error) throw new Error(error.message);
+  return { success: true, data };
+};
+
+export const deleteInstagramPost = async (id: string) => {
+  const { error } = await supabase.from('instagram_posts').delete().eq('id', id);
+  if (error) throw new Error(error.message);
+  return { success: true };
 };
 
 // ─── FAQs ────────────────────────────────────────────────────────────────────

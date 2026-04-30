@@ -49,11 +49,9 @@ function SaleContent() {
       const params: Record<string, string> = { page: String(page), limit: '9', sort, isSale: 'true' };
       if (selectedCategories.length === 1) params.category = selectedCategories[0];
       if (search) params.search = search;
+      if (excludeOutOfStock) params.inStock = 'true';
       const res = await getProducts(params);
       let items = res.data || [];
-      if (excludeOutOfStock) {
-        items = items.filter((p: any) => p.stock > 0);
-      }
       setProducts(items);
       setTotal(res.pagination?.total || 0);
     } catch { }

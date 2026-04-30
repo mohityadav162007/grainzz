@@ -19,6 +19,7 @@ export const getProducts = async (params?: Record<string, string>) => {
   if (params?.category) query = query.eq('category', params.category);
   if (params?.isSale === 'true') query = query.eq('is_sale', true);
   if (params?.search) query = query.ilike('name', `%${params.search}%`);
+  if (params?.inStock === 'true') query = query.gt('stock', 0);
 
   // Sorting
   const sort = params?.sort || 'createdAt';
@@ -43,10 +44,17 @@ export const getProducts = async (params?: Record<string, string>) => {
   if (error) throw new Error(error.message);
 
   // Get total count for pagination
-  const { count: total } = await supabase
+  let countQuery = supabase
     .from('products')
     .select('*', { count: 'exact', head: true })
     .eq('is_active', true);
+
+  if (params?.category) countQuery = countQuery.eq('category', params.category);
+  if (params?.isSale === 'true') countQuery = countQuery.eq('is_sale', true);
+  if (params?.search) countQuery = countQuery.ilike('name', `%${params.search}%`);
+  if (params?.inStock === 'true') countQuery = countQuery.gt('stock', 0);
+
+  const { count: total } = await countQuery;
 
   return {
     success: true,
@@ -55,9 +63,19 @@ export const getProducts = async (params?: Record<string, string>) => {
       total: total || 0,
       page,
       pages: Math.ceil((total || 0) / limit),
-      limit,
     },
   };
+};
+
+export const getCategories = async () => {
+  const { data, error } = await supabase
+    .from('categories')
+    .select('*')
+    .eq('is_active', true)
+    .order('sort_order', { ascending: true });
+
+  if (error) throw new Error(error.message);
+  return { success: true, data: data || [] };
 };
 
 export const getProductBySlug = async (slug: string) => {
@@ -136,16 +154,42 @@ export const getAvailabilityLogos = async () => {
   return data || [];
 };
 
-export const getTestimonials = async () => {
-  const { data, error } = await supabase
-    .from('testimonials')
-    .select('*')
-    .eq('is_active', true)
-    .order('sort_order', { ascending: true });
+  export const getTestimonials = async () => {
+    const { data, error } = await supabase
+      .from('testimonials')
+      .select('*, products(*)')
+      .eq('is_active', true)
+      .order('sort_order', { ascending: true });
+  
+    if (error) throw new Error(error.message);
+    return (data || []).map(t => ({
+      ...t,
+      product: t.products ? sanitizeProduct(t.products) : null
+    }));
+  };
 
-  if (error) throw new Error(error.message);
-  return data || [];
-};
+  export const getProductReviews = async (productId: string) => {
+    const { data, error } = await supabase
+      .from('product_reviews')
+      .select('*')
+      .eq('product_id', productId)
+      .eq('is_active', true)
+      .order('created_at', { ascending: false });
+  
+    if (error) throw new Error(error.message);
+    return data || [];
+  };
+  
+  export const getPoweredByCards = async () => {
+    const { data, error } = await supabase
+      .from('powered_by_cards')
+      .select('*')
+      .eq('is_active', true)
+      .order('sort_order', { ascending: true });
+  
+    if (error) throw new Error(error.message);
+    return data || [];
+  };
 
 export const getInstagramPosts = async () => {
   const { data, error } = await supabase

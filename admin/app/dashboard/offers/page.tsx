@@ -1,13 +1,14 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { getOffers, createOffer, deleteOffer, getProducts } from '@/lib/api';
-import { Plus, Trash2, Loader2 } from 'lucide-react';
+import { getOffers, createOffer, updateOffer, deleteOffer, getProducts } from '@/lib/api';
+import { Plus, Trash2, Edit2, Loader2, X } from 'lucide-react';
 
 export default function AdminOffersPage() {
   const [offers, setOffers] = useState<any[]>([]);
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
+  const [editingOffer, setEditingOffer] = useState<any>(null);
   const [saving, setSaving] = useState(false);
   const [selectedProducts, setSelectedProducts] = useState<string[]>([]);
 
@@ -31,15 +32,24 @@ export default function AdminOffersPage() {
     setSaving(true);
     const form = new FormData(e.currentTarget);
     const categories = (form.get('categories') as string)?.split(',').map(c => c.trim()).filter(Boolean) || [];
+    
+    const payload = {
+      title: form.get('title') as string,
+      discountPercentage: Number(form.get('discountPercentage')),
+      applicableProducts: selectedProducts,
+      applicableCategories: categories,
+      expiryDate: form.get('expiryDate') as string || undefined,
+      isActive: form.get('isActive') !== 'false',
+    };
+
     try {
-      await createOffer({
-        title: form.get('title') as string,
-        discountPercentage: Number(form.get('discountPercentage')),
-        applicableProducts: selectedProducts,
-        applicableCategories: categories,
-        expiryDate: form.get('expiryDate') as string || undefined,
-      });
+      if (editingOffer) {
+        await updateOffer(editingOffer.id, payload);
+      } else {
+        await createOffer(payload);
+      }
       setShowForm(false);
+      setEditingOffer(null);
       setSelectedProducts([]);
       fetchData();
     } catch (err: any) {
@@ -47,6 +57,12 @@ export default function AdminOffersPage() {
     } finally {
       setSaving(false);
     }
+  };
+
+  const handleEdit = (offer: any) => {
+    setEditingOffer(offer);
+    setSelectedProducts(offer.offer_products?.map((op: any) => op.product_id) || []);
+    setShowForm(true);
   };
 
   const handleDelete = async (id: string, title: string) => {
@@ -72,31 +88,38 @@ export default function AdminOffersPage() {
           <h1 className="text-2xl font-black text-gray-900">Offers</h1>
           <p className="text-gray-500 text-sm mt-1">Manage product offers & discounts</p>
         </div>
-        <button onClick={() => setShowForm(!showForm)} className="admin-btn">
-          <Plus size={18} /> {showForm ? 'Cancel' : 'New Offer'}
+        <button onClick={() => { setShowForm(!showForm); setEditingOffer(null); setSelectedProducts([]); }} className="admin-btn">
+          {showForm ? <><X size={18} /> Cancel</> : <><Plus size={18} /> New Offer</>}
         </button>
       </div>
 
       {showForm && (
         <form onSubmit={handleSubmit} className="admin-card p-6 mb-6 space-y-4">
-          <h2 className="font-bold text-gray-900">Create Offer</h2>
+          <h2 className="font-bold text-gray-900">{editingOffer ? 'Edit Offer' : 'Create Offer'}</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="md:col-span-2">
               <label className="block text-sm font-semibold text-gray-700 mb-1">Title *</label>
-              <input name="title" required className="admin-input" placeholder="Summer Sale 20% Off" />
+              <input name="title" required className="admin-input" placeholder="Summer Sale 20% Off" defaultValue={editingOffer?.title} />
             </div>
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-1">Discount % *</label>
-              <input name="discountPercentage" type="number" required className="admin-input" placeholder="20" />
+              <input name="discountPercentage" type="number" required className="admin-input" placeholder="20" defaultValue={editingOffer?.discount_percentage} />
             </div>
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-1">Categories (comma separated)</label>
-              <input name="categories" className="admin-input" placeholder="Healthy Chips, Grain Puffs" />
+              <input name="categories" className="admin-input" placeholder="Healthy Chips, Grain Puffs" defaultValue={editingOffer?.applicable_categories?.join(', ')} />
             </div>
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-1">Expiry Date</label>
-              <input name="expiryDate" type="date" className="admin-input" />
+              <input name="expiryDate" type="date" className="admin-input" defaultValue={editingOffer?.expiry_date ? new Date(editingOffer.expiry_date).toISOString().split('T')[0] : ''} />
             </div>
+            {editingOffer && (
+              <div className="flex items-center gap-3 pt-6">
+                <input name="isActive" type="checkbox" value="true" defaultChecked={editingOffer.is_active} className="w-4 h-4 rounded border-gray-300" />
+                <label className="text-sm font-semibold text-gray-700">Is Active</label>
+                <input type="hidden" name="isActive" value="false" />
+              </div>
+            )}
           </div>
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-2">Apply to Products</label>
@@ -110,7 +133,7 @@ export default function AdminOffersPage() {
             </div>
           </div>
           <button type="submit" disabled={saving} className="admin-btn">
-            {saving ? <><Loader2 size={18} className="animate-spin" /> Creating...</> : 'Create Offer'}
+            {saving ? <><Loader2 size={18} className="animate-spin" /> {editingOffer ? 'Saving...' : 'Creating...'}</> : (editingOffer ? 'Save Changes' : 'Create Offer')}
           </button>
         </form>
       )}
@@ -149,7 +172,10 @@ export default function AdminOffersPage() {
                           {isExpired ? 'Expired' : offer.is_active ? 'Active' : 'Inactive'}
                         </span>
                       </td>
-                      <td className="px-6 py-4 text-right">
+                      <td className="px-6 py-4 text-right space-x-2">
+                        <button onClick={() => handleEdit(offer)} className="w-8 h-8 rounded-lg text-primary hover:bg-primary/10 inline-flex items-center justify-center transition-colors">
+                          <Edit2 size={16} />
+                        </button>
                         <button onClick={() => handleDelete(offer.id, offer.title)} className="w-8 h-8 rounded-lg text-red-600 hover:bg-red-50 inline-flex items-center justify-center transition-colors">
                           <Trash2 size={16} />
                         </button>

@@ -1,12 +1,13 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { getCoupons, createCoupon, deleteCoupon } from '@/lib/api';
-import { Plus, Trash2, Tag, Loader2 } from 'lucide-react';
+import { getCoupons, createCoupon, updateCoupon, deleteCoupon } from '@/lib/api';
+import { Plus, Trash2, Edit2, Loader2, X } from 'lucide-react';
 
 export default function AdminCouponsPage() {
   const [coupons, setCoupons] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
+  const [editingCoupon, setEditingCoupon] = useState<any>(null);
   const [saving, setSaving] = useState(false);
 
   const fetchCoupons = async () => {
@@ -27,23 +28,36 @@ export default function AdminCouponsPage() {
     e.preventDefault();
     setSaving(true);
     const form = new FormData(e.currentTarget);
+    const payload = {
+      code: form.get('code') as string,
+      discountType: form.get('discountType') as string,
+      value: Number(form.get('value')),
+      minOrderValue: Number(form.get('minOrderValue') || 0),
+      maxDiscount: Number(form.get('maxDiscount') || 0) || undefined,
+      expiryDate: form.get('expiryDate') as string,
+      usageLimit: Number(form.get('usageLimit') || 0) || undefined,
+      isActive: form.get('isActive') !== 'false'
+    };
+
     try {
-      await createCoupon({
-        code: form.get('code') as string,
-        discountType: form.get('discountType') as string,
-        value: Number(form.get('value')),
-        minOrderValue: Number(form.get('minOrderValue') || 0),
-        maxDiscount: Number(form.get('maxDiscount') || 0) || undefined,
-        expiryDate: form.get('expiryDate') as string,
-        usageLimit: Number(form.get('usageLimit') || 0) || undefined,
-      });
+      if (editingCoupon) {
+        await updateCoupon(editingCoupon.id, payload);
+      } else {
+        await createCoupon(payload);
+      }
       setShowForm(false);
+      setEditingCoupon(null);
       fetchCoupons();
     } catch (err: any) {
       alert(err.message);
     } finally {
       setSaving(false);
     }
+  };
+
+  const handleEdit = (coupon: any) => {
+    setEditingCoupon(coupon);
+    setShowForm(true);
   };
 
   const handleDelete = async (id: string, code: string) => {
@@ -63,52 +77,60 @@ export default function AdminCouponsPage() {
           <h1 className="text-2xl font-black text-gray-900">Coupons</h1>
           <p className="text-gray-500 text-sm mt-1">Manage discount coupons</p>
         </div>
-        <button onClick={() => setShowForm(!showForm)} className="admin-btn">
-          <Plus size={18} /> {showForm ? 'Cancel' : 'New Coupon'}
+        <button onClick={() => { setShowForm(!showForm); setEditingCoupon(null); }} className="admin-btn">
+          {showForm ? <><X size={18} /> Cancel</> : <><Plus size={18} /> New Coupon</>}
         </button>
       </div>
 
       {showForm && (
         <form onSubmit={handleSubmit} className="admin-card p-6 mb-6 space-y-4">
-          <h2 className="font-bold text-gray-900">Create Coupon</h2>
+          <h2 className="font-bold text-gray-900">{editingCoupon ? 'Edit Coupon' : 'Create Coupon'}</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-1">Code *</label>
-              <input name="code" required className="admin-input" placeholder="SAVE20" />
+              <input name="code" required className="admin-input" placeholder="SAVE20" defaultValue={editingCoupon?.code} />
             </div>
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-1">Type *</label>
-              <select name="discountType" required className="admin-input">
+              <select name="discountType" required className="admin-input" defaultValue={editingCoupon?.discount_type || 'percentage'}>
                 <option value="percentage">Percentage</option>
                 <option value="flat">Flat</option>
               </select>
             </div>
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-1">Value *</label>
-              <input name="value" type="number" required className="admin-input" placeholder="20" />
+              <input name="value" type="number" required className="admin-input" placeholder="20" defaultValue={editingCoupon?.value} />
             </div>
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-1">Min Order (₹)</label>
-              <input name="minOrderValue" type="number" className="admin-input" defaultValue={0} />
+              <input name="minOrderValue" type="number" className="admin-input" defaultValue={editingCoupon?.min_order_value || 0} />
             </div>
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-1">Max Discount (₹)</label>
-              <input name="maxDiscount" type="number" className="admin-input" placeholder="Optional" />
+              <input name="maxDiscount" type="number" className="admin-input" placeholder="Optional" defaultValue={editingCoupon?.max_discount} />
             </div>
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-1">Expiry Date *</label>
-              <input name="expiryDate" type="date" required className="admin-input" />
+              <input name="expiryDate" type="date" required className="admin-input" defaultValue={editingCoupon ? new Date(editingCoupon.expiry_date).toISOString().split('T')[0] : ''} />
             </div>
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-1">Usage Limit</label>
-              <input name="usageLimit" type="number" className="admin-input" placeholder="Unlimited" />
+              <input name="usageLimit" type="number" className="admin-input" placeholder="Unlimited" defaultValue={editingCoupon?.usage_limit} />
             </div>
+            {editingCoupon && (
+              <div className="flex items-center gap-3 pt-6 md:col-span-2">
+                <input name="isActive" type="checkbox" value="true" defaultChecked={editingCoupon.is_active} className="w-4 h-4 rounded border-gray-300" />
+                <label className="text-sm font-semibold text-gray-700">Is Active</label>
+                <input type="hidden" name="isActive" value="false" />
+              </div>
+            )}
           </div>
           <button type="submit" disabled={saving} className="admin-btn">
-            {saving ? <><Loader2 size={18} className="animate-spin" /> Creating...</> : 'Create Coupon'}
+            {saving ? <><Loader2 size={18} className="animate-spin" /> {editingCoupon ? 'Saving...' : 'Creating...'}</> : (editingCoupon ? 'Save Changes' : 'Create Coupon')}
           </button>
         </form>
       )}
+
 
       <div className="admin-card overflow-hidden">
         <div className="overflow-x-auto">
@@ -146,7 +168,10 @@ export default function AdminCouponsPage() {
                           {isExpired ? 'Expired' : coupon.is_active ? 'Active' : 'Inactive'}
                         </span>
                       </td>
-                      <td className="px-6 py-4 text-right">
+                      <td className="px-6 py-4 text-right space-x-2">
+                        <button onClick={() => handleEdit(coupon)} className="w-8 h-8 rounded-lg text-primary hover:bg-primary/10 inline-flex items-center justify-center transition-colors">
+                          <Edit2 size={16} />
+                        </button>
                         <button onClick={() => handleDelete(coupon.id, coupon.code)} className="w-8 h-8 rounded-lg text-red-600 hover:bg-red-50 inline-flex items-center justify-center transition-colors">
                           <Trash2 size={16} />
                         </button>

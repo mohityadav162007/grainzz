@@ -69,6 +69,7 @@ export const createProduct = async (formData: FormData) => {
   const nutritionTableStr = formData.get('nutritionTable') as string;
   const nutritionTable = nutritionTableStr ? JSON.parse(nutritionTableStr) : [];
   const ingredients = (formData.get('ingredients') as string) || '';
+  const weight = (formData.get('weight') as string) || '';
 
   // Generate slug
   const slug = name
@@ -110,13 +111,14 @@ export const createProduct = async (formData: FormData) => {
       description,
       price,
       mrp,
+      weight,
       images: imageUrls,
       category,
       stock,
       is_sale: isSale,
       is_active: isActive,
       tags,
-      nutrition_info: nutritionInfo,
+      nutrition_info: formData.get('nutritionInfo') as string || '',
       nutrition_table: nutritionTable,
       ingredients,
     })
@@ -165,6 +167,9 @@ export const updateProduct = async (id: string, formData: FormData) => {
 
   const ingredients = formData.get('ingredients');
   if (ingredients !== null) updates.ingredients = ingredients;
+
+  const weight = formData.get('weight');
+  if (weight !== null) updates.weight = weight;
 
   // Upload new images
   const files = formData.getAll('images') as File[];
@@ -269,10 +274,11 @@ export const getOrderStats = async () => {
   return { success: true, data };
 };
 
-export const updateOrder = async (id: string, body: { status?: string; paymentStatus?: string }) => {
+export const updateOrder = async (id: string, body: { status?: string; paymentStatus?: string; tracking_link?: string }) => {
   const updates: Record<string, any> = {};
   if (body.status) updates.status = body.status;
   if (body.paymentStatus) updates.payment_status = body.paymentStatus;
+  if (body.tracking_link !== undefined) updates.tracking_link = body.tracking_link;
 
   const { data, error } = await supabase.from('orders').update(updates).eq('id', id).select().single();
   if (error) throw new Error(error.message);
@@ -310,6 +316,31 @@ export const createCoupon = async (body: {
     .select()
     .single();
 
+  if (error) throw new Error(error.message);
+  return { success: true, data };
+};
+
+export const updateCoupon = async (id: string, body: Partial<{
+  code: string;
+  discountType: string;
+  value: number;
+  minOrderValue?: number;
+  maxDiscount?: number;
+  expiryDate: string;
+  usageLimit?: number;
+  isActive: boolean;
+}>) => {
+  const updates: Record<string, any> = {};
+  if (body.code !== undefined) updates.code = body.code.toUpperCase();
+  if (body.discountType !== undefined) updates.discount_type = body.discountType;
+  if (body.value !== undefined) updates.value = Number(body.value);
+  if (body.minOrderValue !== undefined) updates.min_order_value = Number(body.minOrderValue) || 0;
+  if (body.maxDiscount !== undefined) updates.max_discount = body.maxDiscount ? Number(body.maxDiscount) : null;
+  if (body.expiryDate !== undefined) updates.expiry_date = new Date(body.expiryDate).toISOString();
+  if (body.usageLimit !== undefined) updates.usage_limit = body.usageLimit ? Number(body.usageLimit) : null;
+  if (body.isActive !== undefined) updates.is_active = body.isActive;
+
+  const { data, error } = await supabase.from('coupons').update(updates).eq('id', id).select().single();
   if (error) throw new Error(error.message);
   return { success: true, data };
 };
@@ -372,6 +403,59 @@ export const createOffer = async (body: {
     await supabase
       .from('products')
       .update({ offer_id: offer.id })
+      .in('category', body.applicableCategories);
+  }
+
+  return { success: true, data: offer };
+};
+
+export const updateOffer = async (id: string, body: {
+  title?: string;
+  discountPercentage?: number;
+  applicableProducts?: string[];
+  applicableCategories?: string[];
+  expiryDate?: string;
+  isActive?: boolean;
+}) => {
+  const updates: Record<string, any> = {};
+  if (body.title !== undefined) updates.title = body.title;
+  if (body.discountPercentage !== undefined) updates.discount_percentage = Number(body.discountPercentage);
+  if (body.applicableCategories !== undefined) updates.applicable_categories = body.applicableCategories;
+  if (body.expiryDate !== undefined) updates.expiry_date = body.expiryDate ? new Date(body.expiryDate).toISOString() : null;
+  if (body.isActive !== undefined) updates.is_active = body.isActive;
+
+  const { data: offer, error: offerError } = await supabase
+    .from('offers')
+    .update(updates)
+    .eq('id', id)
+    .select()
+    .single();
+
+  if (offerError) throw new Error(offerError.message);
+
+  if (body.applicableProducts !== undefined) {
+    // Unlink old products
+    await supabase.from('products').update({ offer_id: null }).eq('offer_id', id);
+    await supabase.from('offer_products').delete().eq('offer_id', id);
+
+    // Link new products
+    if (body.applicableProducts.length > 0) {
+      const junctions = body.applicableProducts.map((pid) => ({
+        offer_id: id,
+        product_id: pid,
+      }));
+      await supabase.from('offer_products').insert(junctions);
+      await supabase
+        .from('products')
+        .update({ offer_id: id })
+        .in('id', body.applicableProducts);
+    }
+  }
+
+  if (body.applicableCategories !== undefined && body.applicableCategories.length > 0) {
+    await supabase
+      .from('products')
+      .update({ offer_id: id })
       .in('category', body.applicableCategories);
   }
 
@@ -651,6 +735,25 @@ export const deleteInstagramPost = async (id: string) => {
   return { success: true };
 };
 
+export const uploadInstagramImage = async (file: File): Promise<string> => {
+  const fileName = `${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
+  const { data, error } = await supabase.storage
+    .from('product-images') // Reusing product-images bucket as it exists
+    .upload(`instagram/${fileName}`, file, { contentType: file.type, upsert: false });
+  if (error) throw new Error(error.message);
+  const { data: urlData } = supabase.storage.from('product-images').getPublicUrl(data.path);
+  return urlData.publicUrl;
+};
+
+export const deleteInstagramImage = async (url: string) => {
+  if (!url) return;
+  const parts = url.split('/product-images/');
+  const path = parts[1];
+  if (path) {
+    await supabase.storage.from('product-images').remove([decodeURIComponent(path)]);
+  }
+};
+
 // ─── FAQs ────────────────────────────────────────────────────────────────────
 
 export const getFaqs = async () => {
@@ -859,4 +962,18 @@ export const exportData = async (table: string, format: 'csv' | 'json' = 'json')
     return [headers, ...rows].join('\n');
   }
   return JSON.stringify(data, null, 2);
+};
+
+// ─── Store Settings ──────────────────────────────────────────────────────────
+
+export const getStoreSettings = async () => {
+  const { data, error } = await supabase.from('store_settings').select('*').order('key', { ascending: true });
+  if (error) throw new Error(error.message);
+  return { success: true, data: data || [] };
+};
+
+export const updateStoreSetting = async (key: string, value: string) => {
+  const { error } = await supabase.from('store_settings').update({ value }).eq('key', key);
+  if (error) throw new Error(error.message);
+  return { success: true };
 };

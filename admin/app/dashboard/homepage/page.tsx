@@ -3,7 +3,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import {
   Save, Loader2, Plus, Trash2, GripVertical,
   Type, Image, BarChart3, Star, MessageSquare, HelpCircle, Globe, ShoppingBag,
-  Upload, ImageIcon, X, Eye
+  Upload, ImageIcon, X, Eye, Heart
 } from 'lucide-react';
 import {
   getAllSiteContent, upsertSiteContent,
@@ -16,7 +16,7 @@ import {
   getFaqs, createFaq, updateFaq, deleteFaq,
   getHomepageSections, createHomepageSection, updateHomepageSection, getProducts,
   getPoweredByCards, createPoweredByCard, updatePoweredByCard, deletePoweredByCard,
-  getInstagramPostsAdmin, upsertInstagramPost, deleteInstagramPost
+  getInstagramPostsAdmin, upsertInstagramPost, deleteInstagramPost, uploadInstagramImage, deleteInstagramImage
 } from '@/lib/api';
 
 const tabs = [
@@ -28,6 +28,7 @@ const tabs = [
   { id: 'benefits', label: 'Benefits', icon: Star },
   { id: 'logos', label: 'Availability', icon: Globe },
   { id: 'featured', label: 'Featured Product', icon: ShoppingBag },
+  { id: 'team-favs', label: 'Team Favourites', icon: Heart },
   { id: 'testimonials', label: 'Testimonials', icon: MessageSquare },
   { id: 'instagram', label: 'Instagram', icon: ImageIcon },
   { id: 'faqs', label: 'FAQs', icon: HelpCircle },
@@ -163,6 +164,7 @@ export default function HomepageEditorPage() {
         {activeTab === 'powered-by' && (
           <PoweredByEditor
             cards={poweredByCards}
+            products={products}
             onRefresh={loadAll}
           />
         )}
@@ -209,6 +211,16 @@ export default function HomepageEditorPage() {
             config={siteContent.featured_product || {}}
             products={products}
             onSave={(c: any) => handleSaveSiteContent('featured_product', c)}
+            saving={saving}
+          />
+        )}
+
+        {/* ─── Team Favourites ─── */}
+        {activeTab === 'team-favs' && (
+          <TeamFavouritesEditor
+            config={siteContent.team_favourites || { product_ids: [] }}
+            products={products}
+            onSave={(c: any) => handleSaveSiteContent('team_favourites', c)}
             saving={saving}
           />
         )}
@@ -518,7 +530,7 @@ function HeroSlidesEditor({ slides, onRefresh }: any) {
   );
 }
 
-function PoweredByEditor({ cards, onRefresh }: any) {
+function PoweredByEditor({ cards, products, onRefresh }: any) {
   const [items, setItems] = useState(cards);
   const [saving, setSaving] = useState<string | null>(null);
 
@@ -537,6 +549,18 @@ function PoweredByEditor({ cards, onRefresh }: any) {
       });
     } catch (err: any) { alert(err.message); }
     finally { setSaving(null); }
+  };
+
+  const handleProductSelect = (i: number, productId: string) => {
+    const product = products.find((p: any) => p.id === productId);
+    if (product) {
+      setItems((prev: any[]) => prev.map((s: any, idx: number) => idx === i ? { 
+        ...s, 
+        title: product.name, 
+        link: `/products/${product.slug}`, 
+        image_url: product.images?.[0] || '' 
+      } : s));
+    }
   };
 
   const handleAdd = async () => {
@@ -587,6 +611,13 @@ function PoweredByEditor({ cards, onRefresh }: any) {
              </div>
              
              <div className="grid grid-cols-2 gap-3">
+                <div className="col-span-2">
+                  <label className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1 block">Link Product (Auto-fills Title, Link, Image)</label>
+                  <select onChange={(e) => handleProductSelect(i, e.target.value)} className="admin-input text-xs w-full">
+                    <option value="">Select a product to link...</option>
+                    {products.map((p: any) => <option key={p.id} value={p.id}>{p.name}</option>)}
+                  </select>
+                </div>
                 <div>
                   <label className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1 block">Title</label>
                   <input placeholder="Title" value={c.title || ''} onChange={e => updateField(i, 'title', e.target.value)} className="admin-input text-xs w-full" />
@@ -665,7 +696,15 @@ function ProductSectionsEditor({ sections, products, heading, onSaveHeading, onR
     setItems((prev: any[]) => prev.map((s: any) => {
       if (s.id !== sectionId) return s;
       const ids = s.product_ids || [];
-      return { ...s, product_ids: ids.includes(productId) ? ids.filter((id: string) => id !== productId) : [...ids, productId] };
+      if (ids.includes(productId)) {
+        return { ...s, product_ids: ids.filter((id: string) => id !== productId) };
+      } else {
+        if (ids.length >= 4) {
+          alert('Maximum 4 products allowed per tab');
+          return s;
+        }
+        return { ...s, product_ids: [...ids, productId] };
+      }
     }));
   };
 
@@ -677,6 +716,7 @@ function ProductSectionsEditor({ sections, products, heading, onSaveHeading, onR
   };
 
   const handleAddSection = async () => {
+    if (items.length >= 4) { alert('Maximum 4 tabs allowed'); return; }
     try {
       const data = await createHomepageSection({ title: 'New Section', section_type: 'custom', product_ids: [] });
       setItems((prev: any[]) => [...prev, data]);
@@ -695,8 +735,10 @@ function ProductSectionsEditor({ sections, products, heading, onSaveHeading, onR
         </button>
       </div>
       <div className="flex items-center justify-between mb-3">
-        <h4 className="font-semibold text-gray-700 text-sm">Product Sections</h4>
-        <button onClick={handleAddSection} className="admin-btn text-xs py-1 px-2"><Plus size={12} className="mr-1" /> Add Section</button>
+        <h4 className="font-semibold text-gray-700 text-sm">Product Sections ({items.length}/4)</h4>
+        <button onClick={handleAddSection} disabled={items.length >= 4} className={`admin-btn text-xs py-1 px-2 ${items.length >= 4 ? 'opacity-50 cursor-not-allowed' : ''}`}>
+          <Plus size={12} className="mr-1" /> Add Section
+        </button>
       </div>
       {items.map((section: any) => (
         <div key={section.id} className="border border-gray-200 rounded-xl p-4 mb-3">
@@ -835,11 +877,57 @@ function FeaturedProductEditor({ config, products, onSave, saving }: any) {
   );
 }
 
+function TeamFavouritesEditor({ config, products, onSave, saving }: any) {
+  const [c, setC] = useState(config);
+  
+  const toggleProduct = (productId: string) => {
+    const ids = c.product_ids || [];
+    if (ids.includes(productId)) {
+      setC({ ...c, product_ids: ids.filter((id: string) => id !== productId) });
+    } else {
+      if (ids.length >= 4) {
+        alert('Maximum 4 products allowed for Team Favourites');
+        return;
+      }
+      setC({ ...c, product_ids: [...ids, productId] });
+    }
+  };
+
+  return (
+    <div>
+      <h3 className="font-bold text-gray-900 mb-4">Team Favourites (About Us Page)</h3>
+      <div className="space-y-4">
+        <div>
+          <label className="text-xs font-medium text-gray-500 mb-2 block">Select exactly 4 products</label>
+          <div className="flex flex-wrap gap-2">
+            {products.map((p: any) => {
+              const isSelected = (c.product_ids || []).includes(p.id);
+              return (
+                <button 
+                  key={p.id} 
+                  onClick={() => toggleProduct(p.id)}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors border ${isSelected ? 'bg-primary text-white border-primary' : 'bg-white text-gray-600 border-gray-200 hover:border-gray-300'}`}
+                >
+                  {p.name}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+        <button onClick={() => onSave(c)} disabled={saving} className="admin-btn">
+          {saving ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />} Save Team Favourites
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function TestimonialsEditor({ testimonials, products, onRefresh }: any) {
   const [items, setItems] = useState(testimonials);
   const [saving, setSaving] = useState<string | null>(null);
 
   const handleAdd = async () => {
+    if (items.length >= 10) { alert('Maximum 10 testimonials allowed'); return; }
     try { await createTestimonial({ text: 'New testimonial', author: 'Name', role: 'Customer', rating: 5, sort_order: items.length + 1 }); onRefresh(); }
     catch (err: any) { alert(err.message); }
   };
@@ -859,8 +947,10 @@ function TestimonialsEditor({ testimonials, products, onRefresh }: any) {
   return (
     <div>
       <div className="flex items-center justify-between mb-4">
-        <h3 className="font-bold text-gray-900">Testimonials</h3>
-        <button onClick={handleAdd} className="admin-btn text-sm"><Plus size={14} /> Add</button>
+        <h3 className="font-bold text-gray-900">Testimonials ({items.length}/10)</h3>
+        <button onClick={handleAdd} disabled={items.length >= 10} className={`admin-btn text-sm ${items.length >= 10 ? 'opacity-50 cursor-not-allowed' : ''}`}>
+          <Plus size={14} /> Add
+        </button>
       </div>
       <div className="space-y-4">
         {items.map((t: any, i: number) => (
@@ -900,10 +990,25 @@ function TestimonialsEditor({ testimonials, products, onRefresh }: any) {
 function InstagramEditor({ posts, config, onSaveConfig, onRefresh, saving }: any) {
   const [items, setItems] = useState(posts);
   const [upserting, setUpserting] = useState<string | null>(null);
+  const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
   useEffect(() => {
     setItems(posts);
   }, [posts]);
+
+  const handleImageUpload = async (id: string, index: number, file: File) => {
+    if (!file.type.startsWith('image/')) { alert('Please select an image file'); return; }
+    setUpserting(`${id}-uploading`);
+    try {
+      const oldUrl = items[index]?.image_url;
+      if (oldUrl && oldUrl.includes('product-images/instagram')) {
+        await deleteInstagramImage(oldUrl).catch(() => {});
+      }
+      const publicUrl = await uploadInstagramImage(file);
+      setItems((prev: any[]) => prev.map((x: any, idx: number) => idx === index ? { ...x, image_url: publicUrl } : x));
+    } catch (err: any) { alert('Upload failed: ' + err.message); }
+    finally { setUpserting(null); }
+  };
 
   const handleAdd = () => {
     setItems([...items, { id: 'new-' + Date.now(), image_url: '', post_url: '', sort_order: items.length + 1, is_active: true }]);
@@ -952,12 +1057,28 @@ function InstagramEditor({ posts, config, onSaveConfig, onRefresh, saving }: any
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {items.map((post: any, i: number) => (
           <div key={post.id} className="border border-gray-200 rounded-xl p-3 space-y-2 bg-gray-50/30">
-            <div className="aspect-square bg-gray-100 rounded-lg overflow-hidden border">
+            <div className="aspect-square bg-gray-100 rounded-lg overflow-hidden border relative group">
               {post.image_url ? (
-                <img src={post.image_url} alt="" className="w-full h-full object-cover" />
+                <>
+                  <img src={post.image_url} alt="" className="w-full h-full object-cover" />
+                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                    <button onClick={() => fileInputRefs.current[post.id]?.click()} className="bg-white text-gray-800 text-[10px] font-bold px-3 py-1.5 rounded-full flex items-center gap-1 shadow-sm">
+                      <Upload size={10} /> Replace Cover
+                    </button>
+                  </div>
+                </>
               ) : (
-                <div className="w-full h-full flex items-center justify-center text-gray-300"><ImageIcon size={32} /></div>
+                <div onClick={() => fileInputRefs.current[post.id]?.click()} className="w-full h-full flex flex-col items-center justify-center text-gray-400 cursor-pointer hover:bg-gray-200 transition-colors">
+                  <Upload size={24} className="mb-1 text-gray-300" />
+                  <span className="text-[10px] font-medium text-gray-500">Upload Cover</span>
+                </div>
               )}
+              {upserting === `${post.id}-uploading` && (
+                <div className="absolute inset-0 bg-white/70 flex items-center justify-center"><Loader2 size={24} className="animate-spin text-gray-600" /></div>
+              )}
+              <input ref={(el) => { fileInputRefs.current[post.id] = el; }} type="file" accept="image/jpeg,image/png,image/webp" className="hidden"
+                onChange={(e) => { const file = e.target.files?.[0]; if (file) handleImageUpload(post.id, i, file); e.target.value = ''; }}
+              />
             </div>
             <input 
               placeholder="Image URL" 

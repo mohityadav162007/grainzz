@@ -15,7 +15,7 @@ export default function EditProductPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [existingImages, setExistingImages] = useState<string[]>([]);
-  const [newPreviews, setNewPreviews] = useState<string[]>([]);
+  const [newImageFiles, setNewImageFiles] = useState<File[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
   const [nutritionTable, setNutritionTable] = useState<{ nutrient: string; per_100g: string; rda_percent: string }[]>([]);
 
@@ -54,6 +54,8 @@ export default function EditProductPage() {
       const form = new FormData(e.currentTarget);
       // Add existing images
       existingImages.forEach((url) => form.append('existingImages', url));
+      // Append new images manually from state
+      newImageFiles.forEach(file => form.append('images', file));
       // Add nutrition table as JSON string
       form.append('nutritionTable', JSON.stringify(nutritionTable.filter(r => r.nutrient)));
       await updateProduct(id, form);
@@ -72,13 +74,18 @@ export default function EditProductPage() {
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files) return;
-    if (existingImages.length + files.length > 10) {
-      alert(`Maximum 10 images allowed. You can only add ${10 - existingImages.length} more.`);
+    const incomingFiles = Array.from(files);
+    if (existingImages.length + newImageFiles.length + incomingFiles.length > 10) {
+      alert(`Maximum 10 images allowed. You can only add ${10 - existingImages.length - newImageFiles.length} more.`);
       e.target.value = '';
-      setNewPreviews([]);
       return;
     }
-    setNewPreviews(Array.from(files).map((f) => URL.createObjectURL(f)));
+    setNewImageFiles(prev => [...prev, ...incomingFiles]);
+    e.target.value = '';
+  };
+
+  const removeNewImage = (index: number) => {
+    setNewImageFiles(prev => prev.filter((_, i) => i !== index));
   };
 
   if (loading) return <div className="text-center py-12 text-gray-500">Loading product...</div>;
@@ -216,12 +223,17 @@ export default function EditProductPage() {
           <div className="border-2 border-dashed border-gray-200 rounded-xl p-6 text-center">
             <Upload size={24} className="mx-auto text-gray-400 mb-2" />
             <p className="text-sm text-gray-500 mb-2">Upload new images (Max 10 total)</p>
-            <input name="images" type="file" multiple accept="image/*" onChange={handleImageChange} className="w-full max-w-xs mx-auto text-sm" />
+            <input type="file" multiple accept="image/*" onChange={handleImageChange} className="w-full max-w-xs mx-auto text-sm" />
           </div>
-          {newPreviews.length > 0 && (
+          {newImageFiles.length > 0 && (
             <div className="flex gap-3 flex-wrap">
-              {newPreviews.map((url, i) => (
-                <img key={i} src={url} alt="" className="w-20 h-20 object-cover rounded-lg border" />
+              {newImageFiles.map((f, i) => (
+                <div key={i} className="relative group">
+                  <img src={URL.createObjectURL(f)} alt="" className="w-20 h-20 object-cover rounded-lg border" />
+                  <button type="button" onClick={() => removeNewImage(i)} className="absolute -top-2 -right-2 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                    <X size={12} />
+                  </button>
+                </div>
               ))}
             </div>
           )}

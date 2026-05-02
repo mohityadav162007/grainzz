@@ -1,7 +1,7 @@
 'use client';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { LayoutDashboard, Package, ShoppingBag, Tag, Star, LogOut, Menu, X, Home, BarChart3, MessageSquare } from 'lucide-react';
+import { LayoutDashboard, Package, ShoppingBag, Tag, Star, LogOut, Menu, X, Home, BarChart3, MessageSquare, Settings } from 'lucide-react';
 import { useState } from 'react';
 import { adminLogout } from '@/lib/api';
 
@@ -14,6 +14,7 @@ const navItems = [
   { label: 'Offers', href: '/dashboard/offers', icon: Star },
   { label: 'Homepage', href: '/dashboard/homepage', icon: Home },
   { label: 'Analytics', href: '/dashboard/export', icon: BarChart3 },
+  { label: 'Settings', href: '/dashboard/settings', icon: Settings },
 ];
 
 export default function AdminSidebar() {

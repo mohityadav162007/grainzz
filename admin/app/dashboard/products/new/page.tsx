@@ -2,14 +2,14 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { createProduct, getCategories } from '@/lib/api';
-import { ArrowLeft, Upload, Loader2, Plus, Trash2 } from 'lucide-react';
+import { ArrowLeft, Upload, Loader2, Plus, Trash2, X } from 'lucide-react';
 import Link from 'next/link';
 
 export default function NewProductPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [previews, setPreviews] = useState<string[]>([]);
+  const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
   const [nutritionTable, setNutritionTable] = useState([{ nutrient: '', per_100g: '', rda_percent: '' }]);
 
@@ -37,6 +37,8 @@ export default function NewProductPage() {
     setError('');
     try {
       const form = new FormData(e.currentTarget);
+      // Append images manually from state
+      imageFiles.forEach(file => form.append('images', file));
       // Add nutrition table as JSON string
       form.append('nutritionTable', JSON.stringify(nutritionTable.filter(r => r.nutrient)));
       await createProduct(form);
@@ -51,14 +53,18 @@ export default function NewProductPage() {
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files) return;
-    if (files.length > 10) {
-      alert('Maximum 10 images allowed per product');
+    const newFiles = Array.from(files);
+    if (imageFiles.length + newFiles.length > 10) {
+      alert(`Maximum 10 images allowed per product. You can only add ${10 - imageFiles.length} more.`);
       e.target.value = '';
-      setPreviews([]);
       return;
     }
-    const urls = Array.from(files).map((f) => URL.createObjectURL(f));
-    setPreviews(urls);
+    setImageFiles(prev => [...prev, ...newFiles]);
+    e.target.value = ''; // Reset input so same file can be selected again
+  };
+
+  const removeImage = (index: number) => {
+    setImageFiles(prev => prev.filter((_, i) => i !== index));
   };
 
   return (
@@ -177,12 +183,17 @@ export default function NewProductPage() {
           <div className="border-2 border-dashed border-gray-200 rounded-xl p-8 text-center">
             <Upload size={32} className="mx-auto text-gray-400 mb-2" />
             <p className="text-sm text-gray-500 mb-2">Drag & drop or click to upload images (Max 10)</p>
-            <input name="images" type="file" multiple accept="image/*" onChange={handleImageChange} className="w-full max-w-xs mx-auto text-sm" />
+            <input type="file" multiple accept="image/*" onChange={handleImageChange} className="w-full max-w-xs mx-auto text-sm" />
           </div>
-          {previews.length > 0 && (
+          {imageFiles.length > 0 && (
             <div className="flex gap-3 flex-wrap">
-              {previews.map((url, i) => (
-                <img key={i} src={url} alt="" className="w-20 h-20 object-cover rounded-lg border" />
+              {imageFiles.map((f, i) => (
+                <div key={i} className="relative group">
+                  <img src={URL.createObjectURL(f)} alt="" className="w-20 h-20 object-cover rounded-lg border" />
+                  <button type="button" onClick={() => removeImage(i)} className="absolute -top-2 -right-2 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                    <X size={12} />
+                  </button>
+                </div>
               ))}
             </div>
           )}

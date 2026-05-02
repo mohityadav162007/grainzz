@@ -38,7 +38,13 @@ export default function AdminOrdersPage() {
 
   const handleStatusChange = async (orderId: string, newStatus: string) => {
     try {
-      await updateOrder(orderId, { status: newStatus });
+      if (newStatus === 'shipped') {
+        const link = window.prompt("Please enter the tracking link for this shipment:");
+        if (link === null) return; // User cancelled
+        await updateOrder(orderId, { status: newStatus, tracking_link: link });
+      } else {
+        await updateOrder(orderId, { status: newStatus });
+      }
       fetchOrders();
     } catch (err) {
       alert('Failed to update order status');
@@ -123,6 +129,14 @@ export default function AdminOrdersPage() {
                               <p>{order.user_phone}</p>
                               <p>{order.user_email}</p>
                               <p>{order.user_address}, {order.user_city} {order.user_state} {order.user_pincode}</p>
+                              {order.tracking_link && (
+                                <div className="mt-4">
+                                  <p className="font-semibold text-gray-700 mb-1">Tracking Link</p>
+                                  <a href={order.tracking_link} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline break-all">
+                                    {order.tracking_link}
+                                  </a>
+                                </div>
+                              )}
                             </div>
                             <div>
                               <p className="font-semibold text-gray-700 mb-1">Order Items</p>

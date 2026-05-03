@@ -123,7 +123,7 @@ export default function EditProductPage() {
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-1">Category *</label>
               <select name="category" required className="admin-input" defaultValue={product.category}>
-                {categories.map((c) => <option key={c} value={c}>{c}</option>)}
+                {categories.map((c: any) => <option key={c.id} value={c.name}>{c.name}</option>)}
               </select>
             </div>
             <div>

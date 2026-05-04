@@ -246,37 +246,36 @@ export default function Navbar() {
             </nav>
           </div>
 
+          {/* Floating Toggleable Search Bar (Desktop Only) */}
+          <div 
+            className={clsx(
+              "absolute top-full left-0 w-full bg-white border-b border-[#EAEAEA] shadow-md z-[35] hidden lg:flex items-center justify-center overflow-hidden transition-all duration-300 ease-in-out px-4",
+              isSearchOpen ? "h-[80px] opacity-100" : "h-0 opacity-0 pointer-events-none"
+            )}
+          >
+            <div className="relative w-full max-w-[600px] h-[48px] border border-[#CCCCCC] rounded-full flex items-center px-4 bg-[#FAFAFA] focus-within:border-primary focus-within:bg-white transition-colors">
+              <Search size={20} strokeWidth={2} className="text-[#888888] shrink-0" />
+              <input
+                type="text"
+                placeholder="Search for grainzz products..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && searchQuery.trim()) {
+                    setIsSearchOpen(false);
+                    window.location.href = `/products?search=${encodeURIComponent(searchQuery.trim())}`;
+                  }
+                }}
+                className="w-full h-full pl-3 bg-transparent text-[16px] text-[#222222] placeholder:text-[#888888] font-medium focus:outline-none"
+                autoFocus={isSearchOpen}
+              />
+              <button onClick={() => setIsSearchOpen(false)} className="text-[#A1A1A1] hover:text-[#222222] transition-colors p-1">
+                <X size={20} strokeWidth={2.5} />
+              </button>
+            </div>
+          </div>
         </div>
       </header>
-
-      {/* Floating Toggleable Search Bar (Desktop Only) */}
-      <div 
-        className={clsx(
-          "fixed left-0 w-full bg-white border-b border-[#EAEAEA] shadow-md z-[35] hidden lg:flex items-center justify-center overflow-hidden transition-all duration-300 ease-in-out px-4",
-          isSearchOpen ? "top-[80px] h-[80px] opacity-100" : "top-[80px] h-0 opacity-0 pointer-events-none"
-        )}
-      >
-        <div className="relative w-full max-w-[600px] h-[48px] border border-[#CCCCCC] rounded-full flex items-center px-4 bg-[#FAFAFA] focus-within:border-primary focus-within:bg-white transition-colors">
-          <Search size={20} strokeWidth={2} className="text-[#888888] shrink-0" />
-          <input
-            type="text"
-            placeholder="Search for grainzz products..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' && searchQuery.trim()) {
-                setIsSearchOpen(false);
-                window.location.href = `/products?search=${encodeURIComponent(searchQuery.trim())}`;
-              }
-            }}
-            className="w-full h-full pl-3 bg-transparent text-[16px] text-[#222222] placeholder:text-[#888888] font-medium focus:outline-none"
-            autoFocus={isSearchOpen}
-          />
-          <button onClick={() => setIsSearchOpen(false)} className="text-[#A1A1A1] hover:text-[#222222] transition-colors p-1">
-            <X size={20} strokeWidth={2.5} />
-          </button>
-        </div>
-      </div>
 
       <MobileSearchOverlay isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
 

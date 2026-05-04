@@ -273,10 +273,14 @@ export const createOrder = async (body: {
 }) => {
   const { items, userDetails, subtotal, couponCode, discountAmount, totalAmount } = body;
 
+  // Generate UUID v4 for the order to bypass needing .select() and running into RLS errors for guests
+  const orderId = crypto.randomUUID();
+
   // Create order
-  const { data: order, error: orderError } = await supabase
+  const { error: orderError } = await supabase
     .from('orders')
     .insert({
+      id: orderId,
       user_name: userDetails.name,
       user_phone: userDetails.phone,
       user_email: userDetails.email || '',
@@ -288,11 +292,12 @@ export const createOrder = async (body: {
       coupon_code: couponCode || '',
       discount_amount: discountAmount || 0,
       total_amount: totalAmount,
-    })
-    .select()
-    .single();
+    });
 
   if (orderError) throw new Error(orderError.message);
+  
+  // Create a mock order object for the return since we didn't select it back
+  const order = { id: orderId };
 
   // Create order items
   const orderItems = items.map((item) => ({

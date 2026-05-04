@@ -3,7 +3,7 @@ import { Suspense, useEffect, useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { CheckCircle, Package, Loader2, AlertCircle } from 'lucide-react';
-import { getOrder } from '@/lib/api';
+import { checkPaymentStatus } from '@/lib/api';
 
 function SuccessContent() {
   const searchParams = useSearchParams();
@@ -20,8 +20,8 @@ function SuccessContent() {
 
     const validateOrder = async () => {
       try {
-        const order = await getOrder(orderId);
-        if (order.payment_status === 'paid') {
+        const response = await checkPaymentStatus(orderId);
+        if (response.state === 'COMPLETED') {
           setIsValid(true);
         } else {
           // If not paid, force them back through verify logic

@@ -1,10 +1,18 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ChevronRight, Loader2 } from 'lucide-react';
 import { useCartStore } from '@/store/cartStore';
 import { createOrder, initiatePayment } from '@/lib/api';
+
+declare global {
+  interface Window {
+    PhonePeCheckout?: {
+      transact: (config: any) => void;
+    };
+  }
+}
 
 export default function CheckoutPage() {
   const { items, subtotal, discount, total, coupon, clearCart } = useCartStore();
@@ -14,6 +22,14 @@ export default function CheckoutPage() {
   const [form, setForm] = useState({
     name: '', phone: '', email: '', address: '', city: '', state: '', pincode: '',
   });
+
+  const [pendingOrderId, setPendingOrderId] = useState<string | null>(null);
+
+  // If the user modifies their cart after initiating a checkout,
+  // we must discard the pending order so a new one is created with updated items/totals.
+  useEffect(() => {
+    setPendingOrderId(null);
+  }, [items, total]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -25,42 +41,65 @@ export default function CheckoutPage() {
     setLoading(true);
     setError('');
     try {
-      // Create order
-      const orderRes = await createOrder({
-        items: items.map((i) => ({
-          product_id: i.id,
-          name: i.name,
-          image: i.image,
-          price: i.price,
-          mrp: i.mrp,
-          quantity: i.quantity,
-        })),
-        userDetails: form,
-        subtotal: subtotal(),
-        couponCode: coupon?.code || '',
-        discountAmount: discount(),
-        totalAmount: total(),
-      });
+      let orderId = pendingOrderId;
 
-      const orderId = orderRes.data.id;
+      // Create order only if we don't have a pending one
+      if (!orderId) {
+        const orderRes = await createOrder({
+          items: items.map((i) => ({
+            product_id: i.id,
+            name: i.name,
+            image: i.image,
+            price: i.price,
+            mrp: i.mrp,
+            quantity: i.quantity,
+          })),
+          userDetails: form,
+          subtotal: subtotal(),
+          couponCode: coupon?.code || '',
+          discountAmount: discount(),
+          totalAmount: total(),
+        });
+        orderId = orderRes.data.id;
+        setPendingOrderId(orderId);
+      }
+
+      if (!orderId) {
+        throw new Error("Order creation failed.");
+      }
 
       // Initiate PhonePe payment
-      try {
-        const payRes = await initiatePayment({ orderId, amount: total(), userPhone: form.phone });
-        if (payRes.data?.redirectUrl) {
+      const payRes = await initiatePayment({ orderId, amount: total(), userPhone: form.phone });
+      
+      if (payRes.data?.redirectUrl) {
+        if (typeof window !== 'undefined' && window.PhonePeCheckout) {
+          clearCart();
+          setLoading(false);
+          window.PhonePeCheckout.transact({
+            tokenUrl: payRes.data.redirectUrl,
+            type: "IFRAME",
+            callback: function(response: string) {
+              if (response === 'CONCLUDED') {
+                router.push(`/payment/verify?orderId=${orderId}`);
+              } else if (response === 'USER_CANCEL') {
+                setError('Payment was cancelled by user.');
+              } else {
+                setError(`Payment issue occurred. Code: ${response}`);
+              }
+            }
+          });
+          return;
+        } else {
+          // Fallback to direct redirect if SDK failed to load
           clearCart();
           window.location.href = payRes.data.redirectUrl;
           return;
         }
-      } catch {
-        // Payment gateway error - still go to success page for demo
       }
-
-      clearCart();
-      router.push(`/payment/success?orderId=${orderId}`);
+      
+      throw new Error('Failed to initiate payment with PhonePe.');
     } catch (err: any) {
       setError(err.message || 'Something went wrong. Please try again.');
-    } finally {
       setLoading(false);
     }
   };

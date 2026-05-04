@@ -38,7 +38,7 @@ export default function PoweredBy() {
   useEffect(() => {
     getPoweredByCards().then(data => {
       if (data && data.length > 0) {
-        setCards(data.map((c: any) => ({
+        setCards(data.slice(0, 3).map((c: any) => ({
           title: c.title,
           subtitle: c.subtitle,
           topBg: c.top_bg_color || 'bg-[#C68356]',

@@ -23,9 +23,14 @@ export const metadata: Metadata = {
   },
 };
 
+import Script from 'next/script';
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
+      <head>
+        <Script src="https://mercury.phonepe.com/web/bundle/checkout.js" strategy="lazyOnload" />
+      </head>
       <body className={`${jakarta.className} bg-white text-brand-black`}>
         <AuthInitializer />
         <AnnouncementBar />

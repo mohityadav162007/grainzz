@@ -470,44 +470,33 @@ export const deleteOffer = async (id: string) => {
 // ─── Homepage Sections ───────────────────────────────────────────────────────
 
 export const getHomepageSections = async () => {
-  const { data, error } = await supabase
-    .from('homepage_sections')
-    .select('*')
-    .order('sort_order', { ascending: true });
-
-  if (error) throw new Error(error.message);
-  return { success: true, data: data || [] };
+  const { data, error } = await supabase.from('store_settings').select('*').eq('key', 'product_tabs_json').single();
+  if (error || !data) return { success: true, data: [] };
+  try {
+    return { success: true, data: JSON.parse(data.value) };
+  } catch (e) { return { success: true, data: [] }; }
 };
 
-export const createHomepageSection = async (section: any) => {
-  const { data, error } = await supabase
-    .from('homepage_sections')
-    .insert(section)
-    .select()
-    .single();
-
-  if (error) throw new Error(error.message);
-  return data;
+const saveHomepageSections = async (sections: any[]) => {
+  const { data } = await supabase.from('store_settings').select('id').eq('key', 'product_tabs_json').single();
+  if (data) {
+    await supabase.from('store_settings').update({ value: JSON.stringify(sections) }).eq('key', 'product_tabs_json');
+  } else {
+    await supabase.from('store_settings').insert({ key: 'product_tabs_json', value: JSON.stringify(sections) });
+  }
 };
 
-export const updateHomepageSection = async (
-  id: string,
-  body: { title?: string; product_ids?: string[]; is_active?: boolean; sort_order?: number }
-) => {
-  const { data, error } = await supabase
-    .from('homepage_sections')
-    .update(body)
-    .eq('id', id)
-    .select()
-    .single();
-
-  if (error) throw new Error(error.message);
-  return { success: true, data };
-};
-
-export const deleteHomepageSection = async (id: string) => {
-  const { error } = await supabase.from('homepage_sections').delete().eq('id', id);
-  if (error) throw new Error(error.message);
+export const saveProductTabs = async (tabs: { title: string; product_ids: string[] }[]) => {
+  const { data } = await supabase.from('store_settings').select('id').eq('key', 'product_tabs_json').single();
+  const jsonValue = JSON.stringify(tabs);
+  if (data) {
+    const { error } = await supabase.from('store_settings').update({ value: jsonValue }).eq('key', 'product_tabs_json');
+    if (error) throw new Error(error.message);
+  } else {
+    const { error } = await supabase.from('store_settings').insert({ key: 'product_tabs_json', value: jsonValue, description: 'Product tabs JSON' });
+    if (error) throw new Error(error.message);
+  }
+  return { success: true };
 };
 
 // ─── Site Content (Key-Value Store) ──────────────────────────────────────────
@@ -523,47 +512,72 @@ export const getSiteContent = async (key: string) => {
 };
 
 export const getAllSiteContent = async () => {
-  const { data, error } = await supabase.from('site_content').select('*');
-  if (error) throw new Error(error.message);
-  return data || [];
+  const { data, error } = await supabase.from('store_settings').select('*');
+  if (error) return [];
+  // Filter out the JSON arrays we use for complex components
+  return (data || []).filter((d: any) => !d.key.endsWith('_json'));
 };
 
 export const upsertSiteContent = async (key: string, value: any) => {
-  const { data, error } = await supabase
-    .from('site_content')
-    .upsert({ key, value }, { onConflict: 'key' })
-    .select()
-    .single();
-  if (error) throw new Error(error.message);
-  return data;
+  const strValue = typeof value === 'string' ? value : JSON.stringify(value);
+  const { data } = await supabase.from('store_settings').select('id').eq('key', key).single();
+  
+  if (data) {
+    const { data: updated, error } = await supabase.from('store_settings').update({ value: strValue }).eq('key', key).select().single();
+    if (error) throw new Error(error.message);
+    return updated;
+  } else {
+    const { data: inserted, error } = await supabase.from('store_settings').insert({ key, value: strValue, description: 'Site content' }).select().single();
+    if (error) throw new Error(error.message);
+    return inserted;
+  }
 };
 
 // ─── Hero Slides ─────────────────────────────────────────────────────────────
 
 export const getHeroSlides = async () => {
-  const { data, error } = await supabase
-    .from('hero_slides')
-    .select('*')
-    .order('sort_order', { ascending: true });
-  if (error) throw new Error(error.message);
-  return data || [];
+  const { data, error } = await supabase.from('store_settings').select('*').eq('key', 'hero_slides_json').single();
+  if (error || !data) return [];
+  try {
+    const slides = JSON.parse(data.value);
+    return slides.sort((a: any, b: any) => (a.sort_order || 0) - (b.sort_order || 0));
+  } catch (e) { return []; }
+};
+
+const saveHeroSlides = async (slides: any[]) => {
+  const { data } = await supabase.from('store_settings').select('id').eq('key', 'hero_slides_json').single();
+  if (data) {
+    const { error } = await supabase.from('store_settings').update({ value: JSON.stringify(slides) }).eq('key', 'hero_slides_json');
+    if (error) throw new Error(error.message);
+  } else {
+    const { error } = await supabase.from('store_settings').insert({ key: 'hero_slides_json', value: JSON.stringify(slides), description: 'Hero slides JSON' });
+    if (error) throw new Error(error.message);
+  }
 };
 
 export const createHeroSlide = async (slide: any) => {
-  const { data, error } = await supabase.from('hero_slides').insert(slide).select().single();
-  if (error) throw new Error(error.message);
-  return data;
+  const slides = await getHeroSlides();
+  const newSlide = { ...slide, id: crypto.randomUUID(), created_at: new Date().toISOString() };
+  slides.push(newSlide);
+  await saveHeroSlides(slides);
+  return newSlide;
 };
 
 export const updateHeroSlide = async (id: string, slide: any) => {
-  const { data, error } = await supabase.from('hero_slides').update(slide).eq('id', id).select().single();
-  if (error) throw new Error(error.message);
-  return data;
+  const slides = await getHeroSlides();
+  const index = slides.findIndex((s: any) => s.id === id);
+  if (index !== -1) {
+    slides[index] = { ...slides[index], ...slide };
+    await saveHeroSlides(slides);
+    return slides[index];
+  }
+  throw new Error('Slide not found');
 };
 
 export const deleteHeroSlide = async (id: string) => {
-  const { error } = await supabase.from('hero_slides').delete().eq('id', id);
-  if (error) throw new Error(error.message);
+  const slides = await getHeroSlides();
+  const newSlides = slides.filter((s: any) => s.id !== id);
+  await saveHeroSlides(newSlides);
 };
 
 export const uploadHeroImage = async (file: File): Promise<string> => {
@@ -578,29 +592,48 @@ export const deleteHeroImage = async (_url: string) => {
 // ─── Powered By Cards ────────────────────────────────────────────────────────
 
 export const getPoweredByCards = async () => {
-  const { data, error } = await supabase
-    .from('powered_by_cards')
-    .select('*')
-    .order('sort_order', { ascending: true });
-  if (error) throw new Error(error.message);
-  return data || [];
+  const { data, error } = await supabase.from('store_settings').select('*').eq('key', 'powered_by_json').single();
+  if (error || !data) return [];
+  try {
+    const cards = JSON.parse(data.value);
+    return cards.sort((a: any, b: any) => (a.sort_order || 0) - (b.sort_order || 0));
+  } catch (e) { return []; }
+};
+
+const savePoweredByCards = async (cards: any[]) => {
+  const { data } = await supabase.from('store_settings').select('id').eq('key', 'powered_by_json').single();
+  if (data) {
+    const { error } = await supabase.from('store_settings').update({ value: JSON.stringify(cards) }).eq('key', 'powered_by_json');
+    if (error) throw new Error(error.message);
+  } else {
+    const { error } = await supabase.from('store_settings').insert({ key: 'powered_by_json', value: JSON.stringify(cards), description: 'Powered By Cards JSON' });
+    if (error) throw new Error(error.message);
+  }
 };
 
 export const createPoweredByCard = async (card: any) => {
-  const { data, error } = await supabase.from('powered_by_cards').insert(card).select().single();
-  if (error) throw new Error(error.message);
-  return data;
+  const cards = await getPoweredByCards();
+  const newCard = { ...card, id: crypto.randomUUID(), created_at: new Date().toISOString() };
+  cards.push(newCard);
+  await savePoweredByCards(cards);
+  return newCard;
 };
 
 export const updatePoweredByCard = async (id: string, card: any) => {
-  const { data, error } = await supabase.from('powered_by_cards').update(card).eq('id', id).select().single();
-  if (error) throw new Error(error.message);
-  return data;
+  const cards = await getPoweredByCards();
+  const index = cards.findIndex((s: any) => s.id === id);
+  if (index !== -1) {
+    cards[index] = { ...cards[index], ...card };
+    await savePoweredByCards(cards);
+    return cards[index];
+  }
+  throw new Error('Card not found');
 };
 
 export const deletePoweredByCard = async (id: string) => {
-  const { error } = await supabase.from('powered_by_cards').delete().eq('id', id);
-  if (error) throw new Error(error.message);
+  const cards = await getPoweredByCards();
+  const newCards = cards.filter((s: any) => s.id !== id);
+  await savePoweredByCards(newCards);
 };
 
 
@@ -707,20 +740,47 @@ export const deleteProductReview = async (id: string) => {
 // ─── Instagram Section ────────────────────────────────────────────────────────
 
 export const getInstagramPostsAdmin = async () => {
-  const { data, error } = await supabase.from('instagram_posts').select('*').order('sort_order', { ascending: true });
-  if (error) throw new Error(error.message);
-  return { success: true, data: data || [] };
+  const { data, error } = await supabase.from('store_settings').select('*').eq('key', 'instagram_json').single();
+  if (error || !data) return { success: true, data: [] };
+  try {
+    const posts = JSON.parse(data.value);
+    return { success: true, data: posts.sort((a: any, b: any) => (a.sort_order || 0) - (b.sort_order || 0)) };
+  } catch (e) { return { success: true, data: [] }; }
+};
+
+const saveInstagramPosts = async (posts: any[]) => {
+  const { data } = await supabase.from('store_settings').select('id').eq('key', 'instagram_json').single();
+  if (data) {
+    const { error } = await supabase.from('store_settings').update({ value: JSON.stringify(posts) }).eq('key', 'instagram_json');
+    if (error) throw new Error(error.message);
+  } else {
+    const { error } = await supabase.from('store_settings').insert({ key: 'instagram_json', value: JSON.stringify(posts), description: 'Instagram Posts JSON' });
+    if (error) throw new Error(error.message);
+  }
 };
 
 export const upsertInstagramPost = async (post: any) => {
-  const { data, error } = await supabase.from('instagram_posts').upsert(post).select().single();
-  if (error) throw new Error(error.message);
-  return { success: true, data };
+  const res = await getInstagramPostsAdmin();
+  const posts = res.data;
+  const index = posts.findIndex((p: any) => p.id === post.id);
+  const newPost = { ...post };
+  if (!newPost.id) {
+    newPost.id = crypto.randomUUID();
+    newPost.created_at = new Date().toISOString();
+    posts.push(newPost);
+  } else if (index !== -1) {
+    posts[index] = { ...posts[index], ...newPost };
+  } else {
+    posts.push(newPost);
+  }
+  await saveInstagramPosts(posts);
+  return { success: true, data: newPost };
 };
 
 export const deleteInstagramPost = async (id: string) => {
-  const { error } = await supabase.from('instagram_posts').delete().eq('id', id);
-  if (error) throw new Error(error.message);
+  const res = await getInstagramPostsAdmin();
+  const newPosts = res.data.filter((p: any) => p.id !== id);
+  await saveInstagramPosts(newPosts);
   return { success: true };
 };
 

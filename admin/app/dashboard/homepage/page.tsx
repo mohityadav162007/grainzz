@@ -41,12 +41,12 @@ export default function HomepageEditorPage() {
     setLoading(true);
     try {
       const [sc, hs, sec, prods, pwrbd, ig] = await Promise.all([
-        getAllSiteContent(),
-        getHeroSlides(),
-        getHomepageSections().then(r => r.data),
-        getProducts().then(r => r.data),
-        getPoweredByCards(),
-        getInstagramPostsAdmin().then(r => r.data),
+        getAllSiteContent().catch(e => { console.error('SC err:', e); return []; }),
+        getHeroSlides().catch(e => { console.error('HS err:', e); return []; }),
+        getHomepageSections().then(r => r.data).catch(e => { console.error('Sec err:', e); return []; }),
+        getProducts().then(r => r.data).catch(e => { console.error('Prod err:', e); return []; }),
+        getPoweredByCards().catch(e => { console.error('PBC err:', e); return []; }),
+        getInstagramPostsAdmin().then(r => r.data).catch(e => { console.error('IG err:', e); return []; }),
       ]);
       const contentMap: Record<string, any> = {};
       sc.forEach((item: any) => { contentMap[item.key] = item.value; });

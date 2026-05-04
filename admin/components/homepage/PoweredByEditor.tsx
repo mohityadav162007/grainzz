@@ -63,6 +63,16 @@ export default function PoweredByEditor({ cards, products, onRefresh }: any) {
           });
         }
       }
+
+      // Cleanup any extra slots if the database has more than 3
+      if (cards.length > 3) {
+        for (let i = 3; i < cards.length; i++) {
+          if (cards[i]?.id) {
+            await deletePoweredByCard(cards[i].id);
+          }
+        }
+      }
+
       onRefresh();
     } catch (err: any) { alert(err.message); }
     finally { setSaving(false); }

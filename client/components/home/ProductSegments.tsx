@@ -3,78 +3,78 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import ProductCard from '@/components/products/ProductCard';
 import { supabase } from '@/lib/supabase';
-import { getSiteContent } from '@/lib/api';
+import { getHomepageProductTabs, getSiteContent } from '@/lib/api';
 import { ChevronRight } from 'lucide-react';
 
-const tabs = [
-  { label: 'Bestsellers', value: 'bestsellers' },
-  { label: 'Jar Combos', value: 'jar-combos' },
-  { label: 'Puffed Rice Combos', value: 'puffed-rice-combos' },
-  { label: 'Shop All Jars', value: 'shop-all-jars' },
-];
+interface TabData {
+  title: string;
+  product_ids: string[];
+}
 
 export default function ProductSegments() {
-  const [activeTab, setActiveTab] = useState('bestsellers');
+  const [tabs, setTabs] = useState<TabData[]>([]);
+  const [activeTab, setActiveTab] = useState('');
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [heading, setHeading] = useState('Our Product Segments');
-  const [dbSections, setDbSections] = useState<any[]>([]);
 
-  // Fetch heading content
+  // Fetch tabs + heading on mount
   useEffect(() => {
-    getSiteContent('product_tabs_heading').then((content) => {
-      if (content) {
-        if (content.heading) setHeading(content.heading);
-      }
-    }).catch(() => {});
+    const init = async () => {
+      setLoading(true);
+      try {
+        // Fetch heading
+        getSiteContent('product_tabs_heading').then((content) => {
+          if (content?.heading) setHeading(content.heading);
+        }).catch(() => {});
 
-    // Fetch Sections
-    supabase.from('homepage_sections').select('*').eq('is_active', true).then(({ data }) => {
-      if (data) setDbSections(data);
-    });
+        // Fetch product tabs from DB
+        const tabsData = await getHomepageProductTabs();
+        if (tabsData.length > 0) {
+          setTabs(tabsData);
+          setActiveTab(tabsData[0].title);
+        }
+      } catch {
+        setTabs([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    init();
   }, []);
 
-  // Fetch products based on tab
+  // Fetch products when active tab changes
   useEffect(() => {
+    if (!activeTab || tabs.length === 0) return;
+
     const fetchProducts = async () => {
       setLoading(true);
       try {
-        const activeLabel = tabs.find(t => t.value === activeTab)?.label;
-        const section = dbSections.find((s: any) => s.title === activeLabel);
-
-        let query = supabase
-          .from('products')
-          .select('*')
-          .eq('is_active', true);
-
-        if (section && section.product_ids && section.product_ids.length > 0) {
-          query = query.in('id', section.product_ids);
-        } else {
-          // Fallbacks for empty sections
-          if (activeTab === 'bestsellers') {
-            query = query.order('views', { ascending: false });
-          } else if (activeTab === 'shop-all-jars') {
-            query = query.in('category', ['Healthy Chips', 'Grain Puffs']);
-          } else if (activeTab === 'jar-combos') {
-            query = query.eq('category', 'Combos');
-          } else if (activeTab === 'puffed-rice-combos') {
-            query = query.eq('category', 'Puffed Rice');
-          }
+        const currentTab = tabs.find((t) => t.title === activeTab);
+        if (!currentTab || !currentTab.product_ids || currentTab.product_ids.length === 0) {
+          setProducts([]);
+          setLoading(false);
+          return;
         }
 
-        query = query.limit(4);
+        const { data, error } = await supabase
+          .from('products')
+          .select('*')
+          .in('id', currentTab.product_ids)
+          .eq('is_active', true);
 
-        const { data, error } = await query;
         if (error) throw error;
-        
+
         // Sanitize placeholder links
         const sanitized = (data || []).map((prod: any) => {
           if (prod && Array.isArray(prod.images)) {
-             prod.images = prod.images.map((img: string) => img.includes('placeholder.jpg') ? '/image-2@2x.png' : img);
+            prod.images = prod.images.map((img: string) =>
+              img.includes('placeholder.jpg') ? '/image-2@2x.png' : img
+            );
           }
           return prod;
         });
-        
+
         setProducts(sanitized);
       } catch {
         setProducts([]);
@@ -82,10 +82,11 @@ export default function ProductSegments() {
         setLoading(false);
       }
     };
-    if (dbSections.length > 0 || activeTab) {
-      fetchProducts();
-    }
-  }, [activeTab, dbSections]);
+    fetchProducts();
+  }, [activeTab, tabs]);
+
+  // Don't render section if no tabs configured
+  if (!loading && tabs.length === 0) return null;
 
   return (
     <section className="py-[40px] md:py-[60px] bg-white w-full">
@@ -98,15 +99,15 @@ export default function ProductSegments() {
         <div className="flex flex-wrap items-center justify-center gap-[12px] md:gap-[16px] mb-[48px]">
           {tabs.map((tab) => (
             <button
-              key={tab.label}
-              onClick={() => setActiveTab(tab.value)}
+              key={tab.title}
+              onClick={() => setActiveTab(tab.title)}
               className={`px-[24px] py-[10px] md:px-[32px] md:py-[12px] rounded-full text-[14px] md:text-[16px] font-bold transition-all duration-300 border-[1.5px]
-                ${activeTab === tab.value
+                ${activeTab === tab.title
                   ? 'bg-brand-green text-white border-brand-green shadow-md'
                   : 'bg-transparent text-[#666666] border-[#CCCCCC] hover:border-brand-black hover:text-brand-black'
                 }`}
             >
-              {tab.label}
+              {tab.title}
             </button>
           ))}
         </div>

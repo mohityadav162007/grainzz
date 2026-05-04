@@ -8,6 +8,12 @@ const sanitizeProduct = (product: any) => {
   return product;
 };
 
+export const getOrder = async (orderId: string) => {
+  const { data, error } = await supabase.from('orders').select('*').eq('id', orderId).single();
+  if (error) throw new Error(error.message);
+  return data;
+};
+
 // ─── Products ────────────────────────────────────────────────────────────────
 
 export const getProducts = async (params?: Record<string, string>) => {
@@ -99,26 +105,34 @@ export const getProductBySlug = async (slug: string) => {
 // ─── Homepage Dynamic Content ────────────────────────────────────────────────
 
 export const getSiteContent = async (key: string) => {
-  const { data, error } = await supabase
-    .from('site_content')
-    .select('value')
-    .eq('key', key)
-    .single();
-
-  if (error) return null;
-  return data?.value;
+  const { data, error } = await supabase.from('store_settings').select('value').eq('key', key).single();
+  if (error || !data) return null;
+  try {
+    return JSON.parse(data.value);
+  } catch (e) {
+    return data.value;
+  }
 };
 
 export const getHeroSlides = async () => {
-  const { data, error } = await supabase
-    .from('hero_slides')
-    .select('*')
-    .eq('is_active', true)
-    .order('sort_order', { ascending: true })
-    .limit(5);
+  const { data, error } = await supabase.from('store_settings').select('value').eq('key', 'hero_slides_json').single();
+  if (error || !data) return [];
+  try {
+    const slides = JSON.parse(data.value);
+    return slides.filter((s: any) => s.is_active !== false).sort((a: any, b: any) => (a.sort_order || 0) - (b.sort_order || 0)).slice(0, 5);
+  } catch (e) { return []; }
+};
 
-  if (error) throw new Error(error.message);
-  return data || [];
+export const getHomepageProductTabs = async (): Promise<{ title: string; product_ids: string[] }[]> => {
+  const { data, error } = await supabase
+    .from('store_settings')
+    .select('value')
+    .eq('key', 'product_tabs_json')
+    .single();
+  if (error || !data) return [];
+  try {
+    return JSON.parse(data.value);
+  } catch { return []; }
 };
 
 export const getTrustMetrics = async () => {
@@ -181,25 +195,21 @@ export const getAvailabilityLogos = async () => {
   };
   
   export const getPoweredByCards = async () => {
-    const { data, error } = await supabase
-      .from('powered_by_cards')
-      .select('*')
-      .eq('is_active', true)
-      .order('sort_order', { ascending: true });
-  
-    if (error) throw new Error(error.message);
-    return data || [];
+    const { data, error } = await supabase.from('store_settings').select('value').eq('key', 'powered_by_json').single();
+    if (error || !data) return [];
+    try {
+      const cards = JSON.parse(data.value);
+      return cards.filter((s: any) => s.is_active !== false).sort((a: any, b: any) => (a.sort_order || 0) - (b.sort_order || 0));
+    } catch (e) { return []; }
   };
 
 export const getInstagramPosts = async () => {
-  const { data, error } = await supabase
-    .from('instagram_posts')
-    .select('*')
-    .eq('is_active', true)
-    .order('sort_order', { ascending: true });
-
-  if (error) throw new Error(error.message);
-  return data || [];
+  const { data, error } = await supabase.from('store_settings').select('value').eq('key', 'instagram_json').single();
+  if (error || !data) return [];
+  try {
+    const posts = JSON.parse(data.value);
+    return posts.filter((s: any) => s.is_active !== false).sort((a: any, b: any) => (a.sort_order || 0) - (b.sort_order || 0));
+  } catch (e) { return []; }
 };
 
 export const getFaqs = async () => {
@@ -334,9 +344,9 @@ export const initiatePayment = async (body: { orderId: string; amount: number; u
   return data;
 };
 
-export const checkPaymentStatus = async (merchantTransactionId: string) => {
+export const checkPaymentStatus = async (orderId: string) => {
   const { data, error } = await supabase.functions.invoke('phonepe-payment', {
-    body: { action: 'status', merchantTransactionId },
+    body: { action: 'status', orderId },
   });
   if (error) throw new Error(error.message);
   return data;

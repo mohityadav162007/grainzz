@@ -1,18 +1,19 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Save, Loader2, Plus, Trash2, Package } from 'lucide-react';
 import {
-  createHomepageSection, updateHomepageSection, getProducts,
+  createHomepageSection, updateHomepageSection, deleteHomepageSection
 } from '@/lib/api';
-import { upsertSiteContent } from '@/lib/api';
 import ProductPickerModal from '@/components/ProductPickerModal';
 
-export default function ProductSectionsEditor({ sections, products, heading, onSaveHeading, onRefresh, saving }: any) {
-  const [h, setH] = useState(heading.heading || '');
-  const [sub, setSub] = useState(heading.subheading || '');
+export default function ProductSectionsEditor({ sections, products, onRefresh }: any) {
   const [items, setItems] = useState(sections);
   const [sectionSaving, setSectionSaving] = useState<string | null>(null);
   const [pickerOpen, setPickerOpen] = useState<string | null>(null);
+
+  useEffect(() => {
+    setItems(sections);
+  }, [sections]);
 
   const getProduct = (id: string) => products.find((p: any) => p.id === id);
 
@@ -26,9 +27,17 @@ export default function ProductSectionsEditor({ sections, products, heading, onS
   const handleAddSection = async () => {
     if (items.length >= 4) { alert('Maximum 4 tabs allowed'); return; }
     try {
-      const data = await createHomepageSection({ title: 'New Tab', section_type: 'custom', product_ids: [] });
+      const newSortOrder = items.length > 0 ? Math.max(...items.map((i: any) => i.sort_order || 0)) + 1 : 1;
+      const data = await createHomepageSection({ title: 'New Tab', section_type: 'custom', sort_order: newSortOrder });
       setItems((prev: any[]) => [...prev, data]);
-      onRefresh();
+    } catch (err: any) { alert(err.message); }
+  };
+
+  const handleDeleteSection = async (id: string) => {
+    if (!confirm('Are you sure you want to delete this tab?')) return;
+    try {
+      await deleteHomepageSection(id);
+      setItems((prev: any[]) => prev.filter((s: any) => s.id !== id));
     } catch (err: any) { alert(err.message); }
   };
 
@@ -45,18 +54,8 @@ export default function ProductSectionsEditor({ sections, products, heading, onS
 
   return (
     <div>
-      <h3 className="font-bold text-gray-900 text-lg mb-1">Our Product Segment</h3>
+      <h3 className="font-bold text-gray-900 text-lg mb-1">Our Products</h3>
       <p className="text-xs text-gray-400 mb-5">Manage the 4 product tabs on the homepage. Each tab can display up to 4 products.</p>
-
-      {/* Section heading */}
-      <div className="bg-gray-50 rounded-xl p-4 mb-6 space-y-3">
-        <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Section Heading</p>
-        <input placeholder="Section heading" value={h} onChange={e => setH(e.target.value)} className="admin-input w-full" />
-        <input placeholder="Section subheading" value={sub} onChange={e => setSub(e.target.value)} className="admin-input w-full" />
-        <button onClick={() => onSaveHeading({ heading: h, subheading: sub })} disabled={saving} className="admin-btn text-sm">
-          {saving ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />} Save Heading
-        </button>
-      </div>
 
       {/* Tabs */}
       <div className="flex items-center justify-between mb-4">
@@ -84,6 +83,9 @@ export default function ProductSectionsEditor({ sections, products, heading, onS
                   </button>
                   <button onClick={() => handleSaveSection(section)} disabled={sectionSaving === section.id} className="admin-btn text-xs py-1.5 px-3">
                     {sectionSaving === section.id ? <Loader2 size={12} className="animate-spin" /> : <Save size={12} />} Save
+                  </button>
+                  <button onClick={() => handleDeleteSection(section.id)} className="flex items-center justify-center text-red-500 hover:text-red-700 hover:bg-red-50 w-8 h-8 rounded-lg transition-colors">
+                    <Trash2 size={14} />
                   </button>
                 </div>
               </div>

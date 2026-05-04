@@ -1,26 +1,25 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { ShoppingBag, DollarSign, Package, TrendingUp, Users, Eye } from 'lucide-react';
-import { getOrderStats, getUsersCount } from '@/lib/api';
+import { ShoppingBag, DollarSign, Package } from 'lucide-react';
+import { getOrderStats, getProducts } from '@/lib/api';
 import Link from 'next/link';
 
 export default function DashboardPage() {
   const [stats, setStats] = useState<any>(null);
-  const [usersCount, setUsersCount] = useState<number>(0);
+  const [totalProducts, setTotalProducts] = useState<number>(0);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     Promise.all([
       getOrderStats().then((res) => setStats(res.data)).catch(() => {}),
-      getUsersCount().then((res) => setUsersCount(res.count)).catch(() => {}),
+      getProducts().then((res) => setTotalProducts(res.data.length)).catch(() => {}),
     ]).finally(() => setLoading(false));
   }, []);
 
   const statCards = [
     { label: 'Total Orders', value: stats?.totalOrders ?? '—', icon: ShoppingBag, color: 'bg-blue-500' },
-    { label: 'Paid Orders', value: stats?.paidOrders ?? '—', icon: TrendingUp, color: 'bg-green-500' },
     { label: 'Total Revenue', value: stats ? `₹${Number(stats.revenue).toLocaleString()}` : '—', icon: DollarSign, color: 'bg-primary' },
-    { label: 'Users', value: usersCount, icon: Users, color: 'bg-purple-500' },
+    { label: 'Total Products', value: totalProducts, icon: Package, color: 'bg-purple-500' },
   ];
 
   return (
@@ -31,7 +30,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
         {statCards.map(({ label, value, icon: Icon, color }) => (
           <div key={label} className="admin-card p-5 flex items-center gap-4">
             <div className={`w-12 h-12 ${color} rounded-xl flex items-center justify-center`}>

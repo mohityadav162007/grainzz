@@ -1,4 +1,5 @@
 import { supabase } from './supabase';
+import { uploadProductImageCloudinary, uploadHeroImageCloudinary, uploadInstagramImageCloudinary } from './cloudinary';
 
 // ─── Auth ────────────────────────────────────────────────────────────────────
 
@@ -79,23 +80,18 @@ export const createProduct = async (formData: FormData) => {
     .replace(/-+/g, '-')
     .trim();
 
-  // Upload images to Supabase Storage
+  // Upload images to Cloudinary
   const imageUrls: string[] = [];
   const files = formData.getAll('images') as File[];
   for (const file of files) {
     if (file && file.size > 0) {
-      const fileName = `${Date.now()}-${file.name}`;
-      const { data: uploadData, error: uploadError } = await supabase.storage
-        .from('product-images')
-        .upload(fileName, file, { contentType: file.type });
-
-      if (uploadError) {
+      try {
+        const url = await uploadProductImageCloudinary(file);
+        imageUrls.push(url);
+      } catch (uploadError) {
         console.error('Upload error:', uploadError);
         continue;
       }
-
-      const { data: urlData } = supabase.storage.from('product-images').getPublicUrl(uploadData.path);
-      imageUrls.push(urlData.publicUrl);
     }
   }
 
@@ -171,20 +167,18 @@ export const updateProduct = async (id: string, formData: FormData) => {
   const weight = formData.get('weight');
   if (weight !== null) updates.weight = weight;
 
-  // Upload new images
+  // Upload new images to Cloudinary
   const files = formData.getAll('images') as File[];
   const newImageUrls: string[] = [];
   for (const file of files) {
     if (file && file.size > 0) {
-      const fileName = `${Date.now()}-${file.name}`;
-      const { data: uploadData, error: uploadError } = await supabase.storage
-        .from('product-images')
-        .upload(fileName, file, { contentType: file.type });
-
-      if (uploadError) continue;
-
-      const { data: urlData } = supabase.storage.from('product-images').getPublicUrl(uploadData.path);
-      newImageUrls.push(urlData.publicUrl);
+      try {
+        const url = await uploadProductImageCloudinary(file);
+        newImageUrls.push(url);
+      } catch (uploadError) {
+        console.error('Upload error:', uploadError);
+        continue;
+      }
     }
   }
 
@@ -511,6 +505,11 @@ export const updateHomepageSection = async (
   return { success: true, data };
 };
 
+export const deleteHomepageSection = async (id: string) => {
+  const { error } = await supabase.from('homepage_sections').delete().eq('id', id);
+  if (error) throw new Error(error.message);
+};
+
 // ─── Site Content (Key-Value Store) ──────────────────────────────────────────
 
 export const getSiteContent = async (key: string) => {
@@ -568,22 +567,12 @@ export const deleteHeroSlide = async (id: string) => {
 };
 
 export const uploadHeroImage = async (file: File): Promise<string> => {
-  const fileName = `${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
-  const { data, error } = await supabase.storage
-    .from('hero-images')
-    .upload(fileName, file, { contentType: file.type, upsert: false });
-  if (error) throw new Error(error.message);
-  const { data: urlData } = supabase.storage.from('hero-images').getPublicUrl(data.path);
-  return urlData.publicUrl;
+  return uploadHeroImageCloudinary(file);
 };
 
-export const deleteHeroImage = async (url: string) => {
-  if (!url) return;
-  const parts = url.split('/hero-images/');
-  const path = parts[1];
-  if (path) {
-    await supabase.storage.from('hero-images').remove([decodeURIComponent(path)]);
-  }
+export const deleteHeroImage = async (_url: string) => {
+  // Cloudinary deletion requires server-side signed requests.
+  // Images are managed via Cloudinary dashboard if cleanup is needed.
 };
 
 // ─── Powered By Cards ────────────────────────────────────────────────────────
@@ -736,22 +725,12 @@ export const deleteInstagramPost = async (id: string) => {
 };
 
 export const uploadInstagramImage = async (file: File): Promise<string> => {
-  const fileName = `${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
-  const { data, error } = await supabase.storage
-    .from('product-images') // Reusing product-images bucket as it exists
-    .upload(`instagram/${fileName}`, file, { contentType: file.type, upsert: false });
-  if (error) throw new Error(error.message);
-  const { data: urlData } = supabase.storage.from('product-images').getPublicUrl(data.path);
-  return urlData.publicUrl;
+  return uploadInstagramImageCloudinary(file);
 };
 
-export const deleteInstagramImage = async (url: string) => {
-  if (!url) return;
-  const parts = url.split('/product-images/');
-  const path = parts[1];
-  if (path) {
-    await supabase.storage.from('product-images').remove([decodeURIComponent(path)]);
-  }
+export const deleteInstagramImage = async (_url: string) => {
+  // Cloudinary deletion requires server-side signed requests.
+  // Images are managed via Cloudinary dashboard if cleanup is needed.
 };
 
 // ─── FAQs ────────────────────────────────────────────────────────────────────

@@ -135,10 +135,7 @@ export default function HomepageEditorPage() {
           <ProductSectionsEditor
             sections={sections}
             products={products}
-            heading={siteContent.product_tabs_heading || {}}
-            onSaveHeading={(h: any) => handleSaveSiteContent('product_tabs_heading', h)}
             onRefresh={loadAll}
-            saving={saving}
           />
         )}
 

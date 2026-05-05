@@ -4,38 +4,49 @@ import { Instagram } from 'lucide-react';
 import Image from 'next/image';
 import { getInstagramPosts, getSiteContent } from '@/lib/api';
 
-const defaultReels = [
-  { img: '/609216963-17861980689559678-5190492068987603702-n-1@2x.png', link: 'https://www.instagram.com/reel/DTApeL7Errf/' },
-  { img: '/image-25@2x.png', link: 'https://www.instagram.com/reel/DS98mOKkZSI/' },
-  { img: '/image-27@2x.png', link: 'https://www.instagram.com/reel/DQ1hoOXEkap/' },
-  { img: '/image-24@2x.png', link: 'https://www.instagram.com/reel/DSpXmlXgZy-/' },
-  { img: '/image-K6ajnEunSyn0dpLf3ZXfW4cvI1dCO3-1@2x.png', link: 'https://www.instagram.com/reel/DSFS4A4Eud5/' }
-];
-
 export default function InstagramSection() {
-  const [posts, setPosts] = useState<any[]>([]);
+  const [posts, setPosts] = useState<any[] | null>(null); // null = loading
   const [heading, setHeading] = useState('Follow us on Instagram');
   const [handle, setHandle] = useState('grainzbyvitalicious');
-  const [isActive, setIsActive] = useState(true);
+  const [isActive, setIsActive] = useState<boolean | null>(null); // null = checking
 
   useEffect(() => {
-    getInstagramPosts().then((data) => { if (data && data.length > 0) setPosts(data); }).catch(() => {});
-    
-    getSiteContent('instagram_section').then((content) => {
-      if (content) {
-        if (content.heading) setHeading(content.heading);
-        if (content.handle) setHandle(content.handle);
-      }
-    }).catch(() => {});
+    let cancelled = false;
 
-    getSiteContent('instagram_config').then((config) => {
-      if (config && config.is_active === false) {
-        setIsActive(false);
-      }
-    }).catch(() => {});
+    // Fetch all data in parallel
+    Promise.all([
+      getInstagramPosts().catch(() => []),
+      getSiteContent('instagram_section').catch(() => null),
+      getSiteContent('instagram_config').catch(() => null),
+    ]).then(([reels, section, config]) => {
+      if (cancelled) return;
+      setPosts(reels && reels.length > 0 ? reels : []);
+      if (section?.heading) setHeading(section.heading);
+      if (section?.handle) setHandle(section.handle);
+      setIsActive(config?.is_active !== false);
+    });
+
+    return () => { cancelled = true; };
   }, []);
 
-  if (!isActive) return null;
+  // Still loading — show nothing (prevents flash of default content)
+  if (isActive === null || posts === null) {
+    return (
+      <section className="py-[40px] md:py-[60px] bg-white w-full overflow-hidden border-t border-[#f0f0f0]">
+        <div className="max-w-[1440px] mx-auto px-4 md:px-[60px] lg:px-[100px]">
+          <div className="h-8 w-64 bg-gray-100 rounded-lg mb-[32px] animate-pulse" />
+          <div className="flex gap-[16px] md:gap-[24px]">
+            {[1,2,3,4,5].map(i => (
+              <div key={i} className="flex-shrink-0 w-[240px] md:w-1/5 aspect-[9/16] rounded-[20px] bg-gray-100 animate-pulse" />
+            ))}
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  // Section disabled or no reels
+  if (!isActive || posts.length === 0) return null;
 
   return (
     <section className="py-[40px] md:py-[60px] bg-white w-full overflow-hidden border-t border-[#f0f0f0]">
@@ -58,16 +69,18 @@ export default function InstagramSection() {
           </a>
         </div>
 
-        {/* Reels Container */}
+        {/* Reels Container — DB data ONLY */}
         <div className="w-full flex justify-center">
           <div className="flex w-full gap-[16px] md:gap-[24px] overflow-x-auto pb-8 snap-x snap-mandatory scrollbar-hide">
-            {(posts.length > 0 ? posts.slice(0, 5) : defaultReels).map((item, idx) => {
-               const imageUrl = item.img || item.image_url;
-               const postHref = item.post_url || item.link || item.href || `https://instagram.com/${handle.replace('@', '')}`;
+            {posts.slice(0, 5).map((item, idx) => {
+               const imageUrl = item.image_url;
+               const postHref = item.post_url || `https://instagram.com/${handle.replace('@', '')}`;
                
+               if (!imageUrl) return null;
+
                return (
                   <a
-                    key={idx}
+                    key={item.id || idx}
                     href={postHref}
                     target="_blank"
                     rel="noopener noreferrer"

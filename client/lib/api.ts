@@ -203,6 +203,20 @@ export const getAvailabilityLogos = async () => {
     } catch (e) { return []; }
   };
 
+  export const getSnackBoxItems = async () => {
+    const { data, error } = await supabase.from('store_settings').select('value').eq('key', 'snack_box_json').maybeSingle();
+    if (error || !data) return [];
+    try {
+      return JSON.parse(data.value);
+    } catch (e) { return []; }
+  };
+
+  export const getProductById = async (id: string) => {
+    const { data, error } = await supabase.from('products').select('*').eq('id', id).single();
+    if (error) return null;
+    return sanitizeProduct(data);
+  };
+
 export const getInstagramPosts = async () => {
   const { data, error } = await supabase.from('store_settings').select('value').eq('key', 'instagram_json').single();
   if (error || !data) return [];

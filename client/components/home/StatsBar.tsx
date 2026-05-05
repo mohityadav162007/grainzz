@@ -7,23 +7,42 @@ const iconMap: Record<string, any> = {
   Heart, ShieldCheck, Package, MapPin, Leaf, Star, Flame, Award,
 };
 
-const fallbackStats = [
-  { value: '5000+', label: 'Customers Served', icon: 'Heart' },
-  { value: '30,000+', label: 'Products Sold', icon: 'Package' },
-  { value: '15,000+', label: 'Packets Sold', icon: 'ShieldCheck' },
-  { value: '29+', label: 'Indian States Served', icon: 'MapPin' },
-];
-
 export default function StatsBar() {
-  const [stats, setStats] = useState(fallbackStats);
+  const [stats, setStats] = useState<any[] | null>(null); // null = loading
 
   useEffect(() => {
+    let cancelled = false;
     getTrustMetrics()
       .then((data) => {
-        if (data && data.length > 0) setStats(data);
+        if (cancelled) return;
+        setStats(data && data.length > 0 ? data : []);
       })
-      .catch(() => {});
+      .catch(() => { if (!cancelled) setStats([]); });
+    return () => { cancelled = true; };
   }, []);
+
+  // Loading — skeleton
+  if (stats === null) {
+    return (
+      <section className="bg-white py-[60px] md:py-[100px] w-full">
+        <div className="max-w-[1440px] mx-auto px-4 md:px-[120px]">
+          <div className="h-10 w-72 bg-gray-100 rounded-lg mx-auto mb-[48px] animate-pulse" />
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-[24px] md:gap-[32px]">
+            {[1,2,3,4].map(i => (
+              <div key={i} className="flex flex-col items-center justify-center text-center rounded-[20px] py-[40px] px-[20px] md:py-[56px] border border-[#EEEEEE]">
+                <div className="w-[64px] h-[64px] md:w-[80px] md:h-[80px] bg-gray-100 rounded-full mb-[24px] animate-pulse" />
+                <div className="h-12 w-28 bg-gray-100 rounded mb-[12px] animate-pulse" />
+                <div className="h-4 w-36 bg-gray-100 rounded animate-pulse" />
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  // No stats configured
+  if (stats.length === 0) return null;
 
   return (
     <section className="bg-white py-[60px] md:py-[100px] w-full">

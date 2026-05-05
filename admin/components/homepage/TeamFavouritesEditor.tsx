@@ -1,11 +1,27 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Save, Loader2, Package, Trash2, Plus, Heart } from 'lucide-react';
 import ProductPickerModal from '@/components/ProductPickerModal';
 
 export default function TeamFavouritesEditor({ config, products, onSave, saving }: any) {
-  const [c, setC] = useState(config);
+  // Ensure config is always a parsed object, never a raw JSON string
+  const parseConfig = (raw: any) => {
+    if (!raw) return { product_ids: [] };
+    if (typeof raw === 'string') {
+      try { return JSON.parse(raw); } catch { return { product_ids: [] }; }
+    }
+    return raw;
+  };
+
+  const [c, setC] = useState(() => parseConfig(config));
   const [pickerOpen, setPickerOpen] = useState(false);
+
+  // Sync local state when props change (after DB refresh)
+  useEffect(() => {
+    const parsed = parseConfig(config);
+    console.log('[DB LOAD] Team Favourites config synced:', parsed);
+    setC(parsed);
+  }, [config]);
 
   const getProduct = (id: string) => products.find((p: any) => p.id === id);
   const selectedProducts = (c.product_ids || []).map((id: string) => getProduct(id)).filter(Boolean);
@@ -17,6 +33,11 @@ export default function TeamFavouritesEditor({ config, products, onSave, saving 
   const handlePickerConfirm = (selectedIds: string[]) => {
     setC({ ...c, product_ids: selectedIds });
     setPickerOpen(false);
+  };
+
+  const handleSave = () => {
+    console.log('[DB SAVE] Team Favourites saving:', c);
+    onSave(c);
   };
 
   return (
@@ -34,7 +55,7 @@ export default function TeamFavouritesEditor({ config, products, onSave, saving 
           <button onClick={() => setPickerOpen(true)} className="admin-btn-outline text-sm">
             <Plus size={14} /> Select Products
           </button>
-          <button onClick={() => onSave(c)} disabled={saving} className="admin-btn text-sm">
+          <button onClick={handleSave} disabled={saving} className="admin-btn text-sm">
             {saving ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />} Save
           </button>
         </div>

@@ -1,153 +1,126 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { Plus, Minus } from 'lucide-react';
-import { useCartStore } from '@/store/cartStore';
-import { getSiteContent, getProductBySlug } from '@/lib/api';
+import Link from 'next/link';
+import { ArrowRight } from 'lucide-react';
+import Image from 'next/image';
+import { getSnackBoxItems } from '@/lib/api';
+
+interface SnackBoxItem {
+  id: string;
+  title: string;
+  image_url: string;
+  price: number;
+  original_price: number;
+  description: string;
+  redirect_link: string;
+}
 
 export default function EssentialSnackBox() {
-  const [qty, setQty] = useState(1);
-  const [added, setAdded] = useState(false);
-  const [product, setProduct] = useState<any>(null);
-  const [featuredConfig, setFeaturedConfig] = useState<any>(null);
-  const [selectedBox, setSelectedBox] = useState('Box of 6 Grainzz');
-  const { addItem } = useCartStore();
+  const [items, setItems] = useState<SnackBoxItem[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const loadData = async () => {
-      try {
-        const config = await getSiteContent('featured_product');
-        if (config) {
-          setFeaturedConfig(config);
-          const slug = config.slug || 'essential-snack-box-mixed';
-          try {
-            const res = await getProductBySlug(slug);
-            if (res.data) setProduct(res.data);
-          } catch {}
-        }
-      } catch {}
-    };
-    loadData();
+    getSnackBoxItems()
+      .then((data) => {
+        if (data && data.length > 0) setItems(data);
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
   }, []);
 
-  const handleAddToCart = () => {
-    if (!product) return;
-    addItem({
-      id: product.id,
-      name: `${product.name} - ${selectedBox}`,
-      price: product.price,
-      mrp: product.mrp,
-      image: product.images?.[0] || '',
-      quantity: qty,
-      tags: [],
-    });
-    setAdded(true);
-    setTimeout(() => setAdded(false), 2000);
-  };
+  if (loading) {
+    return (
+      <section className="py-[40px] md:py-[60px] bg-[#FCF9F2] w-full border-y border-[#EEEEEE]">
+        <div className="max-w-[1440px] mx-auto px-4 md:px-[60px] lg:px-[100px]">
+          <div className="h-10 w-72 bg-[#EDE8DA] rounded-lg mx-auto mb-8 animate-pulse" />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {[1, 2].map(i => (
+              <div key={i} className="rounded-2xl overflow-hidden bg-white border border-[#EAEAEA]">
+                <div className="aspect-[4/3] bg-[#EDE8DA] animate-pulse" />
+                <div className="p-6 space-y-3">
+                  <div className="h-6 bg-[#EDE8DA] rounded w-48 animate-pulse" />
+                  <div className="h-8 bg-[#EDE8DA] rounded w-24 animate-pulse" />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+    );
+  }
 
-  const heading = featuredConfig?.heading || 'The Essential Snack Box';
-  const supportingLine = featuredConfig?.supporting_line || product?.nutrition_info || 'High-Fibre | No Palm Oil | Baked Crunch';
-  const description = featuredConfig?.description || product?.description || 'Lorem ipsum dolor sit amet consectetur. Cursus consequat consectetur quisque id sollicitudin. Elit aliquet fusce vel aliquet interdum aenean.';
-  const price = product?.price || 149;
-  const mrp = product?.mrp || 199;
+  if (items.length === 0) return null;
 
   return (
     <section className="py-[40px] md:py-[60px] bg-[#FCF9F2] w-full border-y border-[#EEEEEE]">
       <div className="max-w-[1440px] mx-auto px-4 md:px-[60px] lg:px-[100px]">
-        <div className="flex flex-col lg:flex-row items-start gap-[40px] md:gap-[60px]">
-          
-          {/* Product Image */}
-          <div className="w-full lg:w-[460px] xl:w-[500px] h-auto relative rounded-[20px] overflow-hidden bg-[#F9F7F3] border border-[#EAEAEA] flex-shrink-0">
-            {/* Discount Pill */}
-             <div className="absolute top-[20px] right-[20px] w-[20px] h-[20px] bg-white rounded-[4px] p-[3px] z-10 shadow-sm flex items-center justify-center border border-[#e0e0e0]">
-               <div className="w-[10px] h-[10px] rounded-full bg-brand-green" />
-             </div>
-            <img
-              src={product?.images?.[0] || '/Rectangle-10@2x.png'}
-              alt={heading}
-              className="w-full h-full object-cover mix-blend-multiply"
-            />
-          </div>
 
-          {/* Product Content */}
-          <div className="flex-1 flex flex-col items-start pt-[10px]">
-            <h2 className="m-0 text-[32px] md:text-[36px] font-bold text-brand-black leading-[1.2] tracking-tight font-sans mb-[8px]">
-              {heading}
-            </h2>
-            <div className="text-[14px] md:text-[16px] text-[#666666] leading-[1.5] font-sans font-medium mb-[20px]">
-              {supportingLine}
-            </div>
+        <h2 className="text-[32px] md:text-[38px] font-bold text-brand-black text-center mb-[10px] font-sans tracking-tight leading-[1.2]">
+          The Essential Snack Box
+        </h2>
+        <p className="text-[15px] md:text-[16px] text-[#666666] text-center mb-[40px] font-sans font-medium max-w-[500px] mx-auto">
+          Choose from our curated snack boxes — perfect for home, office, or gifting.
+        </p>
 
-            <div className="flex items-center gap-[12px] text-brand-black mb-[32px]">
-              <span className="text-[32px] md:text-[36px] font-bold leading-[1] font-sans tracking-tight">₹{price}</span>
-              <span className="text-[18px] md:text-[20px] text-[#999999] font-medium line-through font-sans">MRP ₹{mrp}</span>
-            </div>
-
-            {/* Select Box Size */}
-            <div className="w-full mb-[20px]">
-              <p className="text-[14px] md:text-[15px] font-bold text-brand-black mb-[12px]">Select your box</p>
-              <div className="flex flex-wrap gap-[12px]">
-                {['Box of 6 Grainzz', 'Box of 10 Grainzz'].map((opt) => (
-                  <button
-                    key={opt}
-                    onClick={() => setSelectedBox(opt)}
-                    className={`px-[20px] py-[8px] md:py-[10px] rounded-full text-[13px] md:text-[14px] font-bold transition-all border ${
-                      selectedBox === opt 
-                        ? 'bg-white border-brand-black justify-center items-center flex' 
-                        : 'bg-white border-[#EAEAEA] text-[#666666] hover:border-[#cccccc]'
-                    }`}
-                  >
-                    {opt}
-                  </button>
-                ))}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-[24px] md:gap-[32px]">
+          {items.map((item) => (
+            <div
+              key={item.id}
+              className="flex flex-col rounded-[20px] overflow-hidden bg-white border border-[#EAEAEA] shadow-[0_2px_12px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_24px_rgba(0,0,0,0.10)] transition-shadow duration-300"
+            >
+              {/* Image */}
+              <div className="w-full aspect-[4/3] md:aspect-[16/10] relative bg-[#F9F7F3]">
+                {item.image_url ? (
+                  <Image
+                    src={item.image_url}
+                    alt={item.title}
+                    fill
+                    className="object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center">
+                    <span className="text-[#CCC] text-sm">No Image</span>
+                  </div>
+                )}
+                {/* Discount badge */}
+                {item.original_price > item.price && (
+                  <div className="absolute top-[16px] left-[16px] bg-brand-red text-white text-[12px] font-bold px-[12px] py-[4px] rounded-full shadow-sm">
+                    {Math.round(((item.original_price - item.price) / item.original_price) * 100)}% OFF
+                  </div>
+                )}
               </div>
-            </div>
 
-            {/* Description Paragraph */}
-            <div className="w-full mb-[40px]">
-              <p className="text-[15px] font-bold text-brand-black mb-[8px]">Description</p>
-              <p className="text-[14px] leading-[1.6] text-[#666666] font-medium max-w-[580px]">
-                {description}
-              </p>
-            </div>
+              {/* Content */}
+              <div className="flex flex-col items-start p-[24px] md:p-[28px]">
+                <h3 className="text-[22px] md:text-[24px] font-bold text-brand-black leading-[1.2] tracking-tight mb-[8px]">
+                  {item.title}
+                </h3>
 
-            {/* Purchase Row */}
-            <div className="w-full flex flex-col gap-[12px] md:gap-[16px]">
-              <div className="flex flex-row items-center gap-[12px] md:gap-[16px] w-full">
-                {/* Quantity */}
-                <div className="flex items-center gap-[16px] md:gap-[20px] min-w-[120px] justify-between border-[1.5px] border-[#EAEAEA] rounded-[40px] px-[16px] py-[10px] md:py-[12px] bg-white">
-                  <button 
-                    onClick={() => setQty(Math.max(1, qty - 1))}
-                    className="flex items-center justify-center text-[#888888] hover:text-brand-black transition-colors"
-                  >
-                    <Minus size={18} strokeWidth={2} />
-                  </button>
-                  <span className="text-[16px] md:text-[18px] font-bold text-brand-black">{qty}</span>
-                  <button 
-                    onClick={() => setQty(qty + 1)}
-                    className="flex items-center justify-center text-[#888888] hover:text-brand-black transition-colors"
-                  >
-                    <Plus size={18} strokeWidth={2} />
-                  </button>
+                <div className="flex items-center gap-[10px] mb-[12px]">
+                  <span className="text-[28px] md:text-[32px] font-bold text-brand-black leading-[1]">₹{item.price}</span>
+                  {item.original_price > item.price && (
+                    <span className="text-[16px] text-[#999999] font-medium line-through">MRP ₹{item.original_price}</span>
+                  )}
                 </div>
 
-                {/* Add to Cart Outline */}
-                <button 
-                  onClick={handleAddToCart}
-                  className="flex-1 w-full h-[48px] md:h-[54px] border-[1.5px] border-brand-black bg-transparent text-brand-black rounded-[40px] font-bold text-[15px] md:text-[16px] hover:bg-[#EAEAEA] transition-all cursor-pointer tracking-wide"
-                >
-                  {added ? 'Added ✓' : 'Add to Cart'}
-                </button>
-              </div>
+                {item.description && (
+                  <p className="text-[14px] leading-[1.6] text-[#666666] font-medium mb-[20px] line-clamp-3">
+                    {item.description}
+                  </p>
+                )}
 
-              {/* Quick Buy Solid Block */}
-              <button 
-                className="w-full h-[48px] md:h-[54px] bg-brand-black text-white rounded-[40px] font-bold text-[15px] md:text-[16px] hover:bg-[#333] transition-all cursor-pointer tracking-wide border-none"
-              >
-                Quick Buy
-              </button>
+                <Link
+                  href={item.redirect_link || '/products'}
+                  className="inline-flex items-center justify-between gap-[16px] bg-brand-black text-white pl-[24px] pr-[6px] py-[6px] rounded-[40px] transition-all hover:bg-[#333] active:scale-95 group shadow-sm mt-auto"
+                >
+                  <span className="font-bold text-[14px] leading-[1] capitalize mt-[1px]">Shop Now</span>
+                  <div className="w-[32px] h-[32px] bg-brand-green rounded-full flex items-center justify-center text-white transition-colors group-hover:bg-[#154617]">
+                    <ArrowRight size={16} strokeWidth={2.5} className="ml-[1px]" />
+                  </div>
+                </Link>
+              </div>
             </div>
-            
-          </div>
+          ))}
         </div>
       </div>
     </section>

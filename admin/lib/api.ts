@@ -1,5 +1,5 @@
 import { supabase } from './supabase';
-import { uploadProductImageCloudinary, uploadHeroImageCloudinary, uploadInstagramImageCloudinary } from './cloudinary';
+import { uploadProductImageCloudinary, uploadHeroImageCloudinary, uploadInstagramImageCloudinary, uploadToCloudinary } from './cloudinary';
 
 // ─── Auth ────────────────────────────────────────────────────────────────────
 
@@ -636,6 +636,39 @@ export const deletePoweredByCard = async (id: string) => {
   await savePoweredByCards(newCards);
 };
 
+export const uploadPoweredByImage = async (file: File): Promise<string> => {
+  return uploadToCloudinary(file, 'grainzz/powered-by');
+};
+
+// ─── Snack Box Items ─────────────────────────────────────────────────────────
+
+export const getSnackBoxItems = async () => {
+  const { data, error } = await supabase.from('store_settings').select('*').eq('key', 'snack_box_json').single();
+  if (error || !data) return [];
+  try {
+    return JSON.parse(data.value);
+  } catch (e) { return []; }
+};
+
+const saveSnackBoxItems = async (items: any[]) => {
+  const { data } = await supabase.from('store_settings').select('id').eq('key', 'snack_box_json').single();
+  if (data) {
+    const { error } = await supabase.from('store_settings').update({ value: JSON.stringify(items) }).eq('key', 'snack_box_json');
+    if (error) throw new Error(error.message);
+  } else {
+    const { error } = await supabase.from('store_settings').insert({ key: 'snack_box_json', value: JSON.stringify(items), description: 'Snack Box Section JSON' });
+    if (error) throw new Error(error.message);
+  }
+};
+
+export const updateSnackBoxItems = async (items: any[]) => {
+  await saveSnackBoxItems(items);
+  return items;
+};
+
+export const uploadSnackBoxImage = async (file: File): Promise<string> => {
+  return uploadToCloudinary(file, 'grainzz/snack-box');
+};
 
 // ─── Trust Metrics ───────────────────────────────────────────────────────────
 
@@ -1013,6 +1046,32 @@ export const getStoreSettings = async () => {
 
 export const updateStoreSetting = async (key: string, value: string) => {
   const { error } = await supabase.from('store_settings').update({ value }).eq('key', key);
+  if (error) throw new Error(error.message);
+  return { success: true };
+};
+
+// ─── Enquiries (Contact Form Submissions) ───────────────────────────────────
+
+export const getEnquiries = async () => {
+  const { data, error } = await supabase
+    .from('enquiries')
+    .select('*')
+    .order('created_at', { ascending: false });
+  if (error) throw new Error(error.message);
+  return { success: true, data: data || [] };
+};
+
+export const updateEnquiryStatus = async (id: string, status: string) => {
+  const { error } = await supabase
+    .from('enquiries')
+    .update({ status })
+    .eq('id', id);
+  if (error) throw new Error(error.message);
+  return { success: true };
+};
+
+export const deleteEnquiry = async (id: string) => {
+  const { error } = await supabase.from('enquiries').delete().eq('id', id);
   if (error) throw new Error(error.message);
   return { success: true };
 };

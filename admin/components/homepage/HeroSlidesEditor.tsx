@@ -1,17 +1,29 @@
 'use client';
-import { useState, useRef, useCallback } from 'react';
-import { Save, Loader2, Plus, Trash2, GripVertical, Upload, ImageIcon, X } from 'lucide-react';
+import { useState, useRef, useCallback, useEffect } from 'react';
+import { Save, Loader2, Plus, Trash2, GripVertical, Upload, ImageIcon, X, Link as LinkIcon, ExternalLink } from 'lucide-react';
 import {
   createHeroSlide, updateHeroSlide, deleteHeroSlide,
   uploadHeroImage, deleteHeroImage,
 } from '@/lib/api';
 
-export default function HeroSlidesEditor({ slides, onRefresh }: { slides: any[]; onRefresh: () => void }) {
+const PAGE_OPTIONS = [
+  { value: '/products', label: 'Shop All' },
+  { value: '/combos', label: 'Combos' },
+  { value: '/sale', label: 'Sale' },
+  { value: '/about', label: 'About Us' },
+  { value: '/contact', label: 'Contact Us' },
+  { value: '/faqs', label: 'FAQs' },
+];
+
+export default function HeroSlidesEditor({ slides, products, onRefresh }: { slides: any[]; products?: any[]; onRefresh: () => void }) {
   const [items, setItems] = useState(slides);
   const [saving, setSaving] = useState<string | null>(null);
   const [uploading, setUploading] = useState<string | null>(null);
   const [dragOver, setDragOver] = useState<string | null>(null);
   const fileRefs = useRef<Record<string, HTMLInputElement | null>>({});
+
+  // Sync local state when props change (after DB refresh)
+  useEffect(() => { setItems(slides); }, [slides]);
 
   const handleImageUpload = useCallback(async (slideId: string, idx: number, file: File, field: 'image_url' | 'mobile_image_url' = 'image_url') => {
     if (!file.type.startsWith('image/')) { alert('Please select an image file'); return; }
@@ -44,9 +56,14 @@ export default function HeroSlidesEditor({ slides, onRefresh }: { slides: any[];
       await updateHeroSlide(slide.id, {
         image_url: slide.image_url,
         mobile_image_url: slide.mobile_image_url || '',
+        redirect_type: slide.redirect_type || 'page',
+        redirect_value: slide.redirect_value || '/products',
         is_active: slide.is_active,
         sort_order: slide.sort_order,
       });
+      console.log('[DB SAVE] Hero slide saved:', slide.id);
+      // Re-fetch from DB to confirm persistence
+      onRefresh();
     } catch (err: any) { alert(err.message); }
     finally { setSaving(null); }
   };
@@ -57,13 +74,11 @@ export default function HeroSlidesEditor({ slides, onRefresh }: { slides: any[];
       await createHeroSlide({
         image_url: '',
         mobile_image_url: '',
-        top_line: '',
-        headline: '',
-        subheadline: '',
-        cta_text: 'BUY NOW',
-        cta_href: '/products',
+        redirect_type: 'page',
+        redirect_value: '/products',
         sort_order: items.length + 1,
       });
+      console.log('[DB SAVE] New hero slide created');
       onRefresh();
     } catch (err: any) { alert(err.message); }
   };
@@ -73,6 +88,7 @@ export default function HeroSlidesEditor({ slides, onRefresh }: { slides: any[];
     try {
       if (imageUrl) await deleteHeroImage(imageUrl).catch(() => {});
       await deleteHeroSlide(id);
+      console.log('[DB SAVE] Hero slide deleted:', id);
       onRefresh();
     } catch (err: any) { alert(err.message); }
   };
@@ -125,7 +141,7 @@ export default function HeroSlidesEditor({ slides, onRefresh }: { slides: any[];
       <div className="flex items-center justify-between mb-5">
         <div>
           <h3 className="font-bold text-gray-900 text-lg">Hero Banners ({items.length}/5)</h3>
-          <p className="text-xs text-gray-400 mt-0.5">Upload banner images for the homepage carousel. Maximum 5 banners. Each slide shows the image with a fixed BUY NOW button.</p>
+          <p className="text-xs text-gray-400 mt-0.5">Upload banner images. Each slide is clickable — set a redirect to a product or page. No text overlays or buttons.</p>
         </div>
         <button onClick={handleAdd} disabled={items.length >= 5} className={`admin-btn text-sm ${items.length >= 5 ? 'opacity-50 cursor-not-allowed' : ''}`}>
           <Plus size={14} /> Add Image
@@ -176,7 +192,7 @@ export default function HeroSlidesEditor({ slides, onRefresh }: { slides: any[];
               </div>
 
               {/* Mobile Image */}
-              <div>
+              <div className="mb-4">
                 <label className="text-xs font-semibold text-gray-600 mb-2 block flex items-center gap-1">
                   <ImageIcon size={12} /> Mobile Banner Image
                   <span className="text-[10px] text-gray-400 font-normal ml-1">750×1200 recommended · Optional</span>
@@ -184,6 +200,61 @@ export default function HeroSlidesEditor({ slides, onRefresh }: { slides: any[];
                 {renderDropZone(s.id, i, 'mobile_image_url', 'Click or drag & drop a mobile image', 'aspect-[9/16]', '750×1200', `${s.id}-mobile`)}
                 <input ref={el => { fileRefs.current[`${s.id}-mobile`] = el; }} type="file" accept="image/jpeg,image/png,image/webp" className="hidden"
                   onChange={e => { const f = e.target.files?.[0]; if (f) handleImageUpload(s.id, i, f, 'mobile_image_url'); e.target.value = ''; }} />
+              </div>
+
+              {/* Click Redirect */}
+              <div className="border-t border-gray-100 pt-4">
+                <label className="text-xs font-semibold text-gray-600 mb-3 block flex items-center gap-1">
+                  <LinkIcon size={12} /> Click Redirect
+                  <span className="text-[10px] text-gray-400 font-normal ml-1">Where does clicking this banner take the user?</span>
+                </label>
+                <div className="flex flex-col sm:flex-row gap-3">
+                  {/* Redirect Type */}
+                  <div className="flex-shrink-0">
+                    <select
+                      value={s.redirect_type || 'page'}
+                      onChange={e => setItems(prev => prev.map((x, idx) => idx === i ? { ...x, redirect_type: e.target.value, redirect_value: '' } : x))}
+                      className="admin-input text-sm py-2 min-w-[140px]"
+                    >
+                      <option value="page">Page</option>
+                      <option value="product">Product</option>
+                    </select>
+                  </div>
+
+                  {/* Redirect Value */}
+                  <div className="flex-1">
+                    {(s.redirect_type || 'page') === 'page' ? (
+                      <select
+                        value={s.redirect_value || '/products'}
+                        onChange={e => setItems(prev => prev.map((x, idx) => idx === i ? { ...x, redirect_value: e.target.value } : x))}
+                        className="admin-input text-sm py-2 w-full"
+                      >
+                        {PAGE_OPTIONS.map(opt => (
+                          <option key={opt.value} value={opt.value}>{opt.label}</option>
+                        ))}
+                      </select>
+                    ) : (
+                      <select
+                        value={s.redirect_value || ''}
+                        onChange={e => setItems(prev => prev.map((x, idx) => idx === i ? { ...x, redirect_value: e.target.value } : x))}
+                        className="admin-input text-sm py-2 w-full"
+                      >
+                        <option value="">— Select a product —</option>
+                        {(products || []).map((p: any) => (
+                          <option key={p.id} value={p.slug}>{p.name}</option>
+                        ))}
+                      </select>
+                    )}
+                  </div>
+
+                  {/* Preview link */}
+                  {s.redirect_value && (
+                    <div className="flex items-center gap-1 text-[10px] text-gray-400 shrink-0 self-center">
+                      <ExternalLink size={10} />
+                      <span className="font-mono">{(s.redirect_type || 'page') === 'product' ? `/products/${s.redirect_value}` : s.redirect_value}</span>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </div>

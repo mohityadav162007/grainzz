@@ -63,7 +63,7 @@ export default function InstagramSection() {
           <div className="flex w-full gap-[16px] md:gap-[24px] overflow-x-auto pb-8 snap-x snap-mandatory scrollbar-hide">
             {(posts.length > 0 ? posts.slice(0, 5) : defaultReels).map((item, idx) => {
                const imageUrl = item.img || item.image_url;
-               const postHref = item.link || item.href || `https://instagram.com/${handle.replace('@', '')}`;
+               const postHref = item.post_url || item.link || item.href || `https://instagram.com/${handle.replace('@', '')}`;
                
                return (
                   <a

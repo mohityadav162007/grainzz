@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
 import ProductCard from '@/components/products/ProductCard';
-import { supabase } from '@/lib/supabase';
+import { getSiteContent, getProducts } from '@/lib/api';
 
 export default function TeamFavourites() {
   const [products, setProducts] = useState<any[]>([]);
@@ -11,52 +11,34 @@ export default function TeamFavourites() {
   useEffect(() => {
     (async () => {
       try {
-        // Find the 'Team Favourites' section
-        const { data: section } = await supabase
-          .from('homepage_sections')
-          .select('product_ids')
-          .eq('title', 'Team Favourites')
-          .eq('is_active', true)
-          .single();
-
-        if (section && section.product_ids && section.product_ids.length > 0) {
-          const { data } = await supabase
-            .from('products')
-            .select('*')
-            .in('id', section.product_ids)
-            .eq('is_active', true)
-            .limit(4);
-          
+        // Fetch from store_settings (key: team_favourites)
+        const config = await getSiteContent('team_favourites');
+        
+        if (config && config.product_ids && config.product_ids.length > 0) {
+          // Use our existing getProducts or fetch manually
+          // The client getProducts doesn't easily support fetching by multiple IDs yet, 
+          // let's see if we can use a simpler approach or just fetch them
+          const { data } = await getProducts(); // This gets active products
           if (data) {
-             const sanitized = data.map((prod: any) => {
-               if (prod && Array.isArray(prod.images)) {
-                 prod.images = prod.images.map((img: string) => img.includes('placeholder.jpg') ? '/image-2@2x.png' : img);
-               }
-               return prod;
-             });
-             setProducts(sanitized);
-             return;
+            const filtered = data.filter((p: any) => config.product_ids.includes(p.id));
+            // Sort to match the order in admin
+            const sorted = config.product_ids
+              .map((id: string) => filtered.find((p: any) => p.id === id))
+              .filter(Boolean);
+            
+            if (sorted.length > 0) {
+              setProducts(sorted);
+              return;
+            }
           }
         }
         
-        // Fallback if no section or products found
-        const { data: fbData } = await supabase
-          .from('products')
-          .select('*')
-          .eq('is_active', true)
-          .order('views', { ascending: false })
-          .limit(4);
-          
-        if (fbData) {
-           const sanitized = fbData.map((prod: any) => {
-               if (prod && Array.isArray(prod.images)) {
-                 prod.images = prod.images.map((img: string) => img.includes('placeholder.jpg') ? '/image-2@2x.png' : img);
-               }
-               return prod;
-             });
-           setProducts(sanitized);
-        }
-      } catch {}
+        // Fallback if no config found
+        const { data: fbData } = await getProducts({ limit: '4', sort: 'best-selling' });
+        if (fbData) setProducts(fbData);
+      } catch (err) {
+        console.error('Error loading team favourites:', err);
+      }
     })();
   }, []);
 

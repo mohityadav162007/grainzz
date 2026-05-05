@@ -133,15 +133,51 @@ export default function PoweredByEditor({ cards, products, onRefresh }: any) {
                     )}
                   </div>
                   <p className="text-sm font-bold text-gray-900 leading-tight line-clamp-2 mb-1">{product.name}</p>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 mb-3">
                     <span className="text-sm font-bold text-primary">₹{product.price}</span>
                     {product.mrp > product.price && (
                       <span className="text-xs text-gray-400 line-through">₹{product.mrp}</span>
                     )}
                   </div>
+
+                  <div className="space-y-3 pt-3 border-t border-gray-100">
+                    <div>
+                      <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1 block">Subtitle</label>
+                      <input 
+                        type="text" 
+                        value={slot.subtitle || ''} 
+                        onChange={(e) => setItems((prev: any[]) => prev.map((s, idx) => idx === i ? { ...s, subtitle: e.target.value } : s))}
+                        className="admin-input text-xs w-full py-1.5"
+                        placeholder="e.g. upto 40% off"
+                      />
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1 block">Top BG</label>
+                        <input 
+                          type="text" 
+                          value={slot.top_bg_color || ''} 
+                          onChange={(e) => setItems((prev: any[]) => prev.map((s, idx) => idx === i ? { ...s, top_bg_color: e.target.value } : s))}
+                          className="admin-input text-xs w-full py-1.5 font-mono"
+                          placeholder="#C68356"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1 block">Bottom BG</label>
+                        <input 
+                          type="text" 
+                          value={slot.bottom_bg_color || ''} 
+                          onChange={(e) => setItems((prev: any[]) => prev.map((s, idx) => idx === i ? { ...s, bottom_bg_color: e.target.value } : s))}
+                          className="admin-input text-xs w-full py-1.5 font-mono"
+                          placeholder="#FDECE7"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
                   <button
                     onClick={() => setPickerOpen(i)}
-                    className="admin-btn-outline text-xs w-full justify-center py-2 mt-3"
+                    className="admin-btn-outline text-xs w-full justify-center py-2 mt-4"
                   >
                     <Package size={12} /> Change Product
                   </button>

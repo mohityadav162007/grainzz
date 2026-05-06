@@ -650,7 +650,7 @@ export const getSnackBoxItems = async () => {
   } catch (e) { return []; }
 };
 
-const saveSnackBoxItems = async (items: any[]) => {
+const saveSnackBoxItems = async (items: any) => {
   const { data } = await supabase.from('store_settings').select('id').eq('key', 'snack_box_json').single();
   if (data) {
     const { error } = await supabase.from('store_settings').update({ value: JSON.stringify(items) }).eq('key', 'snack_box_json');
@@ -661,7 +661,7 @@ const saveSnackBoxItems = async (items: any[]) => {
   }
 };
 
-export const updateSnackBoxItems = async (items: any[]) => {
+export const updateSnackBoxItems = async (items: any) => {
   await saveSnackBoxItems(items);
   return items;
 };

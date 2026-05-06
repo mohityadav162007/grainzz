@@ -751,22 +751,42 @@ export const deleteTestimonial = async (id: string) => {
 // ─── Product Reviews (Admin Control) ──────────────────────────────────────────
 
 export const getAllProductReviews = async (params?: Record<string, string>) => {
-  let query = supabase.from('product_reviews').select('*, products(name)').order('created_at', { ascending: false });
+  let query = supabase.from('reviews').select('*, products(name)').order('created_at', { ascending: false });
   if (params?.product_id) query = query.eq('product_id', params.product_id);
   const { data, error } = await query;
   if (error) throw new Error(error.message);
   return { success: true, data: data || [] };
 };
 
-export const updateProductReviewVisibility = async (id: string, isActive: boolean) => {
-  const { data, error } = await supabase.from('product_reviews').update({ is_active: isActive }).eq('id', id).select().single();
+export const updateProductReviewVisibility = async (id: string, isVisible: boolean) => {
+  const { data, error } = await supabase.from('reviews').update({ is_visible: isVisible }).eq('id', id).select().single();
   if (error) throw new Error(error.message);
   return { success: true, data };
 };
 
 export const deleteProductReview = async (id: string) => {
-  const { error } = await supabase.from('product_reviews').delete().eq('id', id);
+  const { error } = await supabase.from('reviews').delete().eq('id', id);
   if (error) throw new Error(error.message);
+  return { success: true };
+};
+
+// ─── Related Products Section ───────────────────────────────────────────────
+
+export const getRelatedProductsSectionAdmin = async () => {
+  const { data, error } = await supabase.from('related_products_section').select('*, products(name, images)').order('position', { ascending: true });
+  if (error) throw new Error(error.message);
+  return { success: true, data: data || [] };
+};
+
+export const updateRelatedProductsSection = async (productsData: any[]) => {
+  // Simple approach: delete all and insert new ones to maintain order
+  await supabase.from('related_products_section').delete().neq('id', '00000000-0000-0000-0000-000000000000'); // Delete all
+  if (productsData.length > 0) {
+    const { error } = await supabase.from('related_products_section').insert(
+      productsData.map((p, i) => ({ product_id: p.product_id, position: i }))
+    );
+    if (error) throw new Error(error.message);
+  }
   return { success: true };
 };
 

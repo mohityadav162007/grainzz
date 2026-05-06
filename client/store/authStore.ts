@@ -7,10 +7,13 @@ interface AuthState {
   session: Session | null;
   loading: boolean;
   isAuthModalOpen: boolean;
-  
+  authModalMode: 'signin' | 'signup';
+
   setUser: (user: User | null) => void;
   setSession: (session: Session | null) => void;
   setAuthModalOpen: (open: boolean) => void;
+  /** Set the initial mode (signin/signup) before opening the modal */
+  setGuestPopupMode: (mode: 'signin' | 'signup') => void;
   signOut: () => Promise<void>;
   initialize: () => Promise<void>;
 }
@@ -20,11 +23,13 @@ export const useAuthStore = create<AuthState>((set) => ({
   session: null,
   loading: true,
   isAuthModalOpen: false,
+  authModalMode: 'signin',
 
   setUser: (user) => set({ user }),
   setSession: (session) => set({ session, user: session?.user || null }),
   setAuthModalOpen: (open) => set({ isAuthModalOpen: open }),
-  
+  setGuestPopupMode: (mode) => set({ authModalMode: mode }),
+
   signOut: async () => {
     await supabase.auth.signOut();
     set({ user: null, session: null });
@@ -32,7 +37,7 @@ export const useAuthStore = create<AuthState>((set) => ({
 
   initialize: async () => {
     set({ loading: true });
-    
+
     // Get initial session
     const { data: { session } } = await supabase.auth.getSession();
     set({ session, user: session?.user || null, loading: false });

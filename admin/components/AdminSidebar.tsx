@@ -14,6 +14,7 @@ const navItems = [
   { label: 'Product Reviews', href: '/dashboard/reviews', icon: MessageSquare },
   { label: 'Inquiries', href: '/dashboard/inquiries', icon: Inbox },
   { label: 'Offers', href: '/dashboard/offers', icon: Star },
+  { label: 'Related Products', href: '/dashboard/related-products', icon: Package },
   { label: 'Homepage', href: '/dashboard/homepage', icon: Home },
   { label: 'Analytics', href: '/dashboard/export', icon: BarChart3 },
   { label: 'Settings', href: '/dashboard/settings', icon: Settings },

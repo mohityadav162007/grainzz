@@ -19,7 +19,7 @@ export const getOrder = async (orderId: string) => {
 export const getProducts = async (params?: Record<string, string>) => {
   let query = supabase
     .from('products')
-    .select('*, offers(*)')
+    .select('*')
     .eq('is_active', true);
 
   if (params?.category) query = query.eq('category', params.category);
@@ -87,7 +87,7 @@ export const getCategories = async () => {
 export const getProductBySlug = async (slug: string) => {
   const { data, error } = await supabase
     .from('products')
-    .select('*, offers(*)')
+    .select('*')
     .eq('slug', slug)
     .eq('is_active', true)
     .single();
@@ -184,14 +184,64 @@ export const getAvailabilityLogos = async () => {
 
   export const getProductReviews = async (productId: string) => {
     const { data, error } = await supabase
-      .from('product_reviews')
+      .from('reviews')
       .select('*')
       .eq('product_id', productId)
-      .eq('is_active', true)
+      .eq('is_visible', true)
       .order('created_at', { ascending: false });
   
-    if (error) throw new Error(error.message);
+    if (error) {
+      console.error('getProductReviews error:', error);
+      return [];
+    }
     return data || [];
+  };
+
+  export const submitProductReview = async (review: {
+    product_id: string;
+    reviewer_name: string;
+    reviewer_email: string;
+    review_title: string;
+    review_text: string;
+    rating: number;
+    review_image_url?: string;
+  }) => {
+    const { error } = await supabase.from('reviews').insert(review);
+    if (error) throw new Error(error.message);
+    return { success: true };
+  };
+
+  export const uploadReviewImage = async (file: File): Promise<string> => {
+    const CLOUD_NAME = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || '';
+    const UPLOAD_PRESET = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET || '';
+    if (!CLOUD_NAME || !UPLOAD_PRESET) throw new Error('Cloudinary not configured');
+
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('upload_preset', UPLOAD_PRESET);
+    formData.append('folder', 'grainzz/reviews');
+
+    const response = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, {
+      method: 'POST',
+      body: formData,
+    });
+
+    if (!response.ok) throw new Error('Failed to upload image');
+    const data = await response.json();
+    return data.secure_url;
+  };
+
+  export const getRelatedProductsSection = async () => {
+    const { data, error } = await supabase
+      .from('related_products_section')
+      .select('*, products(*)')
+      .order('position', { ascending: true });
+    
+    if (error) {
+      console.error('getRelatedProductsSection error:', error);
+      return [];
+    }
+    return (data || []).map(r => r.products ? sanitizeProduct(r.products) : null).filter(Boolean);
   };
   
   export const getPoweredByCards = async () => {
@@ -205,10 +255,29 @@ export const getAvailabilityLogos = async () => {
 
   export const getSnackBoxItems = async () => {
     const { data, error } = await supabase.from('store_settings').select('value').eq('key', 'snack_box_json').maybeSingle();
-    if (error || !data) return [];
+    if (error || !data) return null;
     try {
-      return JSON.parse(data.value);
-    } catch (e) { return []; }
+      const parsed = JSON.parse(data.value);
+      // Support both old array format and new object format
+      if (Array.isArray(parsed)) {
+        // Legacy format — convert to new shape
+        return {
+          section_title: 'The Essential Snack Box',
+          variants: parsed.map((item: any) => ({
+            id: item.id || crypto.randomUUID(),
+            title: item.title || '',
+            subtitle: item.description || '',
+            image_url: item.image_url || '',
+            price: item.price || 0,
+            mrp: item.original_price || item.mrp || 0,
+            description: item.description || '',
+            ingredients: item.ingredients || '',
+            nutrition_table: item.nutrition_table || [],
+          })),
+        };
+      }
+      return parsed;
+    } catch (e) { return null; }
   };
 
   export const getProductById = async (id: string) => {

@@ -42,6 +42,7 @@ module.exports = {
         'slide-in-right': 'slideInRight 0.3s ease-out',
         'fade-in': 'fadeIn 0.2s ease-out',
         'slide-up': 'slideUp 0.3s ease-out',
+        'scale-in': 'scaleIn 0.25s cubic-bezier(0.34, 1.56, 0.64, 1)',
         'marquee': 'marquee 20s linear infinite',
         'count-up': 'countUp 1s ease-out',
       },
@@ -57,6 +58,10 @@ module.exports = {
         slideUp: {
           '0%': { transform: 'translateY(20px)', opacity: '0' },
           '100%': { transform: 'translateY(0)', opacity: '1' },
+        },
+        scaleIn: {
+          '0%': { transform: 'scale(0.85)', opacity: '0' },
+          '100%': { transform: 'scale(1)', opacity: '1' },
         },
         marquee: {
           '0%': { transform: 'translateX(0%)' },

@@ -1,9 +1,10 @@
 'use client';
-import { useEffect, useRef, useState } from 'react';
-import Link from 'next/link';
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { X, Plus, Minus, Trash2, ShoppingBag, Tag } from 'lucide-react';
+import { X, Plus, Minus, Trash2, ShoppingBag, Tag, Lock } from 'lucide-react';
 import { useCartStore } from '@/store/cartStore';
+import { useAuthStore } from '@/store/authStore';
 import { applyCoupon as apiApplyCoupon } from '@/lib/api';
 
 export default function CartDrawer() {
@@ -11,12 +12,25 @@ export default function CartDrawer() {
     items, isOpen, closeCart, removeItem, updateQuantity,
     subtotal, discount, total, coupon, applyCoupon, removeCoupon,
   } = useCartStore();
-  
+  const { user, setAuthModalOpen, setGuestPopupMode } = useAuthStore();
+  const router = useRouter();
+
   const [couponCode, setCouponCode] = useState('');
   const [couponError, setCouponError] = useState('');
   const [applyingCoupon, setApplyingCoupon] = useState(false);
   const [couponOpen, setCouponOpen] = useState(false);
-  const drawerRef = useRef<HTMLDivElement>(null);
+  const drawerRef = null;
+
+  const handleCheckout = () => {
+    if (!user) {
+      closeCart();
+      if (setGuestPopupMode) setGuestPopupMode('signin');
+      setAuthModalOpen(true);
+      return;
+    }
+    closeCart();
+    router.push('/checkout');
+  };
 
   // Close on backdrop click
   const handleBackdrop = (e: React.MouseEvent) => {
@@ -212,13 +226,18 @@ export default function CartDrawer() {
               </div>
 
               {/* Checkout CTA */}
-              <Link
-                href="/checkout"
-                onClick={closeCart}
-                className="w-full bg-brand-green text-white text-center h-[56px] flex items-center justify-center rounded-[40px] font-bold text-[18px] hover:bg-[#154617] transition-all duration-300 shadow-[0_4px_16px_rgba(29,94,32,0.2)] tracking-wide"
+              <button
+                onClick={handleCheckout}
+                className="w-full bg-brand-green text-white text-center h-[56px] flex items-center justify-center gap-2 rounded-[40px] font-bold text-[18px] hover:bg-[#154617] transition-all duration-300 shadow-[0_4px_16px_rgba(29,94,32,0.2)] tracking-wide"
               >
-                Proceed to Checkout
-              </Link>
+                {!user && <Lock size={16} />}
+                {user ? 'Proceed to Checkout' : 'Sign In to Checkout'}
+              </button>
+              {!user && (
+                <p className="text-center text-[12px] text-[#999] font-medium mt-2">
+                  Sign in or create an account to place your order
+                </p>
+              )}
             </div>
           </>
         )}

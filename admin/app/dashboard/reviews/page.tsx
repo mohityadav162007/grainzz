@@ -26,8 +26,9 @@ export default function ReviewsPage() {
 
   const toggleVisibility = async (id: string, currentStatus: boolean) => {
     try {
-      await updateProductReviewVisibility(id, !currentStatus);
-      setReviews(reviews.map(r => r.id === id ? { ...r, is_active: !currentStatus } : r));
+      const res = await updateProductReviewVisibility(id, !currentStatus);
+      console.log('[ADMIN] Visibility Update Response:', res);
+      setReviews(reviews.map(r => r.id === id ? { ...r, is_visible: !currentStatus } : r));
     } catch (err) {
       alert('Failed to update visibility');
     }
@@ -44,9 +45,9 @@ export default function ReviewsPage() {
   };
 
   const filteredReviews = reviews.filter(r => 
-    r.author.toLowerCase().includes(search.toLowerCase()) ||
-    r.text.toLowerCase().includes(search.toLowerCase()) ||
-    r.products?.name.toLowerCase().includes(search.toLowerCase())
+    r.reviewer_name?.toLowerCase().includes(search.toLowerCase()) ||
+    r.review_text?.toLowerCase().includes(search.toLowerCase()) ||
+    r.products?.name?.toLowerCase().includes(search.toLowerCase())
   );
 
   return (
@@ -92,7 +93,7 @@ export default function ReviewsPage() {
               ) : filteredReviews.map((review) => (
                 <tr key={review.id} className="hover:bg-gray-50/50 transition-colors">
                   <td className="px-6 py-4 font-semibold text-gray-900">{review.products?.name}</td>
-                  <td className="px-6 py-4 text-gray-500">{review.author}</td>
+                  <td className="px-6 py-4 text-gray-500">{review.reviewer_name}</td>
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-1 text-yellow-500">
                       {[...Array(5)].map((_, i) => (
@@ -100,13 +101,13 @@ export default function ReviewsPage() {
                       ))}
                     </div>
                   </td>
-                  <td className="px-6 py-4 text-gray-600 italic line-clamp-2">"{review.text}"</td>
+                  <td className="px-6 py-4 text-gray-600 italic line-clamp-2">"{review.review_text}"</td>
                   <td className="px-6 py-4">
                     <button 
-                      onClick={() => toggleVisibility(review.id, review.is_active)}
-                      className={`flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold transition-colors ${review.is_active ? 'bg-green-100 text-green-700 hover:bg-green-200' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}
+                      onClick={() => toggleVisibility(review.id, review.is_visible)}
+                      className={`flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold transition-colors ${review.is_visible ? 'bg-green-100 text-green-700 hover:bg-green-200' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}
                     >
-                      {review.is_active ? <><Eye size={12}/> Active</> : <><EyeOff size={12}/> Hidden</>}
+                      {review.is_visible ? <><Eye size={12}/> Active</> : <><EyeOff size={12}/> Hidden</>}
                     </button>
                   </td>
                   <td className="px-6 py-4 text-right">

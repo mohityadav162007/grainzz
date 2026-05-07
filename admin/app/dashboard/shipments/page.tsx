@@ -72,7 +72,7 @@ export default function ShipmentsPage() {
     return true;
   });
 
-  const statusOptions = [...new Set(orders.map(o => o.delivery_status).filter(Boolean))];
+  const statusOptions = Array.from(new Set(orders.map(o => o.delivery_status).filter(Boolean)));
 
   // Summary stats
   const total = orders.length;

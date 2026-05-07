@@ -20,6 +20,7 @@ export default function ProductDetailPage() {
   const [openComboSub, setOpenComboSub] = useState<number | null>(null);
   const [added, setAdded] = useState(false);
   const [relatedProducts, setRelatedProducts] = useState<any[]>([]);
+  const [mobileRelatedIndex, setMobileRelatedIndex] = useState(0);
   const [reviews, setReviews] = useState<any[]>([]);
   const { addItem } = useCartStore();
 
@@ -109,9 +110,20 @@ export default function ProductDetailPage() {
       setNotificationSuccess(true);
       setNotificationEmail('');
     } catch (err) {
-      alert('Failed to submit notification request.');
+      alert('Failed to subscribe. Please try again.');
     } finally {
       setNotificationSubmitting(false);
+    }
+  };
+
+  const handleRelatedScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    const container = e.currentTarget;
+    const scrollPosition = container.scrollLeft;
+    // Assuming each card takes up about 85% of container width + gap
+    const cardWidth = container.offsetWidth * 0.85; 
+    const newIndex = Math.round(scrollPosition / cardWidth);
+    if (newIndex !== mobileRelatedIndex) {
+      setMobileRelatedIndex(Math.min(newIndex, relatedProducts.length - 1));
     }
   };
 
@@ -238,7 +250,10 @@ export default function ProductDetailPage() {
           {/* LEFT: Image Gallery */}
           <div className="w-full lg:w-[46%] xl:w-[46%] flex-shrink-0 order-2 lg:order-1 flex flex-col gap-[16px]">
             {/* Main Image */}
-            <div className="relative w-full aspect-[4/3] md:aspect-[4/5] lg:aspect-[4/4] rounded-[24px] overflow-hidden bg-[#F5F0E8] shadow-sm border border-[#EAEAEA]">
+            <div 
+              className="relative w-full rounded-[24px] overflow-hidden bg-[#F5F0E8] shadow-sm border border-[#EAEAEA]"
+              style={{ aspectRatio: '1024 / 1536' }}
+            >
               {product.images?.length > 0 ? (
                 <Image src={product.images[selectedImage % product.images.length]} alt={product.name} fill className="object-cover transition-transform duration-700 hover:scale-[1.03]" priority />
               ) : (
@@ -263,8 +278,8 @@ export default function ProductDetailPage() {
               )}
             </div>
 
-            {/* Thumbnails */}
-            <div className="flex gap-[12px] overflow-x-auto pb-2 scrollbar-none">
+            {/* Desktop Thumbnails (Hidden on mobile) */}
+            <div className="hidden lg:flex gap-[12px] overflow-x-auto pb-2 scrollbar-none">
               {product.images?.slice(0, 10).map((img: string, i: number) => (
                 <button
                   key={i}
@@ -276,12 +291,39 @@ export default function ProductDetailPage() {
                 </button>
               ))}
             </div>
+
+            {/* Mobile Image Gallery Controls (Dots & Arrows) */}
+            {product.images?.length > 1 && (
+              <div className="flex lg:hidden items-center justify-center gap-6 mt-[8px]">
+                <button 
+                  onClick={() => setSelectedImage(prev => prev === 0 ? product.images.length - 1 : prev - 1)}
+                  className="p-2 text-[#888888] hover:text-[#222222] transition-colors"
+                >
+                  <ChevronLeft size={20} strokeWidth={2.5} />
+                </button>
+                <div className="flex items-center gap-[8px]">
+                  {product.images.map((_: any, idx: number) => (
+                    <div
+                      key={idx}
+                      onClick={() => setSelectedImage(idx)}
+                      className={`h-[8px] rounded-full transition-all duration-300 ${idx === selectedImage ? 'w-[24px] bg-[#1E5E28]' : 'w-[8px] bg-[#E0E0E0] hover:bg-[#C0C0C0]'}`}
+                    />
+                  ))}
+                </div>
+                <button 
+                  onClick={() => setSelectedImage(prev => (prev + 1) % product.images.length)}
+                  className="p-2 text-[#888888] hover:text-[#222222] transition-colors"
+                >
+                  <ChevronRight size={20} strokeWidth={2.5} />
+                </button>
+              </div>
+            )}
           </div>
 
           {/* RIGHT: Product Info */}
           <div className="flex-1 flex flex-col items-start order-3 lg:order-2 w-full">
             {/* Desktop Tags & Title */}
-            <div className="hidden lg:flex flex-col items-start w-full">
+            <div className="hidden lg:flex flex-col items-start w-full order-0">
               {product.tags?.length > 0 && (
                 <div className="flex gap-[8px] mb-[12px]">
                   {product.tags.map((tag: string) => (
@@ -297,17 +339,9 @@ export default function ProductDetailPage() {
               </p>
             </div>
 
-            {/* Price */}
-            <div className="flex items-center gap-[12px] mb-[32px]">
-              <span className="text-[32px] lg:text-[38px] font-bold text-[#1A1A1A] leading-[1]">₹{product.price}</span>
-              {product.mrp > product.price && (
-                <span className="text-[18px] text-[#999999] font-medium line-through">MRP ₹{product.mrp}</span>
-              )}
-            </div>
-
             {/* Notification Box (Out of Stock) */}
             {product.stock === 0 && (
-              <div className="w-full mb-[32px] border border-[#EAEAEA] rounded-[16px] p-[24px] bg-white shadow-sm">
+              <div className="w-full mb-[32px] lg:mb-[32px] border border-[#EAEAEA] rounded-[16px] p-[24px] bg-white shadow-sm order-1 lg:order-2">
                 <p className="text-[15px] text-[#4A4A4A] mb-[20px] leading-[1.5]">
                   Register to receive a notification when this item comes back in stock.
                 </p>
@@ -339,8 +373,44 @@ export default function ProductDetailPage() {
               </div>
             )}
 
+            {/* Price */}
+            <div className={`flex items-center gap-[12px] w-full order-2 lg:order-1 ${product.stock === 0 ? 'pt-[32px] border-t border-[#EAEAEA] lg:border-0 lg:pt-0' : ''} mb-[32px]`}>
+              <span className="text-[32px] lg:text-[38px] font-bold text-[#1A1A1A] leading-[1]">₹{product.price}</span>
+              {product.mrp > product.price && (
+                <span className="text-[18px] text-[#999999] font-medium line-through">MRP ₹{product.mrp}</span>
+              )}
+            </div>
+
+            {/* Purchase Controls */}
+            <div className="w-full flex flex-col lg:flex-row gap-[16px] lg:gap-[20px] order-3 lg:order-4 mb-[32px] lg:mb-0">
+              <div className={`flex items-center gap-[16px] h-[64px] lg:h-[64px] w-fit ${product.stock === 0 ? 'opacity-40 pointer-events-none' : ''}`}>
+                <button onClick={() => setQty(Math.max(1, qty - 1))} className="w-[60px] h-[60px] lg:w-[60px] lg:h-[60px] rounded-full border border-[#D9D9D9] flex items-center justify-center text-[#4A4A4A] hover:bg-white transition-colors"><Minus size={22} strokeWidth={1.5} /></button>
+                <span className="text-[22px] lg:text-[24px] font-bold text-brand-black w-[24px] text-center select-none">{qty}</span>
+                <button onClick={() => setQty(qty + 1)} className="w-[60px] h-[60px] lg:w-[60px] lg:h-[60px] rounded-full border border-[#D9D9D9] flex items-center justify-center text-[#4A4A4A] hover:bg-white transition-colors"><Plus size={22} strokeWidth={1.5} /></button>
+              </div>
+              <button 
+                onClick={handleAddToCart}
+                disabled={product.stock === 0}
+                className={`w-full lg:flex-1 h-[64px] lg:h-[64px] rounded-full border-[1.5px] font-bold text-[18px] lg:text-[18px] transition-all
+                  ${product.stock === 0 
+                    ? 'border-[#b5d4a6] text-[#b5d4a6] cursor-not-allowed bg-transparent' 
+                    : 'border-[#8cb369] text-[#4d7a2f] hover:bg-[#F2F9ED]'}`}
+              >
+                {added ? 'Added ✓' : 'Add to Cart'}
+              </button>
+              <button 
+                disabled={product.stock === 0}
+                className={`w-full lg:flex-1 h-[64px] lg:h-[64px] rounded-full font-bold text-[18px] lg:text-[18px] transition-all shadow-sm
+                  ${product.stock === 0 
+                    ? 'bg-[#999999] text-white cursor-not-allowed' 
+                    : 'bg-[#1D5E2E] text-white hover:bg-[#154617]'}`}
+              >
+                Quick Buy
+              </button>
+            </div>
+
             {/* Accordions — Exclusive: only one open at a time */}
-            <div className="w-full flex flex-col mb-[32px] border-t border-[#EAEAEA]">
+            <div className="w-full flex flex-col mb-[32px] border-t border-[#EAEAEA] order-4 lg:order-3">
               {accordionItems.map((item: any) => {
                 const isOpen = openSection === item.label;
                 return (
@@ -441,35 +511,6 @@ export default function ProductDetailPage() {
                 );
               })}
             </div>
-
-            {/* Purchase Controls */}
-            <div className="w-full flex flex-col lg:flex-row gap-[16px]">
-              <div className={`flex items-center gap-[16px] h-[54px] ${product.stock === 0 ? 'opacity-50 pointer-events-none' : ''}`}>
-                <button onClick={() => setQty(Math.max(1, qty - 1))} className="w-[54px] h-[54px] rounded-full border border-[#D9D9D9] flex items-center justify-center text-[#4A4A4A] hover:bg-white transition-colors"><Minus size={20} strokeWidth={1.5} /></button>
-                <span className="text-[20px] font-bold text-brand-black w-[24px] text-center select-none">{qty}</span>
-                <button onClick={() => setQty(qty + 1)} className="w-[54px] h-[54px] rounded-full border border-[#D9D9D9] flex items-center justify-center text-[#4A4A4A] hover:bg-white transition-colors"><Plus size={20} strokeWidth={1.5} /></button>
-              </div>
-              <button 
-                onClick={handleAddToCart}
-                disabled={product.stock === 0}
-                className={`flex-1 h-[54px] rounded-full border-[1.5px] font-bold text-[16px] transition-all
-                  ${product.stock === 0 
-                    ? 'border-[#D9D9D9] text-[#999999] cursor-not-allowed bg-transparent' 
-                    : 'border-[#8cb369] text-[#4d7a2f] hover:bg-[#F2F9ED]'}`}
-              >
-                {added ? 'Added ✓' : 'Add to Cart'}
-              </button>
-              <button 
-                disabled={product.stock === 0}
-                className={`flex-1 h-[54px] rounded-full font-bold text-[16px] transition-all shadow-sm
-                  ${product.stock === 0 
-                    ? 'bg-[#999999] text-white cursor-not-allowed' 
-                    : 'bg-[#1D5E2E] text-white hover:bg-[#154617]'}`}
-              >
-                Quick Buy
-              </button>
-            </div>
-
           </div>
         </div>
 
@@ -663,13 +704,62 @@ export default function ProductDetailPage() {
         {/* ============================== */}
         {relatedProducts.length > 0 && (
           <section className="mb-[100px] border-t border-[#EAEAEA] pt-[60px]">
-            <h2 className="text-[28px] md:text-[36px] font-bold mb-[40px] text-brand-black tracking-tight font-sans">
+            <h2 className="text-[28px] md:text-[36px] font-bold mb-[40px] text-brand-black tracking-tight font-sans lg:text-left text-center">
               You may also like
             </h2>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-[16px] md:gap-[32px]">
+            
+            {/* Desktop Grid */}
+            <div className="hidden md:grid grid-cols-2 md:grid-cols-4 gap-[16px] md:gap-[32px]">
               {relatedProducts.map((p: any) => (
                 <ProductCard key={p.id} product={p} />
               ))}
+            </div>
+
+            {/* Mobile Carousel */}
+            <div className="flex md:hidden flex-col w-full">
+              <div 
+                id="related-mobile-carousel"
+                onScroll={handleRelatedScroll}
+                className="flex w-full overflow-x-auto snap-x snap-mandatory scrollbar-none gap-[16px] pb-[24px]"
+              >
+                {relatedProducts.map((p: any) => (
+                  <div key={p.id} className="snap-center shrink-0 w-[85%] max-w-[300px]">
+                    <ProductCard product={p} />
+                  </div>
+                ))}
+              </div>
+              
+              {/* Controls */}
+              <div className="flex items-center justify-center gap-[24px] mt-[8px]">
+                <button 
+                  onClick={() => {
+                    const c = document.getElementById('related-mobile-carousel');
+                    if (c) c.scrollBy({ left: -window.innerWidth * 0.85, behavior: 'smooth' });
+                  }}
+                  className="p-1 text-[#888888] hover:text-[#222222] transition-colors"
+                >
+                  <ChevronLeft size={20} strokeWidth={2.5} />
+                </button>
+                
+                <div className="flex items-center gap-[8px]">
+                  {relatedProducts.map((_, idx) => (
+                    <div
+                      key={idx}
+                      className={`h-[8px] rounded-full transition-all duration-300 ${idx === mobileRelatedIndex ? 'w-[24px] bg-[#1E5E28]' : 'w-[8px] bg-[#E0E0E0]'}`}
+                    />
+                  ))}
+                </div>
+
+                <button 
+                  onClick={() => {
+                    const c = document.getElementById('related-mobile-carousel');
+                    if (c) c.scrollBy({ left: window.innerWidth * 0.85, behavior: 'smooth' });
+                  }}
+                  className="p-1 text-[#888888] hover:text-[#222222] transition-colors"
+                >
+                  <ChevronRight size={20} strokeWidth={2.5} />
+                </button>
+              </div>
             </div>
           </section>
         )}

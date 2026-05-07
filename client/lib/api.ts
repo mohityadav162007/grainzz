@@ -23,6 +23,7 @@ export const getProducts = async (params?: Record<string, string>) => {
     .eq('is_active', true);
 
   if (params?.category) query = query.eq('category', params.category);
+  if (params?.categories) query = query.in('category', params.categories.split(','));
   if (params?.isSale === 'true') query = query.eq('is_sale', true);
   if (params?.search) query = query.ilike('name', `%${params.search}%`);
   if (params?.inStock === 'true') query = query.gt('stock', 0);
@@ -244,6 +245,15 @@ export const getAvailabilityLogos = async () => {
     return (data || []).map(r => r.products ? sanitizeProduct(r.products) : null).filter(Boolean);
   };
   
+  export const submitStockNotification = async (productId: string, email: string) => {
+    const { error } = await supabase.from('stock_notification_requests').insert({
+      product_id: productId,
+      email: email,
+    });
+    if (error) throw new Error(error.message);
+    return { success: true };
+  };
+  
   export const getPoweredByCards = async () => {
     const { data, error } = await supabase.from('store_settings').select('value').eq('key', 'powered_by_json').single();
     if (error || !data) return [];
@@ -463,4 +473,32 @@ export const submitEnquiry = async (body: {
 
   if (error) throw new Error(error.message);
   return { success: true, data };
+};
+
+// ─── Shipment Tracking (Customer-facing) ─────────────────────────────────────
+
+/**
+ * Get live tracking info for an order shipment (customer-side).
+ * Uses the shiprocket-orders edge function server-side.
+ */
+export const trackOrderShipment = async (params: { awbCode?: string; shipmentId?: string }) => {
+  const { data, error } = await supabase.functions.invoke('shiprocket-orders', {
+    body: { action: 'track', ...params },
+  });
+  if (error) throw new Error(error.message);
+  return data;
+};
+
+/**
+ * Fetch all orders for a given email address (for customer account page).
+ */
+export const getUserOrders = async (email: string) => {
+  const { data, error } = await supabase
+    .from('orders')
+    .select('*, order_items(*)')
+    .eq('user_email', email)
+    .order('created_at', { ascending: false });
+
+  if (error) throw new Error(error.message);
+  return data || [];
 };

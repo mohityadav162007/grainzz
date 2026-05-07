@@ -5,6 +5,7 @@ import {
   getAllSiteContent, upsertSiteContent,
   getHeroSlides, getHomepageSections, getProducts,
   getPoweredByCards, getInstagramPostsAdmin, getSnackBoxItems,
+  validateProductReferences,
 } from '@/lib/api';
 
 import HeroSlidesEditor from '@/components/homepage/HeroSlidesEditor';
@@ -46,6 +47,11 @@ export default function HomepageEditorPage() {
   const loadAll = async () => {
     setLoading(true);
     try {
+      // Auto-clean orphan product references before loading
+      validateProductReferences().then(r => {
+        if (r.total > 0) console.log('[Cleanup] Orphan references removed:', r.cleaned);
+      }).catch(() => {});
+
       const [sc, hs, sec, prods, pwrbd, sb, ig] = await Promise.all([
         getAllSiteContent().catch(e => { console.error('[DB LOAD] SC err:', e); return []; }),
         getHeroSlides().catch(e => { console.error('[DB LOAD] HS err:', e); return []; }),

@@ -102,12 +102,19 @@ export default function PoweredBy() {
           Powered by Real Grains
         </h2>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8">
+        <div className="flex flex-col md:grid md:grid-cols-3 gap-6 lg:gap-8 relative">
           {cards.map((cat, idx) => (
-            <div key={idx} className="flex flex-col w-full rounded-xl overflow-hidden shadow-[0_2px_12px_rgba(0,0,0,0.06)] hover:shadow-[0_8px_24px_rgba(0,0,0,0.12)] transition-shadow duration-300">
+            <div 
+              key={idx} 
+              className="flex flex-col w-[88%] max-w-[340px] mx-auto md:w-full md:max-w-none rounded-3xl md:rounded-xl overflow-hidden shadow-[0_2px_12px_rgba(0,0,0,0.06)] hover:shadow-[0_8px_24px_rgba(0,0,0,0.12)] transition-shadow duration-300 md:relative sticky"
+              style={{ 
+                top: `calc(100px + ${idx * 16}px)`,
+                zIndex: idx 
+              }}
+            >
               {/* Top Image Section */}
               <div
-                className="w-full aspect-square md:aspect-auto md:h-[280px] lg:h-[320px] relative flex flex-col justify-end items-center pt-8 pb-4"
+                className="w-full aspect-[4/5] md:aspect-auto md:h-[280px] lg:h-[320px] relative flex flex-col justify-end items-center pt-8 pb-4"
                 style={{ backgroundColor: cat.topBg }}
               >
                  <div className="h-[90%] w-full relative">
@@ -115,26 +122,27 @@ export default function PoweredBy() {
                      src={cat.image}
                      alt={cat.title}
                      fill
-                     className="object-contain drop-shadow-xl"
+                     className="object-contain drop-shadow-2xl"
                    />
                  </div>
               </div>
 
               {/* Bottom Content Section */}
               <div
-                className="w-full flex flex-col items-center text-center px-6 py-6"
+                className="w-full flex flex-col items-center text-center px-6 py-6 md:py-6 rounded-b-2xl md:rounded-b-none border-t border-black/5"
                 style={{ backgroundColor: cat.bottomBg }}
               >
                 {cat.subtitle && (
-                  <p className="text-[13px] font-medium text-[#7A7A7A] mb-1">
+                  <p className="text-[14px] font-medium text-[#4A4A4A] mb-1.5">
                     {cat.subtitle}
                   </p>
                 )}
-                <h3 className="text-[20px] lg:text-[22px] font-bold text-[#2A2A2A] mb-2 tracking-tight">
+                <h3 className="text-[22px] lg:text-[22px] font-bold text-[#1A1A1A] mb-4 tracking-tight">
                   {cat.title}
                 </h3>
+                
                 {cat.price && (
-                  <div className="flex items-center gap-2 mb-3">
+                  <div className="flex items-center gap-2 mb-3 hidden md:flex">
                     <span className="text-[16px] font-bold text-[#1E5E28]">₹{cat.price}</span>
                     {cat.mrp && cat.mrp > cat.price && (
                       <span className="text-[13px] text-[#999] line-through">₹{cat.mrp}</span>
@@ -144,11 +152,11 @@ export default function PoweredBy() {
 
                 <Link
                   href={cat.link}
-                  className="inline-flex items-center justify-between w-[140px] border border-[#a8a8a8] bg-transparent pl-4 pr-1 py-1 rounded-full hover:bg-black/5 transition-colors group mt-1"
+                  className="inline-flex items-center justify-between w-[150px] border border-[#a8a8a8] bg-transparent pl-5 pr-1.5 py-1.5 rounded-full hover:bg-black/5 transition-colors group"
                 >
-                  <span className="font-bold text-[13px] text-[#444444]">Buy Now</span>
-                  <div className="w-8 h-8 bg-[#1E5E28] rounded-full flex items-center justify-center text-white shrink-0 group-hover:bg-[#15461c] transition-colors">
-                    <ArrowRight size={16} strokeWidth={2.5}/>
+                  <span className="font-bold text-[15px] text-[#2A2A2A]">Buy Now</span>
+                  <div className="w-9 h-9 bg-[#1a5b23] rounded-full flex items-center justify-center text-white shrink-0 group-hover:bg-[#15461c] transition-colors">
+                    <ArrowRight size={18} strokeWidth={2.5}/>
                   </div>
                 </Link>
               </div>

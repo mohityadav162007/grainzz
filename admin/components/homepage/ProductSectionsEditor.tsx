@@ -13,15 +13,18 @@ export default function ProductSectionsEditor({ sections, products, onRefresh }:
   const [pickerOpen, setPickerOpen] = useState<string | null>(null);
 
   useEffect(() => {
+    const validProductIds = new Set(products.map((p: any) => p.id));
     const mapped = HARDCODED_TABS.map((title) => {
       const existing = (sections || []).find((s: any) => s.title === title);
-      return {
-        title,
-        product_ids: existing?.product_ids || [],
-      };
+      const originalIds = existing?.product_ids || [];
+      const cleanedIds = originalIds.filter((id: string) => validProductIds.has(id));
+      if (cleanedIds.length < originalIds.length) {
+        console.warn(`[ProductSections] "${title}": removed ${originalIds.length - cleanedIds.length} orphan reference(s)`);
+      }
+      return { title, product_ids: cleanedIds };
     });
     setItems(mapped);
-  }, [sections]);
+  }, [sections, products]);
 
   const getProduct = (id: string) => products.find((p: any) => p.id === id);
 

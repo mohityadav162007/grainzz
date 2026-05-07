@@ -16,28 +16,42 @@ const HOMEPAGE_REVIEWS = [
     author: 'Aarav Mehta',
     role: 'Delhi',
     rating: 5,
-    product_id: 'b0213901-afd9-4fea-8469-d4fa224656cc', // ← test product 1
+    product_id: '9fb17378-0edd-4f8f-a7ca-f23ad2d3b049', // 
   },
   {
     text: "Perfect for evening snacking. Light, tasty and much easier to keep reaching for than namkeen.",
     author: 'Ritika Sharma',
     role: 'Gurugram',
     rating: 5,
-    product_id: 'a0df7392-c6e7-44be-8b23-3ee7176f3d03', // ← test product 2
+    product_id: 'a769b834-3673-40ed-87c7-b1c19717d0e1', // 
   },
   {
     text: "I bought these out of curiosity but ended up loving them. Great if you want something different from standard chips.",
     author: 'Sneha Nair',
     role: 'Bengaluru',
     rating: 5,
-    product_id: '8c43bd32-ae8b-42f3-be99-be48f26db2b6', // ← test product 3
+    product_id: 'f8ae529c-83b8-4216-8259-178564e9d41c', // 
   },
   {
     text: "Did not expect quinoa snacks to taste this good. These have become my work desk snack now.",
     author: 'Kunal Arora',
     role: 'Noida',
     rating: 5,
-    product_id: 'c2ddcc32-10b9-4fa0-8de8-96aee37233e7', // ← test product 4
+    product_id: 'a9c352ce-99e3-4496-83bc-7904a7128c8a', // 
+  },
+  {
+    text: "The combo is the best way to try Grainzz because everyone at home ends up liking a different one.",
+    author: 'Priya Bansal',
+    role: 'Jaipur',
+    rating: 5,
+    product_id: '62b4eb79-8d83-4648-8304-1264fcc6a74d', // 
+  },
+  {
+    text: "Very easy to snack on at night. Light, flavourful and much better than random fried snacks.",
+    author: 'Nidhi Kapoor',
+    role: 'Mumbai',
+    rating: 5,
+    product_id: 'c19020a7-b8e4-4459-a062-a47480935c87', // 
   },
 ];
 
@@ -134,16 +148,16 @@ export default function TestimonialsSection() {
 
         {product ? (
           <div className="relative z-10 w-[302px] bg-white rounded-[20px] shadow-[0_24px_60px_rgba(0,0,0,0.12)] flex flex-col items-center p-[16px] text-left font-sans transform hover:-translate-y-2 transition-transform duration-500">
-            <div className="w-[270px] h-[280px] bg-[#FDEAE3] rounded-[16px] relative flex items-center justify-center p-4 mb-2">
+            <div className="w-[270px] h-[280px] bg-[#FDEAE3] rounded-[16px] relative mb-2">
               {product.mrp > product.price && (
                 <div className="absolute top-4 left-4 rounded-full bg-[#E51624] flex items-center justify-center py-1 px-3 z-20 text-white text-[11px] font-bold shadow-sm">
                   -{Math.round(((product.mrp - product.price) / product.mrp) * 100)}%
                 </div>
               )}
               <Image
-                className="h-[90%] w-auto object-contain z-10 drop-shadow-2xl"
-                width={200}
-                height={260}
+                className="w-full h-full object-cover z-10 rounded-[16px]"
+                width={270}
+                height={280}
                 alt={product.name}
                 src={product.images?.[0] || '/Rectangle-10@2x.png'}
               />

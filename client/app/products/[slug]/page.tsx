@@ -4,7 +4,7 @@ import { useParams } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 import { ChevronRight, ChevronLeft, Plus, Minus, Star, Check, X, Upload, Loader2 } from 'lucide-react';
-import { getProductBySlug, getProductReviews, submitProductReview, uploadReviewImage, getRelatedProductsSection } from '@/lib/api';
+import { getProductBySlug, getProductReviews, submitProductReview, uploadReviewImage, getRelatedProductsSection, submitStockNotification } from '@/lib/api';
 import { useCartStore } from '@/store/cartStore';
 import ProductCard from '@/components/products/ProductCard';
 import ProductTestimonialsSection from '@/components/products/ProductTestimonialsSection';
@@ -16,11 +16,17 @@ export default function ProductDetailPage() {
   const [loading, setLoading] = useState(true);
   const [qty, setQty] = useState(1);
   const [selectedImage, setSelectedImage] = useState(0);
-  const [openSections, setOpenSections] = useState<Set<string>>(new Set(['Description']));
+  const [openSection, setOpenSection] = useState<string | null>('Description');
+  const [openComboSub, setOpenComboSub] = useState<number | null>(null);
   const [added, setAdded] = useState(false);
   const [relatedProducts, setRelatedProducts] = useState<any[]>([]);
   const [reviews, setReviews] = useState<any[]>([]);
   const { addItem } = useCartStore();
+
+  // Notification State
+  const [notificationEmail, setNotificationEmail] = useState('');
+  const [notificationSubmitting, setNotificationSubmitting] = useState(false);
+  const [notificationSuccess, setNotificationSuccess] = useState(false);
 
   // Review Form State
   const [reviewForm, setReviewForm] = useState({ rating: 0, title: '', text: '', name: '', email: '' });
@@ -75,12 +81,8 @@ export default function ProductDetailPage() {
   }, [slug]);
 
   const toggleSection = (label: string) => {
-    setOpenSections(prev => {
-      const next = new Set(prev);
-      if (next.has(label)) next.delete(label);
-      else next.add(label);
-      return next;
-    });
+    setOpenSection(prev => prev === label ? null : label);
+    if (label !== 'Nutrition breakdown') setOpenComboSub(null);
   };
 
   const handleAddToCart = () => {
@@ -96,6 +98,21 @@ export default function ProductDetailPage() {
     });
     setAdded(true);
     setTimeout(() => setAdded(false), 2000);
+  };
+
+  const handleNotifySubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!notificationEmail || !product) return;
+    setNotificationSubmitting(true);
+    try {
+      await submitStockNotification(product.id, notificationEmail);
+      setNotificationSuccess(true);
+      setNotificationEmail('');
+    } catch (err) {
+      alert('Failed to submit notification request.');
+    } finally {
+      setNotificationSubmitting(false);
+    }
   };
 
   const handleReviewSubmit = async (e: React.FormEvent) => {
@@ -169,11 +186,19 @@ export default function ProductDetailPage() {
 
   const discount = product.mrp > product.price ? Math.round(((product.mrp - product.price) / product.mrp) * 100) : 0;
 
+  const isComboProduct = ['2-Jar Combo', '3-Jar Combo', '4-Jar Combo', '6-Jar Combo', 'Puffed Rice Mixed 6-Pack'].includes(product.category);
+  const hasComboNutrition = isComboProduct && product.combo_nutrition?.length > 0;
+  const hasNormalNutrition = product.nutrition_table?.length > 0;
+
   const accordionItems = [
     { label: 'Description', content: product.description },
-    { label: 'Nutrition breakdown', isTable: true, content: product.nutrition_table },
-    { label: 'Ingredients', content: product.ingredients },
-  ].filter(item => item.content || (item.isTable && item.content?.length > 0));
+    ...(hasComboNutrition
+      ? [{ label: 'Nutrition breakdown', isComboNutrition: true, content: product.combo_nutrition }]
+      : hasNormalNutrition
+        ? [{ label: 'Nutrition breakdown', isTable: true, content: product.nutrition_table }]
+        : []),
+    ...(product.ingredients ? [{ label: 'Ingredients', content: product.ingredients }] : []),
+  ];
 
   return (
     <div className="bg-[#FCF9F2] min-h-screen pb-[60px] md:pb-[100px] font-sans">
@@ -213,14 +238,14 @@ export default function ProductDetailPage() {
           {/* LEFT: Image Gallery */}
           <div className="w-full lg:w-[46%] xl:w-[46%] flex-shrink-0 order-2 lg:order-1 flex flex-col gap-[16px]">
             {/* Main Image */}
-            <div className="relative w-full aspect-[4/3] md:aspect-square rounded-[24px] overflow-hidden bg-[#F5F0E8] shadow-sm border border-[#EAEAEA]">
+            <div className="relative w-full aspect-[4/3] md:aspect-[4/5] lg:aspect-[4/4] rounded-[24px] overflow-hidden bg-[#F5F0E8] shadow-sm border border-[#EAEAEA]">
               {product.images?.length > 0 ? (
                 <Image src={product.images[selectedImage % product.images.length]} alt={product.name} fill className="object-cover transition-transform duration-700 hover:scale-[1.03]" priority />
               ) : (
                 <Image src="/Rectangle-10@2x.png" alt={product.name} fill className="object-cover" />
               )}
               {discount > 0 && (
-                <div className="absolute top-[20px] left-[20px] bg-brand-red text-white text-[13px] font-bold px-[14px] py-[6px] rounded-full tracking-wide shadow-sm z-10">
+                <div className="absolute top-[20px] left-[20px] bg-[#9A0000] text-white text-[13px] font-medium px-[14px] py-[6px] rounded-full tracking-wide shadow-sm z-10">
                   -{discount}%
                 </div>
               )}
@@ -228,6 +253,14 @@ export default function ProductDetailPage() {
               <div className="absolute top-[20px] right-[20px] w-[22px] h-[22px] border-[1.5px] border-[#1E8A38] rounded-[3px] flex items-center justify-center bg-white z-10">
                 <div className="w-[10px] h-[10px] bg-[#1E8A38] rounded-full" />
               </div>
+              {/* Out of Stock Overlay */}
+              {product.stock === 0 && (
+                <div className="absolute inset-0 bg-white/20 backdrop-blur-[2px] flex items-center justify-center z-20">
+                  <div className="w-[130px] h-[130px] rounded-full bg-white/95 flex items-center justify-center shadow-[0_4px_24px_rgba(0,0,0,0.08)]">
+                    <span className="text-[15px] font-medium text-[#4A4A4A] tracking-wide text-center">Out of Stock</span>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Thumbnails */}
@@ -250,88 +283,188 @@ export default function ProductDetailPage() {
             {/* Desktop Tags & Title */}
             <div className="hidden lg:flex flex-col items-start w-full">
               {product.tags?.length > 0 && (
-                <div className="flex gap-[8px] mb-[16px]">
+                <div className="flex gap-[8px] mb-[12px]">
                   {product.tags.map((tag: string) => (
-                    <span key={tag} className="bg-[#FDF7E7] text-[#D89F43] text-[12px] font-bold px-[12px] py-[5px] rounded-[6px] tracking-wide shadow-sm">{tag}</span>
+                    <span key={tag} className="bg-[#FDF0CC] text-[#4A4A4A] text-[13px] font-medium px-[14px] py-[4px] rounded-[6px] tracking-wide shadow-sm">{tag}</span>
                   ))}
                 </div>
               )}
-              <h1 className="text-[36px] lg:text-[42px] font-bold text-[#1D5E2E] mb-[8px] leading-[1.1] tracking-tight">
+              <h1 className="text-[36px] lg:text-[40px] font-bold text-[#1D5E2E] mb-[6px] leading-[1.1] tracking-tight">
                 {product.name}
               </h1>
-              <p className="text-[#657B67] text-[15px] font-medium mb-[24px]">
-                {product.category === 'Healthy Chips' ? 'Enjoy our healthy snack packed with nutrition.' : 'Delicious and wholesome everyday snacking.'}
+              <p className="text-[#7A7A7A] text-[16px] font-medium mb-[24px]">
+                {product.subtitle || 'High-Fibre | No Palm Oil | Baked Crunch'}
               </p>
             </div>
 
             {/* Price */}
             <div className="flex items-center gap-[12px] mb-[32px]">
-              <span className="text-[32px] lg:text-[40px] font-bold text-brand-black leading-[1]">₹{product.price}</span>
+              <span className="text-[32px] lg:text-[38px] font-bold text-[#1A1A1A] leading-[1]">₹{product.price}</span>
               {product.mrp > product.price && (
                 <span className="text-[18px] text-[#999999] font-medium line-through">MRP ₹{product.mrp}</span>
               )}
             </div>
 
-            {/* Accordions */}
-            <div className="w-full flex flex-col mb-[32px] border-t border-[#EAEAEA]">
-              {accordionItems.map((item) => (
-                <div key={item.label} className="border-b border-[#EAEAEA]">
-                  <button 
-                    onClick={() => toggleSection(item.label)}
-                    className="w-full py-[20px] flex items-center justify-between font-bold text-[15px] text-brand-black hover:text-brand-green transition-colors"
-                  >
-                    {item.label}
-                    {openSections.has(item.label) ? <Minus size={20} strokeWidth={1.5} className="text-black"/> : <Plus size={20} strokeWidth={1.5} className="text-black"/>}
-                  </button>
-                  {openSections.has(item.label) && (
-                    <div className="pb-[20px] text-[#4A4A4A] text-[14px] leading-[1.7]">
-                      {item.isTable ? (
-                        <div className="w-full overflow-x-auto rounded-[8px] border border-[#EAEAEA]">
-                          <table className="w-full border-collapse min-w-[300px]">
-                            <thead className="bg-gray-50 text-gray-700">
-                              <tr>
-                                <th className="py-2.5 px-4 text-left font-bold text-[12px] uppercase">Nutrients</th>
-                                <th className="py-2.5 px-4 text-left font-bold text-[12px] uppercase">per 100g</th>
-                                <th className="py-2.5 px-4 text-left font-bold text-[12px] uppercase">% RDA per serve</th>
-                              </tr>
-                            </thead>
-                            <tbody className="bg-white text-brand-black text-[13px] font-medium">
-                              {item.content.map((row: any, i: number) => (
-                                <tr key={i} className="border-t border-[#EAEAEA]">
-                                  <td className="py-2.5 px-4 font-bold">{row.nutrient}</td>
-                                  <td className="py-2.5 px-4">{row.per_100g}</td>
-                                  <td className="py-2.5 px-4">{row.rda_percent}</td>
-                                </tr>
-                              ))}
-                            </tbody>
-                          </table>
-                        </div>
-                      ) : (
-                        item.content
-                      )}
+            {/* Notification Box (Out of Stock) */}
+            {product.stock === 0 && (
+              <div className="w-full mb-[32px] border border-[#EAEAEA] rounded-[16px] p-[24px] bg-white shadow-sm">
+                <p className="text-[15px] text-[#4A4A4A] mb-[20px] leading-[1.5]">
+                  Register to receive a notification when this item comes back in stock.
+                </p>
+                {notificationSuccess ? (
+                  <div className="bg-[#F2F9ED] text-[#1D5E2E] p-4 rounded-[8px] text-[14px] font-medium text-center border border-[#A6C98F]">
+                    You're on the list! We'll notify you when it's back.
+                  </div>
+                ) : (
+                  <form onSubmit={handleNotifySubmit} className="flex flex-col gap-4">
+                    <div>
+                      <label className="text-[13px] text-[#4A4A4A] mb-1.5 block">Email<span className="text-red-500">*</span></label>
+                      <input 
+                        type="email" 
+                        required 
+                        value={notificationEmail}
+                        onChange={(e) => setNotificationEmail(e.target.value)}
+                        className="w-full h-[48px] border border-[#EAEAEA] rounded-[8px] px-[16px] outline-none focus:border-brand-green focus:ring-1 focus:ring-brand-green text-[14px] transition-all"
+                      />
                     </div>
-                  )}
-                </div>
-              ))}
+                    <button 
+                      type="submit" 
+                      disabled={notificationSubmitting}
+                      className="w-full h-[48px] bg-[#1a1a1a] text-white rounded-[24px] font-bold text-[15px] hover:bg-black transition-colors disabled:opacity-50"
+                    >
+                      {notificationSubmitting ? 'Submitting...' : 'Notify Me'}
+                    </button>
+                  </form>
+                )}
+              </div>
+            )}
+
+            {/* Accordions — Exclusive: only one open at a time */}
+            <div className="w-full flex flex-col mb-[32px] border-t border-[#EAEAEA]">
+              {accordionItems.map((item: any) => {
+                const isOpen = openSection === item.label;
+                return (
+                  <div key={item.label} className="border-b border-[#EAEAEA]">
+                    <button 
+                      onClick={() => toggleSection(item.label)}
+                      className="w-full py-[20px] flex items-center justify-between font-bold text-[15px] text-brand-black hover:text-brand-green transition-colors"
+                    >
+                      {item.label}
+                      <span className={`transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`}>
+                        {isOpen ? <Minus size={20} strokeWidth={1.5} className="text-black"/> : <Plus size={20} strokeWidth={1.5} className="text-black"/>}
+                      </span>
+                    </button>
+                    <div
+                      className="overflow-hidden transition-all duration-300 ease-in-out"
+                      style={{ maxHeight: isOpen ? '2000px' : '0px', opacity: isOpen ? 1 : 0 }}
+                    >
+                      <div className="pb-[20px] text-[#4A4A4A] text-[14px] leading-[1.7]">
+                        {/* ── Combo Nutrition: nested sub-accordions ── */}
+                        {item.isComboNutrition ? (
+                          <div className="space-y-[2px]">
+                            {item.content.map((group: any, gi: number) => {
+                              const subOpen = openComboSub === gi;
+                              return (
+                                <div key={gi} className="border border-[#EAEAEA] rounded-[10px] overflow-hidden bg-white">
+                                  <button
+                                    onClick={() => setOpenComboSub(subOpen ? null : gi)}
+                                    className="w-full py-[14px] px-[16px] flex items-center justify-between text-[14px] font-semibold text-brand-black hover:text-brand-green transition-colors bg-[#FAFAF8]"
+                                  >
+                                    <span className="flex items-center gap-[10px]">
+                                      <span className="w-[6px] h-[6px] rounded-full bg-brand-green flex-shrink-0" />
+                                      {group.name}
+                                    </span>
+                                    <ChevronRight size={16} strokeWidth={1.5} className={`transition-transform duration-250 ${subOpen ? 'rotate-90' : ''}`} />
+                                  </button>
+                                  <div
+                                    className="overflow-hidden transition-all duration-250 ease-in-out"
+                                    style={{ maxHeight: subOpen ? '1000px' : '0px', opacity: subOpen ? 1 : 0 }}
+                                  >
+                                    {group.rows?.length > 0 && (
+                                      <div className="px-[16px] pb-[14px]">
+                                        <div className="w-full overflow-x-auto rounded-[8px] border border-[#EAEAEA]">
+                                          <table className="w-full border-collapse min-w-[300px]">
+                                            <thead className="bg-gray-50 text-gray-700">
+                                              <tr>
+                                                <th className="py-2.5 px-4 text-left font-bold text-[12px] uppercase">Nutrients</th>
+                                                <th className="py-2.5 px-4 text-left font-bold text-[12px] uppercase">per 100g</th>
+                                                <th className="py-2.5 px-4 text-left font-bold text-[12px] uppercase">% RDA per serve</th>
+                                              </tr>
+                                            </thead>
+                                            <tbody className="bg-white text-brand-black text-[13px] font-medium">
+                                              {group.rows.map((row: any, ri: number) => (
+                                                <tr key={ri} className="border-t border-[#EAEAEA]">
+                                                  <td className="py-2.5 px-4 font-bold">{row.nutrient}</td>
+                                                  <td className="py-2.5 px-4">{row.per_100g}</td>
+                                                  <td className="py-2.5 px-4">{row.rda_percent}</td>
+                                                </tr>
+                                              ))}
+                                            </tbody>
+                                          </table>
+                                        </div>
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        ) : item.isTable ? (
+                          /* ── Normal single nutrition table ── */
+                          <div className="w-full overflow-x-auto rounded-[8px] border border-[#EAEAEA]">
+                            <table className="w-full border-collapse min-w-[300px]">
+                              <thead className="bg-gray-50 text-gray-700">
+                                <tr>
+                                  <th className="py-2.5 px-4 text-left font-bold text-[12px] uppercase">Nutrients</th>
+                                  <th className="py-2.5 px-4 text-left font-bold text-[12px] uppercase">per 100g</th>
+                                  <th className="py-2.5 px-4 text-left font-bold text-[12px] uppercase">% RDA per serve</th>
+                                </tr>
+                              </thead>
+                              <tbody className="bg-white text-brand-black text-[13px] font-medium">
+                                {item.content.map((row: any, i: number) => (
+                                  <tr key={i} className="border-t border-[#EAEAEA]">
+                                    <td className="py-2.5 px-4 font-bold">{row.nutrient}</td>
+                                    <td className="py-2.5 px-4">{row.per_100g}</td>
+                                    <td className="py-2.5 px-4">{row.rda_percent}</td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        ) : (
+                          /* ── Text content (Description / Ingredients) ── */
+                          item.content
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
 
             {/* Purchase Controls */}
             <div className="w-full flex flex-col lg:flex-row gap-[16px]">
-              <div className="flex items-center gap-[16px] h-[54px]">
-                <button onClick={() => setQty(Math.max(1, qty - 1))} className="w-[54px] h-[54px] rounded-full border border-[#4A4A4A] flex items-center justify-center text-[#4A4A4A] hover:bg-white transition-colors"><Minus size={20} strokeWidth={1.5} /></button>
+              <div className={`flex items-center gap-[16px] h-[54px] ${product.stock === 0 ? 'opacity-50 pointer-events-none' : ''}`}>
+                <button onClick={() => setQty(Math.max(1, qty - 1))} className="w-[54px] h-[54px] rounded-full border border-[#D9D9D9] flex items-center justify-center text-[#4A4A4A] hover:bg-white transition-colors"><Minus size={20} strokeWidth={1.5} /></button>
                 <span className="text-[20px] font-bold text-brand-black w-[24px] text-center select-none">{qty}</span>
-                <button onClick={() => setQty(qty + 1)} className="w-[54px] h-[54px] rounded-full border border-[#4A4A4A] flex items-center justify-center text-[#4A4A4A] hover:bg-white transition-colors"><Plus size={20} strokeWidth={1.5} /></button>
+                <button onClick={() => setQty(qty + 1)} className="w-[54px] h-[54px] rounded-full border border-[#D9D9D9] flex items-center justify-center text-[#4A4A4A] hover:bg-white transition-colors"><Plus size={20} strokeWidth={1.5} /></button>
               </div>
               <button 
                 onClick={handleAddToCart}
                 disabled={product.stock === 0}
-                className="flex-1 h-[54px] rounded-full border-[1.5px] border-[#1D5E2E] text-[#1D5E2E] font-bold text-[16px] hover:bg-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className={`flex-1 h-[54px] rounded-full border-[1.5px] font-bold text-[16px] transition-all
+                  ${product.stock === 0 
+                    ? 'border-[#D9D9D9] text-[#999999] cursor-not-allowed bg-transparent' 
+                    : 'border-[#8cb369] text-[#4d7a2f] hover:bg-[#F2F9ED]'}`}
               >
                 {added ? 'Added ✓' : 'Add to Cart'}
               </button>
               <button 
                 disabled={product.stock === 0}
-                className="flex-1 h-[54px] rounded-full bg-[#1D5E2E] text-white font-bold text-[16px] hover:bg-[#154617] transition-colors shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+                className={`flex-1 h-[54px] rounded-full font-bold text-[16px] transition-all shadow-sm
+                  ${product.stock === 0 
+                    ? 'bg-[#999999] text-white cursor-not-allowed' 
+                    : 'bg-[#1D5E2E] text-white hover:bg-[#154617]'}`}
               >
                 Quick Buy
               </button>

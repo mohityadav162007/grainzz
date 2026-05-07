@@ -6,7 +6,6 @@ import ProductCard from '@/components/products/ProductCard';
 import { getProducts } from '@/lib/api';
 
 const productCategories = ['Puffed Rice', 'Healthy Chips', 'Grain Puffs'];
-const bundleCategories = ['Combos', 'Gift Packs'];
 const sortOptions = [
   { label: 'Best Selling', value: 'best-selling' },
   { label: 'Price: Low to High', value: 'price-asc' },
@@ -27,9 +26,12 @@ function CombosContent() {
   const [products, setProducts] = useState<any[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [isInit, setIsInit] = useState(false);
   const [page, setPage] = useState(1);
   const [sort, setSort] = useState('best-selling');
-  const [selectedCategories, setSelectedCategories] = useState<string[]>(['Combos']);
+  
+  const [bundleCategoriesState, setBundleCategoriesState] = useState<string[]>(['Combos']);
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [excludeOutOfStock, setExcludeOutOfStock] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
 
@@ -40,20 +42,45 @@ function CombosContent() {
 
   const search = searchParams.get('search') || '';
 
+  useEffect(() => {
+    import('@/lib/api').then(({ getSiteContent }) => {
+      getSiteContent('combo_page_categories').then(content => {
+        let cats = ['Combos'];
+        if (content && typeof content === 'string') {
+          const parsed = content.split(',').map(c => c.trim()).filter(Boolean);
+          if (parsed.length > 0) cats = parsed;
+        }
+        setBundleCategoriesState(cats);
+        setSelectedCategories(cats);
+        setIsInit(true);
+      }).catch(() => {
+        setSelectedCategories(['Combos']);
+        setIsInit(true);
+      });
+    });
+  }, []);
+
   const fetchProducts = useCallback(async () => {
+    if (!isInit) return;
     setLoading(true);
     try {
       const params: Record<string, string> = { page: String(page), limit: '9', sort };
-      if (selectedCategories.length === 1) params.category = selectedCategories[0];
+      if (selectedCategories.length > 0) {
+        if (selectedCategories.length === 1) params.category = selectedCategories[0];
+        else params.categories = selectedCategories.join(',');
+      } else {
+        params.categories = 'NONE'; // If nothing selected, return empty instead of ALL store products.
+      }
       if (search) params.search = search;
       if (excludeOutOfStock) params.inStock = 'true';
+      const { getProducts } = await import('@/lib/api');
       const res = await getProducts(params);
       let items = res.data || [];
       setProducts(items);
       setTotal(res.pagination?.total || 0);
     } catch { }
     finally { setLoading(false); }
-  }, [page, sort, selectedCategories, search, excludeOutOfStock]);
+  }, [page, sort, selectedCategories, search, excludeOutOfStock, isInit]);
 
   useEffect(() => { setPage(1); }, [sort, selectedCategories, search, excludeOutOfStock]);
   useEffect(() => { fetchProducts(); }, [fetchProducts]);
@@ -178,7 +205,7 @@ function CombosContent() {
                 <SectionHeader title="Bundles" open={bundlesOpen} toggle={() => setBundlesOpen(!bundlesOpen)} />
                 {bundlesOpen && (
                   <div className="mt-[12px] space-y-[10px]">
-                    {bundleCategories.map((cat) => (
+                    {bundleCategoriesState.map((cat) => (
                       <Checkbox
                         key={cat}
                         checked={selectedCategories.includes(cat)}
@@ -301,7 +328,7 @@ function CombosContent() {
               <div>
                 <span className="text-[15px] font-semibold text-brand-black block mb-[10px]">Bundles</span>
                 <div className="space-y-[10px]">
-                  {bundleCategories.map((cat) => (<Checkbox key={cat} checked={selectedCategories.includes(cat)} onChange={() => toggleCategory(cat)} label={cat} />))}
+                  {bundleCategoriesState.map((cat) => (<Checkbox key={cat} checked={selectedCategories.includes(cat)} onChange={() => toggleCategory(cat)} label={cat} />))}
                 </div>
               </div>
             </div>

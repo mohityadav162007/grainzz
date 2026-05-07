@@ -35,6 +35,101 @@ export const getSession = async () => {
   return data.session;
 };
 
+// ─── Product Reference Validation Utility ────────────────────────────────────
+
+/**
+ * Scans all JSON stores for orphan product references and removes them.
+ * Call on admin load or on-demand. Returns a cleanup log.
+ */
+export const validateProductReferences = async (): Promise<{ cleaned: string[]; total: number }> => {
+  const cleaned: string[] = [];
+
+  // Get all valid product IDs
+  const { data: allProducts } = await supabase.from('products').select('id');
+  const validIds = new Set((allProducts || []).map((p: any) => p.id));
+
+  // 1. product_tabs_json
+  const { data: tabsRow } = await supabase
+    .from('store_settings').select('value').eq('key', 'product_tabs_json').single();
+  if (tabsRow?.value) {
+    try {
+      const tabs = JSON.parse(tabsRow.value);
+      if (Array.isArray(tabs)) {
+        let changed = false;
+        const cleanedTabs = tabs.map((tab: any) => {
+          const orig = tab.product_ids || [];
+          const valid = orig.filter((id: string) => validIds.has(id));
+          if (valid.length < orig.length) {
+            changed = true;
+            cleaned.push(`product_tabs "${tab.title}": removed ${orig.length - valid.length} orphan(s)`);
+          }
+          return { ...tab, product_ids: valid };
+        });
+        if (changed) {
+          await supabase.from('store_settings').update({ value: JSON.stringify(cleanedTabs) }).eq('key', 'product_tabs_json');
+        }
+      }
+    } catch { /* skip */ }
+  }
+
+  // 2. team_favourites
+  const { data: tfRow } = await supabase
+    .from('store_settings').select('value').eq('key', 'team_favourites').single();
+  if (tfRow?.value) {
+    try {
+      const tf = JSON.parse(tfRow.value);
+      if (tf && Array.isArray(tf.product_ids)) {
+        const orig = tf.product_ids;
+        const valid = orig.filter((id: string) => validIds.has(id));
+        if (valid.length < orig.length) {
+          tf.product_ids = valid;
+          cleaned.push(`team_favourites: removed ${orig.length - valid.length} orphan(s)`);
+          await supabase.from('store_settings').update({ value: JSON.stringify(tf) }).eq('key', 'team_favourites');
+        }
+      }
+    } catch { /* skip */ }
+  }
+
+  // 3. powered_by_json
+  const { data: pbRow } = await supabase
+    .from('store_settings').select('value').eq('key', 'powered_by_json').single();
+  if (pbRow?.value) {
+    try {
+      const cards = JSON.parse(pbRow.value);
+      if (Array.isArray(cards)) {
+        let changed = false;
+        const cleanedCards = cards.map((card: any) => {
+          if (card.product_id && !validIds.has(card.product_id)) {
+            changed = true;
+            cleaned.push(`powered_by slot "${card.title || 'untitled'}": orphan removed`);
+            return { ...card, product_id: null, title: '', link: '#' };
+          }
+          return card;
+        });
+        if (changed) {
+          await supabase.from('store_settings').update({ value: JSON.stringify(cleanedCards) }).eq('key', 'powered_by_json');
+        }
+      }
+    } catch { /* skip */ }
+  }
+
+  // 4. homepage_sections UUID[] arrays
+  const { data: hpSections } = await supabase.from('homepage_sections').select('id, section_type, product_ids');
+  if (hpSections) {
+    for (const section of hpSections) {
+      if (Array.isArray(section.product_ids)) {
+        const valid = section.product_ids.filter((id: string) => validIds.has(id));
+        if (valid.length < section.product_ids.length) {
+          cleaned.push(`homepage_section "${section.section_type}": removed ${section.product_ids.length - valid.length} orphan(s)`);
+          await supabase.from('homepage_sections').update({ product_ids: valid }).eq('id', section.id);
+        }
+      }
+    }
+  }
+
+  return { cleaned, total: cleaned.length };
+};
+
 // ─── Products ────────────────────────────────────────────────────────────────
 
 export const getProducts = async (params?: Record<string, string>) => {
@@ -69,6 +164,8 @@ export const createProduct = async (formData: FormData) => {
   const tags = tagsStr ? tagsStr.split(',').map((t) => t.trim()) : [];
   const nutritionTableStr = formData.get('nutritionTable') as string;
   const nutritionTable = nutritionTableStr ? JSON.parse(nutritionTableStr) : [];
+  const comboNutritionStr = formData.get('comboNutrition') as string;
+  const comboNutrition = comboNutritionStr ? JSON.parse(comboNutritionStr) : [];
   const ingredients = (formData.get('ingredients') as string) || '';
   const weight = (formData.get('weight') as string) || '';
 
@@ -116,7 +213,9 @@ export const createProduct = async (formData: FormData) => {
       tags,
       nutrition_info: formData.get('nutritionInfo') as string || '',
       nutrition_table: nutritionTable,
+      combo_nutrition: comboNutrition,
       ingredients,
+      subtitle: (formData.get('subtitle') as string) || '',
     })
     .select()
     .single();
@@ -161,11 +260,17 @@ export const updateProduct = async (id: string, formData: FormData) => {
   const nutritionTableStr = formData.get('nutritionTable') as string;
   if (nutritionTableStr !== null) updates.nutrition_table = JSON.parse(nutritionTableStr);
 
+  const comboNutritionStr = formData.get('comboNutrition') as string;
+  if (comboNutritionStr !== null) updates.combo_nutrition = JSON.parse(comboNutritionStr);
+
   const ingredients = formData.get('ingredients');
   if (ingredients !== null) updates.ingredients = ingredients;
 
   const weight = formData.get('weight');
   if (weight !== null) updates.weight = weight;
+
+  const subtitle = formData.get('subtitle');
+  if (subtitle !== null) updates.subtitle = subtitle;
 
   // Upload new images to Cloudinary
   const files = formData.getAll('images') as File[];
@@ -200,6 +305,73 @@ export const updateProduct = async (id: string, formData: FormData) => {
 };
 
 export const deleteProduct = async (id: string) => {
+  // ── Cascade cleanup: remove product references from all JSON stores ──
+  // The DB trigger (019) also does this, but we do it here too for immediate
+  // UI consistency and as a safety net.
+
+  try {
+    // 1. Clean product_tabs_json
+    const { data: tabsRow } = await supabase
+      .from('store_settings').select('value').eq('key', 'product_tabs_json').single();
+    if (tabsRow?.value) {
+      try {
+        const tabs = JSON.parse(tabsRow.value);
+        if (Array.isArray(tabs)) {
+          const cleaned = tabs.map((tab: any) => ({
+            ...tab,
+            product_ids: (tab.product_ids || []).filter((pid: string) => pid !== id),
+          }));
+          await supabase.from('store_settings').update({ value: JSON.stringify(cleaned) }).eq('key', 'product_tabs_json');
+        }
+      } catch { /* skip malformed JSON */ }
+    }
+
+    // 2. Clean team_favourites
+    const { data: tfRow } = await supabase
+      .from('store_settings').select('value').eq('key', 'team_favourites').single();
+    if (tfRow?.value) {
+      try {
+        const tf = JSON.parse(tfRow.value);
+        if (tf && Array.isArray(tf.product_ids)) {
+          tf.product_ids = tf.product_ids.filter((pid: string) => pid !== id);
+          await supabase.from('store_settings').update({ value: JSON.stringify(tf) }).eq('key', 'team_favourites');
+        }
+      } catch { /* skip */ }
+    }
+
+    // 3. Clean powered_by_json
+    const { data: pbRow } = await supabase
+      .from('store_settings').select('value').eq('key', 'powered_by_json').single();
+    if (pbRow?.value) {
+      try {
+        const cards = JSON.parse(pbRow.value);
+        if (Array.isArray(cards)) {
+          const cleaned = cards.map((card: any) => {
+            if (card.product_id === id) {
+              return { ...card, product_id: null, title: '', link: '#' };
+            }
+            return card;
+          });
+          await supabase.from('store_settings').update({ value: JSON.stringify(cleaned) }).eq('key', 'powered_by_json');
+        }
+      } catch { /* skip */ }
+    }
+
+    // 4. Clean homepage_sections product_ids arrays (UUID[] column)
+    const { data: hpSections } = await supabase.from('homepage_sections').select('id, product_ids');
+    if (hpSections) {
+      for (const section of hpSections) {
+        if (Array.isArray(section.product_ids) && section.product_ids.includes(id)) {
+          const cleaned = section.product_ids.filter((pid: string) => pid !== id);
+          await supabase.from('homepage_sections').update({ product_ids: cleaned }).eq('id', section.id);
+        }
+      }
+    }
+  } catch (cleanupErr) {
+    console.warn('[deleteProduct] Reference cleanup had errors (non-fatal):', cleanupErr);
+  }
+
+  // ── Now delete the actual product ──
   const { error } = await supabase.from('products').delete().eq('id', id);
   if (error) throw new Error(error.message);
   return { success: true, message: 'Product deleted permanently' };
@@ -1094,4 +1266,82 @@ export const deleteEnquiry = async (id: string) => {
   const { error } = await supabase.from('enquiries').delete().eq('id', id);
   if (error) throw new Error(error.message);
   return { success: true };
+};
+
+// ─── Shiprocket Integration ─────────────────────────────────────────────────
+
+/**
+ * Send selected orders to Shiprocket for shipment creation.
+ * All API calls happen server-side via Supabase Edge Function.
+ */
+export const sendOrdersToShiprocket = async (orderIds: string[]) => {
+  const { data, error } = await supabase.functions.invoke('shiprocket-orders', {
+    body: { action: 'create-shipment', orderIds },
+  });
+  if (error) throw new Error(error.message);
+  return data;
+};
+
+/**
+ * Request AWB (Air Waybill) for a shipment that was created but didn't get auto-assigned.
+ */
+export const requestAwb = async (shipmentId: string) => {
+  const { data, error } = await supabase.functions.invoke('shiprocket-orders', {
+    body: { action: 'request-awb', shipmentId },
+  });
+  if (error) throw new Error(error.message);
+  return data;
+};
+
+/**
+ * Track a specific shipment by AWB code or shipment ID.
+ */
+export const trackShipment = async (params: { awbCode?: string; shipmentId?: string }) => {
+  const { data, error } = await supabase.functions.invoke('shiprocket-orders', {
+    body: { action: 'track', ...params },
+  });
+  if (error) throw new Error(error.message);
+  return data;
+};
+
+/**
+ * Bulk sync tracking statuses for all active shipments.
+ */
+export const syncAllTrackingStatuses = async () => {
+  const { data, error } = await supabase.functions.invoke('shiprocket-orders', {
+    body: { action: 'sync-tracking' },
+  });
+  if (error) throw new Error(error.message);
+  return data;
+};
+
+/**
+ * Cancel a Shiprocket order.
+ */
+export const cancelShiprocketOrder = async (shiprocketOrderIds: string[]) => {
+  const { data, error } = await supabase.functions.invoke('shiprocket-orders', {
+    body: { action: 'cancel', shiprocketOrderIds },
+  });
+  if (error) throw new Error(error.message);
+  return data;
+};
+
+/**
+ * Force refresh Shiprocket auth token.
+ */
+export const refreshShiprocketToken = async () => {
+  const { data, error } = await supabase.functions.invoke('shiprocket-auth', {
+    body: { action: 'refresh-token' },
+  });
+  if (error) throw new Error(error.message);
+  return data;
+};
+
+/**
+ * Update order shipment fields directly in the database.
+ */
+export const updateOrderShipmentFields = async (id: string, fields: Record<string, any>) => {
+  const { data, error } = await supabase.from('orders').update(fields).eq('id', id).select().single();
+  if (error) throw new Error(error.message);
+  return { success: true, data };
 };

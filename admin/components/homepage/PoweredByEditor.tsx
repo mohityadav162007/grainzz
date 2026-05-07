@@ -12,7 +12,18 @@ export default function PoweredByEditor({ cards, products, onRefresh }: any) {
   const fileRefs = useRef<(HTMLInputElement | null)[]>([null, null, null]);
 
   // Sync local state when props change (after DB refresh)
-  useEffect(() => { setItems(cards); }, [cards]);
+  // Also validate: clear product references for deleted products
+  useEffect(() => {
+    const validProductIds = new Set(products.map((p: any) => p.id));
+    const cleaned = (cards || []).map((card: any) => {
+      if (card.product_id && !validProductIds.has(card.product_id)) {
+        console.warn(`[PoweredBy] Slot "${card.title || 'untitled'}": orphan product_id ${card.product_id} removed`);
+        return { ...card, product_id: null, title: '', link: '#' };
+      }
+      return card;
+    });
+    setItems(cleaned);
+  }, [cards, products]);
 
   const getProduct = (id: string) => products.find((p: any) => p.id === id);
 

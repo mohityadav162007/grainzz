@@ -82,7 +82,7 @@ export default function HeroSection() {
   if (slides === null) {
     return (
       <section className="w-full">
-        <div className="w-full h-[400px] md:h-[540px] lg:h-[600px] bg-[#F5F5F0] animate-pulse" />
+        <div className="w-full aspect-[1537/1023] md:aspect-auto md:h-[540px] lg:h-[600px] bg-[#F5F5F0] animate-pulse" />
       </section>
     );
   }
@@ -98,14 +98,25 @@ export default function HeroSection() {
   return (
     <section className="w-full flex justify-center flex-col items-center">
       <div
-        className="w-full h-[400px] md:h-[540px] lg:h-[600px] relative flex flex-col overflow-hidden bg-[#F5F5F0] cursor-pointer"
+        className="w-full md:h-[540px] lg:h-[600px] relative flex flex-col overflow-hidden bg-[#F5F5F0] cursor-pointer"
         onClick={() => handleSlideClick(slide)}
-        style={{
-          background: bgImage
-            ? `url(${bgImage}) center center/cover no-repeat`
-            : undefined,
-        }}
-      />
+      >
+        {/* Mobile naturally scales height to fit image without cropping */}
+        <img 
+          src={bgImage} 
+          alt="Banner" 
+          className="block md:hidden w-full h-auto object-contain"
+        />
+        {/* Desktop keeps the exact same behavior and fixed heights */}
+        <div 
+          className="hidden md:block absolute inset-0 w-full h-full"
+          style={{
+            background: bgImage
+              ? `url(${bgImage}) center center/cover no-repeat`
+              : undefined,
+          }}
+        />
+      </div>
 
       {slides.length > 1 && (
         <div className="w-full bg-white flex items-center justify-center py-[24px]">

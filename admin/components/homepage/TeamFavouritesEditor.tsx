@@ -19,9 +19,16 @@ export default function TeamFavouritesEditor({ config, products, onSave, saving 
   // Sync local state when props change (after DB refresh)
   useEffect(() => {
     const parsed = parseConfig(config);
-    console.log('[DB LOAD] Team Favourites config synced:', parsed);
+    // Validate: remove orphan product_ids that no longer exist
+    const validProductIds = new Set(products.map((p: any) => p.id));
+    const originalIds = parsed.product_ids || [];
+    const cleanedIds = originalIds.filter((id: string) => validProductIds.has(id));
+    if (cleanedIds.length < originalIds.length) {
+      console.warn(`[TeamFavourites] Removed ${originalIds.length - cleanedIds.length} orphan product reference(s)`);
+    }
+    parsed.product_ids = cleanedIds;
     setC(parsed);
-  }, [config]);
+  }, [config, products]);
 
   const getProduct = (id: string) => products.find((p: any) => p.id === id);
   const selectedProducts = (c.product_ids || []).map((id: string) => getProduct(id)).filter(Boolean);

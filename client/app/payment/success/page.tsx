@@ -21,7 +21,7 @@ function SuccessContent() {
     const validateOrder = async () => {
       try {
         const response = await checkPaymentStatus(orderId);
-        if (response.state === 'COMPLETED') {
+        if (response?.data?.state === 'COMPLETED') {
           setIsValid(true);
         } else {
           // If not paid, force them back through verify logic

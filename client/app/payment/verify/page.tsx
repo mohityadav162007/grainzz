@@ -18,6 +18,8 @@ function VerifyContent() {
       return;
     }
 
+    let timeoutIds: NodeJS.Timeout[] = [];
+
     const verify = async () => {
       try {
         const res = await checkPaymentStatus(orderId);
@@ -25,28 +27,27 @@ function VerifyContent() {
 
         if (state === 'COMPLETED') {
           setStatus('success');
-          // Redirect to success page after brief delay
-          setTimeout(() => {
+          timeoutIds.push(setTimeout(() => {
             router.replace(`/payment/success?orderId=${orderId}`);
-          }, 1500);
+          }, 1500));
         } else if (state === 'FAILED') {
           setStatus('failed');
-          setTimeout(() => {
+          timeoutIds.push(setTimeout(() => {
             router.replace('/payment/failure');
-          }, 2000);
+          }, 2000));
         } else {
           // PENDING or unknown — could still be processing
           // Retry once after 3 seconds
-          setTimeout(async () => {
+          timeoutIds.push(setTimeout(async () => {
             try {
               const retryRes = await checkPaymentStatus(orderId);
               const retryState = retryRes?.data?.state;
               if (retryState === 'COMPLETED') {
                 setStatus('success');
-                setTimeout(() => router.replace(`/payment/success?orderId=${orderId}`), 1000);
+                timeoutIds.push(setTimeout(() => router.replace(`/payment/success?orderId=${orderId}`), 1000));
               } else if (retryState === 'FAILED') {
                 setStatus('failed');
-                setTimeout(() => router.replace('/payment/failure'), 1500);
+                timeoutIds.push(setTimeout(() => router.replace('/payment/failure'), 1500));
               } else {
                 // Still pending — show as pending, let user manually check
                 setStatus('error');
@@ -56,7 +57,7 @@ function VerifyContent() {
               setStatus('error');
               setErrorMsg('Unable to verify payment status. Please contact support.');
             }
-          }, 3000);
+          }, 3000));
         }
       } catch (err: any) {
         setStatus('error');
@@ -65,6 +66,10 @@ function VerifyContent() {
     };
 
     verify();
+
+    return () => {
+      timeoutIds.forEach(clearTimeout);
+    };
   }, [orderId, router]);
 
   return (

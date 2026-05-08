@@ -62,10 +62,10 @@ export default function InstagramSection() {
             href={`https://instagram.com/${handle.replace('@', '')}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex flex-shrink-0 items-center justify-center gap-[10px] px-[28px] py-[14px] bg-[#1A1A1A] text-white rounded-full text-[15px] md:text-[16px] font-bold hover:bg-black transition-all group shadow-md"
+            className="flex flex-shrink-0 items-center justify-center gap-[12px] px-[24px] py-[12px] bg-[#111111] text-white rounded-full text-[16px] md:text-[17px] font-normal hover:bg-black transition-all group"
           >
-            <Instagram size={20} strokeWidth={2} />
-            {handle}
+            <Instagram size={26} strokeWidth={1.5} className="opacity-90" />
+            <span className="leading-none tracking-tight">{handle.toLowerCase()}</span>
           </a>
         </div>
 

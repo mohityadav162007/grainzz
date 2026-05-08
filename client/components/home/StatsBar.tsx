@@ -72,27 +72,23 @@ export default function StatsBar() {
   }
 
   return (
-    <section className="bg-white py-[40px] md:py-[100px] w-full">
-      <div className="max-w-[1440px] mx-auto px-4 md:px-[120px]">
-        <h2 className="text-[28px] md:text-[44px] font-bold text-center text-[#1A1A1A] md:text-brand-black mb-[32px] md:mb-[64px] leading-[1.2] font-sans tracking-tight">
+    <section className="bg-[#FFFBF0] py-[40px] md:py-[60px] w-full">
+      <div className="max-w-[1440px] mx-auto px-4 md:px-[60px] lg:px-[100px]">
+        <h2 className="text-[28px] md:text-[40px] font-semibold text-center text-[#1A1A1A] mb-[32px] md:mb-[48px] leading-[1.2] font-sans tracking-tight">
           Our Numbers Talk
         </h2>
         
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-[16px] md:gap-[32px]">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-[24px] md:gap-[32px]">
           {displayStats.map((stat) => {
-            const Icon = iconMap[stat.icon] || Heart;
             return (
               <div 
                 key={stat.label} 
-                className="flex flex-col items-center justify-center text-center bg-[#F2F9ED] md:bg-white rounded-2xl md:rounded-[20px] py-[32px] px-[16px] md:py-[56px] md:px-[20px] border border-[#A6C98F] md:border-[#EEEEEE] md:hover:border-brand-green/30 md:hover:shadow-[0_8px_30px_rgb(0,0,0,0.06)] transition-all duration-300 group"
+                className="flex flex-col items-center justify-center text-center"
               >
-                <div className="w-[56px] h-[56px] md:w-[80px] md:h-[80px] bg-white md:bg-[#EEFBDC] rounded-full flex items-center justify-center mb-[20px] md:mb-[24px] transition-transform duration-500 group-hover:scale-110 shadow-sm md:shadow-none">
-                  <Icon className="text-[#1a5b23] md:text-brand-green w-6 h-6 md:w-10 md:h-10" strokeWidth={2} />
-                </div>
-                <span className="text-[26px] md:text-[48px] font-bold text-[#1A1A1A] md:text-brand-black leading-[1] mb-[8px] md:mb-[12px] font-sans tracking-tight">
+                <span className="text-[28px] md:text-[42px] font-bold text-[#1A5B23] leading-[1] mb-[4px] md:mb-[8px] font-sans tracking-tight">
                   {stat.value}
                 </span>
-                <span className="text-[14px] md:text-[16px] font-medium text-[#4A4A4A] md:font-bold md:text-[#666666] tracking-normal md:tracking-wider lowercase md:uppercase font-sans">
+                <span className="text-[13px] md:text-[15px] font-medium text-[#4A4A4A] tracking-normal font-sans">
                   {stat.label}
                 </span>
               </div>

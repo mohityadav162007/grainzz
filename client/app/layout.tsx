@@ -8,7 +8,6 @@ import CartDrawer from '@/components/cart/CartDrawer';
 
 import AuthInitializer from '@/components/auth/AuthInitializer';
 import AuthModal from '@/components/auth/AuthModal';
-import GuestPopupTrigger from '@/components/auth/GuestPopupTrigger';
 
 const jakarta = Plus_Jakarta_Sans({ subsets: ['latin'], display: 'swap', adjustFontFallback: false });
 
@@ -34,7 +33,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body className={`${jakarta.className} bg-white text-brand-black`}>
         <AuthInitializer />
-        <GuestPopupTrigger />
         <AnnouncementBar />
         <Navbar />
         <main className="min-h-screen">{children}</main>

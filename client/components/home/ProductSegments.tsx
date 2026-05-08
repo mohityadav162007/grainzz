@@ -4,7 +4,7 @@ import Link from 'next/link';
 import ProductCard from '@/components/products/ProductCard';
 import { supabase } from '@/lib/supabase';
 import { getHomepageProductTabs, getSiteContent } from '@/lib/api';
-import { ChevronRight } from 'lucide-react';
+import { ChevronRight, ArrowRight } from 'lucide-react';
 
 interface TabData {
   title: string;
@@ -118,7 +118,7 @@ export default function ProductSegments() {
   return (
     <section className="py-[40px] md:py-[60px] bg-white w-full overflow-hidden">
       <div className="max-w-[1440px] mx-auto px-4 md:px-[60px] lg:px-[100px]">
-        <h2 className="text-[24px] md:text-[32px] font-bold text-center text-brand-black mb-[24px] md:mb-[48px] tracking-tight font-sans">
+        <h2 className="text-[24px] md:text-[32px] font-semibold text-center text-brand-black mb-[24px] md:mb-[48px] tracking-tight font-sans">
           {heading}
         </h2>
 
@@ -128,10 +128,10 @@ export default function ProductSegments() {
             <button
               key={tab.title}
               onClick={() => { setActiveTab(tab.title); setActiveIndex(0); }}
-              className={`flex items-center gap-2 px-[16px] md:px-[32px] py-[8px] md:py-[12px] rounded-full text-[13px] md:text-[16px] font-bold transition-all duration-300 border-[1.5px]
+              className={`flex items-center gap-2 px-[16px] md:px-[32px] py-[8px] md:py-[12px] rounded-full text-[13px] md:text-[16px] font-semibold transition-all duration-300 border-[1.5px]
                 ${activeTab === tab.title
-                  ? 'bg-[#1a5b23] text-white border-[#1a5b23] shadow-md'
-                  : 'bg-transparent text-[#666666] border-transparent md:border-[#CCCCCC] hover:text-[#1a5b23]'
+                  ? 'bg-brand-green text-white border-brand-green shadow-md'
+                  : 'bg-transparent text-[#666666] border-transparent hover:bg-brand-light hover:text-brand-green hover:border-brand-green'
                 }`}
             >
               <span className="text-lg leading-none">{getTabIcon(tab.title)}</span>
@@ -197,11 +197,11 @@ export default function ProductSegments() {
         <div className="flex justify-center mt-[32px] md:mt-[64px]">
           <Link 
             href="/products" 
-            className="inline-flex items-center justify-between gap-[16px] md:gap-[34px] bg-transparent border-[1.5px] border-[#1a5b23] text-[#1a5b23] hover:bg-[#1a5b23] hover:text-white pl-[20px] md:pl-[38px] pr-[4px] md:pr-[8px] py-[4px] md:py-[8px] rounded-[40px] transition-all group"
+            className="inline-flex items-center justify-between gap-4 md:gap-8 bg-white border border-[#D1EAD3] text-brand-green pl-6 md:pl-10 pr-1 md:pr-2 py-1 md:py-2 rounded-full transition-all group hover:border-brand-green hover:bg-brand-green hover:text-white"
           >
-            <span className="font-bold text-[14px] md:text-[20px] leading-[132%]">View All Products</span>
-            <div className="w-[32px] h-[32px] md:w-[50px] md:h-[50px] bg-[#1a5b23] group-hover:bg-white rounded-full flex items-center justify-center text-white group-hover:text-[#1a5b23] transition-colors">
-              <ChevronRight size={18} strokeWidth={2.5} className="md:w-6 md:h-6" />
+            <span className="font-semibold text-[14px] md:text-[20px] leading-[132%]">View All Products</span>
+            <div className="w-8 h-8 md:w-12 md:h-12 bg-brand-green group-hover:bg-white rounded-full flex items-center justify-center text-white group-hover:text-brand-green transition-colors">
+              <ArrowRight size={18} strokeWidth={2.5} className="md:w-6 md:h-6" />
             </div>
           </Link>
         </div>

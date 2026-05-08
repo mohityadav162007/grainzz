@@ -113,34 +113,31 @@ export default function AboutPage() {
       <section className="py-[64px] md:py-[96px] bg-[#1D5E20] text-white w-full overflow-hidden">
         <div className="max-w-[1200px] mx-auto px-4 md:px-[40px] lg:px-[60px] grid md:grid-cols-[1fr_auto] gap-[48px] md:gap-[64px] items-center">
           <div className="max-w-[520px]">
-            <h2 className="text-[32px] md:text-[42px] font-bold mb-[28px] leading-[1.15] tracking-tight text-white">Meet The Founders</h2>
-            <p className="text-white/85 text-[15px] md:text-[16px] leading-[1.7] mb-[20px] font-normal">
-              GRAINZZ was founded by Vibhor Kataria (Operations Specialist) and Rishel Puri (Branding &amp; Marketing Strategist).
-            </p>
-            <p className="text-white/85 text-[15px] md:text-[16px] leading-[1.7] mb-[28px] font-normal">
-              Together, they are building India&apos;s next big healthy snacking brand, a homegrown company turning traditional puffed rice into a structured, premium snack category.
-            </p>
-            <p className="text-white/85 text-[15px] md:text-[16px] leading-[1.7] mb-[20px] font-normal">
-              GRAINZZ was founded by Vibhor Kataria (Operations Specialist) and Rishel Puri (Branding &amp; Marketing Strategist).
-            </p>
-            <p className="text-white/85 text-[15px] md:text-[16px] leading-[1.7] font-normal">
-              Together, they are building India&apos;s next big healthy snacking brand, a homegrown company turning traditional puffed rice into a structured, premium snack category.
-            </p>
+            <h2 className="text-[36px] md:text-[48px] font-semibold mb-[28px] leading-[1.15] tracking-tight text-white">Meet The Founders</h2>
+            <div className="space-y-6">
+              <p className="text-white/90 text-[16px] md:text-[18px] leading-[1.6] font-normal">
+                GRAINZZ was founded by Vibhor Kataria (Operations Specialist) and Rishel Puri (Branding &amp; Marketing Strategist).
+              </p>
+              <p className="text-white/90 text-[16px] md:text-[18px] leading-[1.6] font-normal">
+                Together, they are building India&apos;s next big healthy snacking brand, a homegrown company turning traditional puffed rice into a structured, premium snack category.
+              </p>
+            </div>
           </div>
-          {/* Polaroid-style tilted photo */}
+
+          {/* Single Polaroid photo — matches reference exactly */}
           <div className="flex justify-center md:justify-end">
-            <div className="relative w-[280px] md:w-[340px] rotate-[4deg] hover:rotate-[2deg] transition-transform duration-500">
-              <div className="bg-white p-[10px] pb-[40px] rounded-[4px] shadow-[0_8px_32px_rgba(0,0,0,0.3)]">
-                <div className="relative w-full aspect-[4/3] overflow-hidden rounded-[2px]">
+            <div className="relative w-[300px] md:w-[380px] rotate-[5deg] hover:rotate-[2deg] transition-transform duration-500">
+              <div className="bg-white p-[16px] rounded-[2px] shadow-[0_20px_60px_rgba(0,0,0,0.5)]">
+                <div className="relative w-full aspect-[4/5] overflow-hidden rounded-[1px]">
                   <Image
-                    src="/founders.jpg"
+                    src="/founders.png"
                     alt="Grainzz Founders"
                     fill
                     className="object-cover"
-                    sizes="340px"
+                    sizes="(max-width: 768px) 300px, 380px"
                   />
                 </div>
-                <p className="text-center text-[12px] text-[#666] mt-[10px] italic font-medium">Ab hamein ye saare boxes pack karne the..</p>
+                {/* No bottom text as requested */}
               </div>
             </div>
           </div>

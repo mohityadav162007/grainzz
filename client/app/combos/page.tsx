@@ -64,13 +64,18 @@ function CombosContent() {
     if (!isInit) return;
     setLoading(true);
     try {
-      const params: Record<string, string> = { page: String(page), limit: '9', sort };
+      const params: Record<string, string> = { 
+        page: String(page), 
+        limit: '9', 
+        sort,
+        isCombo: 'true' 
+      };
+
       if (selectedCategories.length > 0) {
         if (selectedCategories.length === 1) params.category = selectedCategories[0];
         else params.categories = selectedCategories.join(',');
-      } else {
-        params.categories = 'NONE'; // If nothing selected, return empty instead of ALL store products.
       }
+      
       if (search) params.search = search;
       if (excludeOutOfStock) params.inStock = 'true';
       const { getProducts } = await import('@/lib/api');

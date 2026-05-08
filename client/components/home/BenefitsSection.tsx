@@ -22,10 +22,10 @@ export default function BenefitsSection() {
     <>
       <section className="py-[40px] md:py-[60px] bg-[#EEFBDC] w-full">
         <div className="max-w-[1440px] mx-auto px-4 md:px-[60px] lg:px-[100px]">
-          <div className="flex flex-col lg:flex-row items-center gap-[32px] md:gap-[60px]">
+          <div className="flex flex-col lg:flex-row items-stretch gap-[32px] md:gap-[60px]">
             
-            {/* Visual Box (Using the transparent products on a table photo) */}
-            <div className="w-full lg:w-[400px] h-[320px] md:h-[500px] relative rounded-[20px] overflow-hidden flex-shrink-0">
+            {/* Visual Box */}
+            <div className="w-full lg:w-[480px] relative rounded-[16px] overflow-hidden flex-shrink-0 min-h-[360px] md:min-h-[500px]">
               <Image 
                 src="/image-24@2x.png" 
                 alt="Grainzz Quality Snacking"
@@ -37,7 +37,7 @@ export default function BenefitsSection() {
 
             {/* Text & Grid Content */}
             <div className="flex-1 flex flex-col items-start w-full py-[16px]">
-              <h2 className="text-[28px] md:text-[36px] font-bold text-brand-black mb-[40px] md:mb-[48px] leading-[1.2] whitespace-pre-line tracking-tight">
+              <h2 className="text-[28px] md:text-[36px] font-semibold text-brand-black mb-[32px] md:mb-[40px] leading-[1.2] whitespace-pre-line tracking-tight">
                 {heading}
               </h2>
               
@@ -50,7 +50,7 @@ export default function BenefitsSection() {
                         <Icon size={22} strokeWidth={2} />
                       </div>
                       <div className="flex flex-col gap-[10px]">
-                        <h3 className="text-[18px] md:text-[20px] font-bold text-brand-black leading-[1.3] tracking-tight">{benefit.title}</h3>
+                        <h3 className="text-[18px] md:text-[20px] font-semibold text-brand-black leading-[1.3] tracking-tight">{benefit.title}</h3>
                         <p className="text-[14px] md:text-[15px] font-medium text-[#4A4A4A] leading-[1.6]">{benefit.description}</p>
                       </div>
                     </div>
@@ -65,7 +65,7 @@ export default function BenefitsSection() {
 
       {/* Marquee Also Available On */}
       <div className="bg-brand-green w-full overflow-hidden border-b border-[#0f3d13]">
-        <div className="py-[12px] md:py-[16px] flex whitespace-nowrap animate-marquee items-center min-w-max text-white">
+        <div className="py-[12px] md:py-[16px] flex whitespace-nowrap animate-marquee items-center min-w-max text-white" style={{ animationDuration: '60s' }}>
           {Array.from({ length: 12 }).map((_, i) => (
             <div key={i} className="flex items-center">
               <span className="text-[16px] md:text-[18px] font-bold tracking-wide mr-[16px]">Also Available on:</span>

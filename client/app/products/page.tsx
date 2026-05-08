@@ -53,7 +53,18 @@ function ProductsContent() {
     setLoading(true);
     try {
       const params: Record<string, string> = { page: String(page), limit: '9', sort };
-      if (selectedCategories.length === 1) params.category = selectedCategories[0];
+      
+      // Separate 'Combos' flag from actual category names
+      const isComboSelected = selectedCategories.includes('Combos');
+      const filteredCategories = selectedCategories.filter(c => c !== 'Combos');
+
+      if (isComboSelected) params.isCombo = 'true';
+      
+      if (filteredCategories.length > 0) {
+        if (filteredCategories.length === 1) params.category = filteredCategories[0];
+        else params.categories = filteredCategories.join(',');
+      }
+
       if (search) params.search = search;
       if (excludeOutOfStock) params.inStock = 'true';
       const res = await getProducts(params);

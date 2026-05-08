@@ -22,14 +22,7 @@ const NavigationBar: NextPage<NavigationBarType> = ({
       <div className="w-[1440px] bg-[#1e5e20] flex items-start justify-between py-2.5 px-[60px] box-border">
         <div className="flex items-center gap-1.5">
           <div className="relative leading-[132%] font-medium">{`Start this year with a healthy choice: Shipping PAN India `}</div>
-          <Image
-            className="cursor-pointer [border:none] p-0 bg-[transparent] w-[24px] relative max-h-full"
-            width={24}
-            height={24}
-            sizes="100vw"
-            alt=""
-            src="/.svg"
-          />
+          <span className="emoji-font text-[18px]">🇮🇳</span>
         </div>
       </div>
       <FrameComponent4 />

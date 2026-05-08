@@ -310,76 +310,9 @@ export default function SnackBoxEditor({ items: initialItems, onRefresh }: { ite
                       value={variant.description || ''}
                       onChange={e => updateVariantField(variant.id, 'description', e.target.value)}
                       className="admin-input text-sm w-full"
-                      rows={3}
+                      rows={5}
                       placeholder="Detailed description of this snack box variant..."
                     />
-                  </div>
-
-                  {/* Ingredients */}
-                  <div>
-                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1 block">Ingredients</label>
-                    <textarea
-                      value={variant.ingredients || ''}
-                      onChange={e => updateVariantField(variant.id, 'ingredients', e.target.value)}
-                      className="admin-input text-sm w-full"
-                      rows={2}
-                      placeholder="Oats, Quinoa, Ragi, Bajra, Salt, Spices..."
-                    />
-                  </div>
-
-                  {/* Nutrition Table */}
-                  <div>
-                    <div className="flex items-center justify-between mb-2">
-                      <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Nutrition Breakdown</label>
-                      <button
-                        onClick={() => addNutritionRow(variant.id)}
-                        className="admin-btn-outline text-xs py-1 px-2"
-                      >
-                        <Plus size={12} /> Add Row
-                      </button>
-                    </div>
-                    {variant.nutrition_table.length > 0 ? (
-                      <div className="border border-gray-200 rounded-lg overflow-hidden">
-                        {/* Header */}
-                        <div className="grid grid-cols-[1fr_1fr_1fr_40px] bg-gray-50 border-b border-gray-200">
-                          <div className="px-3 py-2 text-[10px] font-bold text-gray-500 uppercase">Nutrient</div>
-                          <div className="px-3 py-2 text-[10px] font-bold text-gray-500 uppercase">Per 100g</div>
-                          <div className="px-3 py-2 text-[10px] font-bold text-gray-500 uppercase">% RDA</div>
-                          <div />
-                        </div>
-                        {/* Rows */}
-                        {variant.nutrition_table.map((row, rowIdx) => (
-                          <div key={rowIdx} className="grid grid-cols-[1fr_1fr_1fr_40px] border-b border-gray-100 last:border-0">
-                            <input
-                              value={row.nutrient}
-                              onChange={e => updateNutritionRow(variant.id, rowIdx, 'nutrient', e.target.value)}
-                              className="px-3 py-2 text-sm border-r border-gray-100 focus:outline-none focus:bg-blue-50"
-                              placeholder="Energy"
-                            />
-                            <input
-                              value={row.per_100g}
-                              onChange={e => updateNutritionRow(variant.id, rowIdx, 'per_100g', e.target.value)}
-                              className="px-3 py-2 text-sm border-r border-gray-100 focus:outline-none focus:bg-blue-50"
-                              placeholder="450 kcal"
-                            />
-                            <input
-                              value={row.rda_percent}
-                              onChange={e => updateNutritionRow(variant.id, rowIdx, 'rda_percent', e.target.value)}
-                              className="px-3 py-2 text-sm focus:outline-none focus:bg-blue-50"
-                              placeholder="22%"
-                            />
-                            <button
-                              onClick={() => removeNutritionRow(variant.id, rowIdx)}
-                              className="flex items-center justify-center text-gray-300 hover:text-red-500 transition-colors"
-                            >
-                              <X size={14} />
-                            </button>
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <p className="text-xs text-gray-400 italic py-3">No nutrition data added yet. Click "Add Row" to start.</p>
-                    )}
                   </div>
                 </div>
               )}

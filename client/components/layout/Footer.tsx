@@ -1,11 +1,28 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Phone, Mail, MapPin, Facebook, Twitter, Linkedin, Instagram, Send, ChevronDown } from 'lucide-react';
+import { getStoreSettings } from '@/lib/api';
 
 export default function Footer() {
   const [openSection, setOpenSection] = useState<string | null>('Quick Links');
+  const [settings, setSettings] = useState<Record<string, string>>({
+    contact_phone: '96262425 , 93756546',
+    contact_email: 'katariavibhor9@gmail.com',
+    contact_address: 'B-291, MIG Flats, East of Loni road, Delhi, Delhi - 110093, India',
+    social_instagram: '#',
+    social_facebook: '#',
+    social_twitter: '#',
+    social_linkedin: '#',
+    about_text: 'Subscribe to get latest offers'
+  });
+
+  useEffect(() => {
+    getStoreSettings().then(data => {
+      if (data) setSettings(prev => ({ ...prev, ...data }));
+    }).catch(console.error);
+  }, []);
 
   const toggleSection = (section: string) => {
     setOpenSection(openSection === section ? null : section);
@@ -54,15 +71,31 @@ export default function Footer() {
               <div className="flex flex-col gap-4 text-[14px] lg:text-[15px] font-medium text-white/90">
                 <div className="flex items-start gap-4">
                   <Phone size={20} className="shrink-0 text-white/80" strokeWidth={1.5} />
-                  <span>96262425 , 93756546</span>
+                  <div className="flex flex-col lg:flex-row gap-1 lg:gap-2">
+                    {settings.contact_phone.split(',').map((num, i) => (
+                      <div key={i} className="flex items-center gap-2">
+                        <a href={`tel:${num.trim()}`} className="hover:text-white transition-colors">{num.trim()}</a>
+                        {i < settings.contact_phone.split(',').length - 1 && <span className="hidden lg:inline text-white/40">|</span>}
+                      </div>
+                    ))}
+                  </div>
                 </div>
                 <div className="flex items-start gap-4">
                   <Mail size={20} className="shrink-0 text-white/80" strokeWidth={1.5} />
-                  <span>katariavibhor9@gmail.com</span>
+                  <a href={`mailto:${(settings.contact_email || '').trim()}`} className="hover:text-white transition-colors break-all">
+                    {(settings.contact_email || '').trim()}
+                  </a>
                 </div>
                 <div className="flex items-start gap-4">
                   <MapPin size={20} className="shrink-0 text-white/80 mt-1" strokeWidth={1.5} />
-                  <span className="leading-[1.4]">B-291, MIG Flats, East of Loni road, Delhi, Delhi<br/>- 110093, India</span>
+                  <a 
+                    href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(settings.contact_address)}`} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="leading-[1.4] hover:text-white transition-colors"
+                  >
+                    {settings.contact_address}
+                  </a>
                 </div>
               </div>
             </div>
@@ -82,7 +115,7 @@ export default function Footer() {
                 </button>
                 <div className={`mt-4 lg:mt-6 flex-col gap-[14px] lg:flex ${openSection === title ? 'flex' : 'hidden'}`}>
                   {links.map((link) => (
-                    <Link key={link.name} href={link.href} className="text-[14px] lg:text-[15px] font-medium text-white/80 hover:text-white transition-colors block">
+                    <Link key={link.name} href={link.href} className="text-[14px] lg:text-[15px] font-medium text-white/80 hover:text-white hover:underline decoration-2 underline-offset-8 transition-all block">
                       {link.name}
                     </Link>
                   ))}
@@ -93,7 +126,7 @@ export default function Footer() {
             {/* Subscribe & Social */}
             <div className="flex flex-col gap-6 lg:gap-8 pt-4 lg:pt-0">
               <div className="flex flex-col gap-4">
-                <h4 className="text-[18px] lg:text-[20px] font-semibold text-white">Subscribe to get latest offers</h4>
+                <h4 className="text-[18px] lg:text-[20px] font-semibold text-white">{settings.about_text}</h4>
                 <div className="relative w-full max-w-[320px]">
                   <input 
                     type="email" 
@@ -107,11 +140,18 @@ export default function Footer() {
               </div>
               
               <div className="flex items-center gap-[12px]">
-                {[Facebook, Twitter, Linkedin, Instagram].map((Icon, i) => (
-                  <a key={i} href="#" className="w-[36px] h-[36px] bg-white text-[#1D5E20] rounded-full flex items-center justify-center hover:scale-110 transition-transform">
-                    <Icon size={18} strokeWidth={2} fill="currentColor" />
-                  </a>
-                ))}
+                <a href={settings.social_facebook} target="_blank" rel="noopener noreferrer" className="w-[36px] h-[36px] bg-white text-[#1D5E20] rounded-full flex items-center justify-center hover:scale-110 transition-transform">
+                  <Facebook size={18} strokeWidth={2} fill="currentColor" />
+                </a>
+                <a href={settings.social_twitter} target="_blank" rel="noopener noreferrer" className="w-[36px] h-[36px] bg-white text-[#1D5E20] rounded-full flex items-center justify-center hover:scale-110 transition-transform">
+                  <Twitter size={18} strokeWidth={2} fill="currentColor" />
+                </a>
+                <a href={settings.social_linkedin} target="_blank" rel="noopener noreferrer" className="w-[36px] h-[36px] bg-white text-[#1D5E20] rounded-full flex items-center justify-center hover:scale-110 transition-transform">
+                  <Linkedin size={18} strokeWidth={2} fill="currentColor" />
+                </a>
+                <a href={settings.social_instagram} target="_blank" rel="noopener noreferrer" className="w-[36px] h-[36px] bg-white text-[#1D5E20] rounded-full flex items-center justify-center hover:scale-110 transition-transform">
+                  <Instagram size={18} strokeWidth={2} fill="currentColor" />
+                </a>
               </div>
             </div>
 
@@ -121,7 +161,7 @@ export default function Footer() {
       
       {/* Copyright Strip */}
       <div className="bg-[#FCF9F2] w-full py-[20px]">
-        <div className="max-w-[1440px] mx-auto px-4 lg:px-[120px] text-center lg:text-left">
+        <div className="max-w-[1440px] mx-auto px-4 lg:px-[120px] text-center">
           <p className="m-0 text-[14px] font-medium text-[#444444]">
             Copyright © 2026 Grainzz by Vitalicious
           </p>

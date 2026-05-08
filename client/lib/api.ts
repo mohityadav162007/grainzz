@@ -25,6 +25,9 @@ export const getProducts = async (params?: Record<string, string>) => {
   if (params?.category) query = query.eq('category', params.category);
   if (params?.categories) query = query.in('category', params.categories.split(','));
   if (params?.isSale === 'true') query = query.eq('is_sale', true);
+  if (params?.isCombo === 'true') {
+    query = query.in('category', ['Combos', 'Gift Packs', '2-Jar Combo', '3-Jar Combo', '4-Jar Combo', '6-Jar Combo', 'Puffed Rice Mixed 6-Pack']);
+  }
   if (params?.search) query = query.ilike('name', `%${params.search}%`);
   if (params?.inStock === 'true') query = query.gt('stock', 0);
 
@@ -58,6 +61,9 @@ export const getProducts = async (params?: Record<string, string>) => {
 
   if (params?.category) countQuery = countQuery.eq('category', params.category);
   if (params?.isSale === 'true') countQuery = countQuery.eq('is_sale', true);
+  if (params?.isCombo === 'true') {
+    countQuery = countQuery.in('category', ['Combos', 'Gift Packs', '2-Jar Combo', '3-Jar Combo', '4-Jar Combo', '6-Jar Combo', 'Puffed Rice Mixed 6-Pack']);
+  }
   if (params?.search) countQuery = countQuery.ilike('name', `%${params.search}%`);
   if (params?.inStock === 'true') countQuery = countQuery.gt('stock', 0);
 
@@ -104,6 +110,16 @@ export const getProductBySlug = async (slug: string) => {
 };
 
 // ─── Homepage Dynamic Content ────────────────────────────────────────────────
+
+export const getStoreSettings = async () => {
+  const { data, error } = await supabase.from('store_settings').select('key, value');
+  if (error) throw new Error(error.message);
+  // Transform to a simple object for easier use: { key: value }
+  return (data || []).reduce((acc: Record<string, string>, item) => {
+    acc[item.key] = item.value;
+    return acc;
+  }, {});
+};
 
 export const getSiteContent = async (key: string) => {
   const { data, error } = await supabase.from('store_settings').select('value').eq('key', key).single();

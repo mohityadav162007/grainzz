@@ -70,14 +70,14 @@ export default function TeamFavourites() {
         </div>
 
         {/* View All Products CTA */}
-        <div className="flex justify-center mt-[40px]">
+        <div className="flex justify-center mt-[40px] md:mt-[64px]">
           <Link
             href="/products"
-            className="inline-flex items-center gap-[14px] border-[1.5px] border-brand-black text-brand-black pl-[22px] pr-[5px] py-[5px] rounded-full hover:border-brand-green hover:text-brand-green transition-all group"
+            className="inline-flex items-center justify-between gap-6 md:gap-10 bg-white border border-[#D1EAD3] text-brand-green pl-6 md:pl-10 pr-1 md:pr-2 py-1.5 md:py-2.5 rounded-full transition-all group hover:border-brand-green hover:bg-brand-green hover:text-white shadow-sm hover:shadow-md"
           >
-            <span className="text-[14px] font-semibold">View All Products</span>
-            <div className="w-[34px] h-[34px] bg-brand-green rounded-full flex items-center justify-center text-white group-hover:bg-[#154617] transition-colors">
-              <ArrowRight size={16} strokeWidth={2.5} />
+            <span className="text-[16px] md:text-[20px] font-semibold leading-tight">View All Products</span>
+            <div className="w-[40px] h-[40px] md:w-[52px] md:h-[52px] bg-brand-green group-hover:bg-white rounded-full flex items-center justify-center text-white group-hover:text-brand-green transition-all duration-300">
+              <ArrowRight size={20} strokeWidth={2.5} className="md:w-6 md:h-6" />
             </div>
           </Link>
         </div>

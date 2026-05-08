@@ -143,11 +143,11 @@ export default function EssentialSnackBox() {
   return (
     <section className="py-[40px] md:py-[70px] bg-[#FCF9F2] w-full border-y border-[#EEEEEE]">
       <div className="max-w-[1440px] mx-auto px-4 md:px-[60px] lg:px-[100px]">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-[32px] lg:gap-[60px] xl:gap-[80px] items-start">
+        <div className="flex flex-col lg:flex-row items-stretch gap-[32px] lg:gap-[60px] xl:gap-[80px]">
 
           {/* ═══ LEFT: Product Image ═══ */}
-          <div className="w-full">
-            <div className="relative w-full aspect-square rounded-[20px] overflow-hidden bg-white border border-[#EAEAEA] shadow-sm">
+          <div className="w-full lg:w-1/2">
+            <div className="relative w-full h-full min-h-[360px] md:min-h-[500px] rounded-[20px] overflow-hidden bg-white border border-[#EAEAEA] shadow-sm">
               {variant.image_url ? (
                 <Image
                   src={variant.image_url}
@@ -181,44 +181,44 @@ export default function EssentialSnackBox() {
           </div>
 
           {/* ═══ RIGHT: Product Info ═══ */}
-          <div className="flex flex-col items-start">
+          <div className="w-full lg:w-[48%] flex flex-col items-start pt-[10px] lg:max-w-[560px]">
 
             {/* Title */}
-            <h2 className="text-[28px] md:text-[36px] lg:text-[42px] font-extrabold text-[#1D5E2E] leading-[1.1] tracking-tight font-sans mb-[8px]">
+            <h2 className="text-[32px] md:text-[42px] font-bold text-[#1A5B23] leading-[1.1] mb-[8px] font-sans tracking-tight">
               {data.section_title || 'The Essential Snack Box'}
             </h2>
 
             {/* Subtitle / Tagline */}
             {variant.subtitle && (
-              <p className="text-[14px] md:text-[15px] text-[#666666] font-medium mb-[20px]">
+              <p className="text-[14px] md:text-[16px] text-[#666666] font-medium mb-[16px] tracking-tight">
                 {variant.subtitle}
               </p>
             )}
 
-            {/* Price */}
-            <div className="flex items-center gap-[12px] mb-[24px]">
-              <span className="text-[32px] md:text-[38px] font-bold text-brand-black leading-[1] font-sans">
+            {/* Price Row */}
+            <div className="flex items-baseline gap-[12px] mb-[20px]">
+              <span className="text-[32px] md:text-[40px] font-semibold text-[#1A1A1A] leading-[1]">
                 ₹{variant.price}
               </span>
               {variant.mrp > variant.price && (
-                <span className="text-[16px] text-[#999999] font-medium line-through">
+                <span className="text-[16px] md:text-[20px] text-[#999999] font-medium line-through">
                   MRP ₹{variant.mrp}
                 </span>
               )}
             </div>
 
             {/* Variant Selector */}
-            <div className="mb-[28px] w-full">
-              <p className="text-[14px] font-bold text-brand-black mb-[12px]">Select your box</p>
-              <div className="flex flex-wrap gap-[12px]">
+            <div className="mb-[20px] w-full">
+              <p className="text-[16px] font-semibold text-[#1A1A1A] mb-[10px]">Select your box</p>
+              <div className="flex flex-wrap gap-[10px]">
                 {data.variants.map((v, idx) => (
                   <button
                     key={v.id}
                     onClick={() => handleSwitchVariant(idx)}
-                    className={`px-[20px] py-[10px] rounded-full text-[14px] font-semibold transition-all duration-200 border-[1.5px] ${
+                    className={`px-[20px] py-[10px] rounded-full text-[14px] font-semibold transition-all duration-300 border-[1.5px] ${
                       idx === activeVariant
-                        ? 'border-[#1D5E2E] bg-white text-[#1D5E2E] shadow-sm'
-                        : 'border-[#DDDDDD] bg-transparent text-[#666666] hover:border-[#999999]'
+                        ? 'border-[#1A5B23] bg-[#1A5B23] text-white shadow-sm'
+                        : 'border-[#DDDDDD] bg-transparent text-[#1A1A1A] hover:bg-[#EEFBDC] hover:text-[#1A5B23] hover:border-[#EEFBDC]'
                     }`}
                   >
                     {v.title}
@@ -227,102 +227,49 @@ export default function EssentialSnackBox() {
               </div>
             </div>
 
-            {/* ─── Accordions ─── */}
-            <div className="w-full border-t border-[#EAEAEA] mb-[28px]">
-              {accordionItems.map((item) => (
-                <div key={item.key} className="border-b border-[#EAEAEA]">
-                  <button
-                    onClick={() => toggleAccordion(item.key)}
-                    className="w-full py-[16px] flex items-center justify-between text-[15px] font-semibold text-brand-black hover:text-[#1D5E2E] transition-colors"
-                  >
-                    <span>{item.label}</span>
-                    <span className={`text-[20px] font-light transition-transform duration-200 ${openAccordion === item.key ? 'rotate-45' : ''}`}>
-                      +
-                    </span>
-                  </button>
-
-                  <div
-                    className={`overflow-hidden transition-all duration-300 ease-out ${
-                      openAccordion === item.key ? 'max-h-[600px] opacity-100 pb-[16px]' : 'max-h-0 opacity-0'
-                    }`}
-                  >
-                    {/* Text content */}
-                    {item.content && (
-                      <p className="text-[14px] text-[#4A4A4A] leading-[1.7] whitespace-pre-line">
-                        {item.content}
-                      </p>
-                    )}
-
-                    {/* Nutrition table */}
-                    {item.table && item.table.length > 0 && (
-                      <div className="w-full overflow-x-auto rounded-[12px] border border-[#EAEAEA]">
-                        <table className="w-full border-collapse min-w-[320px]">
-                          <thead className="bg-[#1D5E2E] text-white">
-                            <tr>
-                              <th className="py-2.5 px-3 text-left font-bold text-[12px] uppercase tracking-tight">Nutrients</th>
-                              <th className="py-2.5 px-3 text-left font-bold text-[12px] uppercase tracking-tight">per 100g</th>
-                              <th className="py-2.5 px-3 text-left font-bold text-[12px] uppercase tracking-tight">% RDA</th>
-                            </tr>
-                          </thead>
-                          <tbody className="bg-white text-brand-black text-[12px] font-medium">
-                            {item.table.map((row: NutritionRow, i: number) => (
-                              <tr key={i} className="border-b border-[#F0F0F0] last:border-0">
-                                <td className="py-2.5 px-3 font-bold border-r border-[#F0F0F0]">{row.nutrient}</td>
-                                <td className="py-2.5 px-3 border-r border-[#F0F0F0]">{row.per_100g}</td>
-                                <td className="py-2.5 px-3">{row.rda_percent}</td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              ))}
+            {/* Description */}
+            <div className="w-full mb-[24px]">
+              <p className="text-[16px] font-semibold text-[#1A1A1A] mb-[8px]">Description</p>
+              <p className="text-[14px] text-[#4A4A4A] leading-[1.6] whitespace-pre-line font-medium opacity-80">
+                {variant.description}
+              </p>
             </div>
 
             {/* ─── Purchase Controls ─── */}
-            <div className="w-full flex flex-col gap-[14px]">
-              <div className="flex items-center gap-[20px]">
+            <div className="w-full flex flex-col gap-[16px]">
+              <div className="flex items-center gap-[24px]">
                 {/* Quantity */}
-                <div className="flex items-center gap-[14px]">
+                <div className="flex items-center gap-[20px]">
                   <button
                     onClick={() => setQty(Math.max(1, qty - 1))}
-                    className="w-[44px] h-[44px] rounded-full border border-[#4A4A4A] flex items-center justify-center text-[#4A4A4A] hover:bg-[#F2F2F2] transition-colors"
+                    disabled={qty <= 1}
+                    className="w-[48px] h-[48px] rounded-full border border-[#666] flex items-center justify-center text-[#1A1A1A] hover:bg-black/5 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
                   >
-                    <Minus size={18} strokeWidth={1.5} />
+                    <Minus size={20} strokeWidth={1} />
                   </button>
-                  <span className="text-[18px] font-bold text-brand-black w-[20px] text-center select-none">{qty}</span>
+                  <span className="text-[24px] font-bold text-[#1A1A1A] w-[24px] text-center select-none font-sans">{qty}</span>
                   <button
                     onClick={() => setQty(qty + 1)}
-                    className="w-[44px] h-[44px] rounded-full border border-[#4A4A4A] flex items-center justify-center text-[#4A4A4A] hover:bg-[#F2F2F2] transition-colors"
+                    className="w-[48px] h-[48px] rounded-full border border-[#666] flex items-center justify-center text-[#1A1A1A] hover:bg-black/5 transition-colors"
                   >
-                    <Plus size={18} strokeWidth={1.5} />
+                    <Plus size={20} strokeWidth={1} />
                   </button>
                 </div>
 
                 {/* Add to Cart */}
                 <button
                   onClick={handleAddToCart}
-                  className="flex-1 h-[54px] border-[1.5px] border-[#1D5E2E]/40 bg-[#FCF9F2] text-[#1D5E2E] rounded-full font-bold text-[15px] hover:bg-white hover:border-[#1D5E2E] transition-all flex items-center justify-center gap-[8px]"
+                  className="flex-1 h-[58px] border-[1.5px] border-[#1A5B23] bg-transparent text-[#1A5B23] rounded-full font-bold text-[16px] transition-all flex items-center justify-center hover:bg-[#1A5B23] hover:text-white"
                 >
-                  {added ? (
-                    <span>Added ✓</span>
-                  ) : (
-                    <>
-                      <ShoppingBag size={18} strokeWidth={2} />
-                      <span>Add To Cart</span>
-                    </>
-                  )}
+                  {added ? 'Added ✓' : 'Add To Cart'}
                 </button>
               </div>
 
               {/* Quick Buy */}
               <button
                 onClick={handleQuickBuy}
-                className="w-full h-[54px] bg-[#1a1a1a] text-white rounded-full font-bold text-[16px] hover:bg-black transition-all shadow-md active:scale-[0.98] flex items-center justify-center gap-[8px]"
+                className="w-full h-[58px] bg-[#1A1A1A] text-white rounded-full font-bold text-[18px] hover:bg-black transition-all active:scale-[0.98] shadow-lg"
               >
-                <Zap size={18} strokeWidth={2} />
                 Quick Buy
               </button>
             </div>

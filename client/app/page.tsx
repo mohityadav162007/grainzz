@@ -16,9 +16,9 @@ export default function HomePage() {
     <div>
       <HeroSection />
       <ProductSegments />
+      <StatsBar />
       <BenefitsSection />
       <PoweredBy />
-      <StatsBar />
 
       <EssentialSnackBox />
       <TestimonialsSection />

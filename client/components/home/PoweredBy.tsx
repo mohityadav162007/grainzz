@@ -98,65 +98,52 @@ export default function PoweredBy() {
     <section className="py-16 bg-white w-full">
       <div className="max-w-[1100px] mx-auto px-4 md:px-10">
 
-        <h2 className="text-[32px] md:text-[38px] font-semibold text-[#1A1A1A] text-center mb-10 font-sans tracking-tight">
+        <h2 className="text-[32px] md:text-[38px] font-semibold text-[#1A1A1A] text-center mb-4 font-sans tracking-tight">
           Powered by Real Grains
         </h2>
 
-        <div className="flex flex-col md:grid md:grid-cols-3 gap-6 lg:gap-8 relative">
+        <div className="flex flex-col md:grid md:grid-cols-3 gap-6 lg:gap-8 relative mt-8">
           {cards.map((cat, idx) => (
             <div 
               key={idx} 
-              className="flex flex-col w-[88%] max-w-[340px] mx-auto md:w-full md:max-w-none rounded-3xl md:rounded-xl overflow-hidden shadow-[0_2px_12px_rgba(0,0,0,0.06)] hover:shadow-[0_8px_24px_rgba(0,0,0,0.12)] transition-shadow duration-300 md:relative sticky"
-              style={{ 
-                top: `calc(100px + ${idx * 16}px)`,
-                zIndex: idx 
-              }}
+              className="flex flex-col w-full rounded-[24px] overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.05)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.1)] transition-all duration-300"
             >
               {/* Top Image Section */}
               <div
-                className="w-full aspect-[4/5] md:aspect-auto md:h-[280px] lg:h-[320px] relative flex flex-col justify-end items-center pt-8 pb-4"
+                className="w-full aspect-square relative flex items-center justify-center"
                 style={{ backgroundColor: cat.topBg }}
               >
-                 <div className="h-[90%] w-full relative">
-                   <Image
-                     src={cat.image}
-                     alt={cat.title}
-                     fill
-                     className="object-contain drop-shadow-2xl"
-                   />
-                 </div>
+                <div className="w-full h-full relative">
+                  <Image
+                    src={cat.image}
+                    alt={cat.title}
+                    fill
+                    className="object-cover"
+                  />
+                </div>
               </div>
 
               {/* Bottom Content Section */}
               <div
-                className="w-full flex flex-col items-center text-center px-6 py-6 md:py-6 rounded-b-2xl md:rounded-b-none border-t border-black/5"
+                className="w-full flex-1 flex flex-col items-center text-center px-6 py-8"
                 style={{ backgroundColor: cat.bottomBg }}
               >
                 {cat.subtitle && (
-                  <p className="text-[14px] font-medium text-[#4A4A4A] mb-1.5">
+                  <p className="text-[13px] md:text-[15px] font-medium text-[#4A4A4A] mb-2">
                     {cat.subtitle}
                   </p>
                 )}
-                <h3 className="text-[22px] lg:text-[22px] font-bold text-[#1A1A1A] mb-4 tracking-tight">
+                <h3 className="text-[20px] md:text-[24px] font-bold text-[#1A1A1A] mb-6 tracking-tight">
                   {cat.title}
                 </h3>
                 
-                {cat.price && (
-                  <div className="flex items-center gap-2 mb-3 hidden md:flex">
-                    <span className="text-[16px] font-bold text-[#1E5E28]">₹{cat.price}</span>
-                    {cat.mrp && cat.mrp > cat.price && (
-                      <span className="text-[13px] text-[#999] line-through">₹{cat.mrp}</span>
-                    )}
-                  </div>
-                )}
-
                 <Link
                   href={cat.link}
-                  className="inline-flex items-center justify-between w-[150px] border border-[#a8a8a8] bg-transparent pl-5 pr-1.5 py-1.5 rounded-full hover:bg-black/5 transition-colors group"
+                  className="inline-flex items-center justify-between gap-4 bg-white/50 border border-black/10 text-brand-green pl-5 pr-1 py-1 rounded-full transition-all group hover:bg-brand-green hover:text-white hover:border-brand-green"
                 >
-                  <span className="font-bold text-[15px] text-[#2A2A2A]">Buy Now</span>
-                  <div className="w-9 h-9 bg-[#1a5b23] rounded-full flex items-center justify-center text-white shrink-0 group-hover:bg-[#15461c] transition-colors">
-                    <ArrowRight size={18} strokeWidth={2.5}/>
+                  <span className="font-bold text-[14px] md:text-[16px]">Buy Now</span>
+                  <div className="w-8 h-8 md:w-9 md:h-9 bg-brand-green group-hover:bg-white rounded-full flex items-center justify-center text-white group-hover:text-brand-green transition-colors">
+                    <ArrowRight size={16} strokeWidth={3}/>
                   </div>
                 </Link>
               </div>

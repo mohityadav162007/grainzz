@@ -2,7 +2,7 @@
 import Link from 'next/link';
 import { useState, useEffect, useRef } from 'react';
 import { usePathname } from 'next/navigation';
-import { Search, ShoppingCart, User, Menu, X, ChevronDown, Heart } from 'lucide-react';
+import { Search, ShoppingCart, User, Menu, X, ChevronDown, Heart, Home } from 'lucide-react';
 import Image from 'next/image';
 import { useCartStore } from '@/store/cartStore';
 import { useAuthStore } from '@/store/authStore';
@@ -10,12 +10,7 @@ import clsx from 'clsx';
 import MobileSearchOverlay from './MobileSearchOverlay';
 
 const navLinks = [
-  { label: 'Shop All', href: '/products', dropdown: [
-      { label: 'All Products', href: '/products' },
-      { label: 'Healthy Chips', href: '/products?category=Healthy%20Chips' },
-      { label: 'Grain Puffs', href: '/products?category=Grain%20Puffs' },
-      { label: 'Combos', href: '/combos' },
-  ]},
+  { label: 'Shop All', href: '/products' },
   { label: 'Combos', href: '/combos' },
   { label: 'Sale!', href: '/sale', className: 'text-brand-red font-semibold' },
   { label: 'About Us', href: '/about' },
@@ -25,6 +20,7 @@ const navLinks = [
 
 const HEADER_CSS = `
 .hdr-layer{position:absolute;inset:0;display:flex;align-items:center;padding:0 100px;transition:opacity 250ms ease,transform 250ms ease}
+[data-no-transition="true"] .hdr-layer{transition:none!important}
 .hdr-expanded{opacity:1;transform:translateY(0);pointer-events:auto}
 [data-compact="true"] .hdr-expanded{opacity:0;transform:translateY(-5px);pointer-events:none}
 .hdr-compact{opacity:0;transform:translateY(5px);pointer-events:none}
@@ -48,7 +44,16 @@ export default function Navbar() {
   useEffect(() => {
     const el = headerRef.current;
     if (!el) return;
-    if (pathname !== '/') { el.dataset.compact = 'true'; return; }
+    
+    if (pathname !== '/') { 
+      el.dataset.noTransition = 'true';
+      el.dataset.compact = 'true'; 
+      return; 
+    } else {
+      el.dataset.noTransition = 'false';
+      el.dataset.compact = 'false';
+    }
+
     let ticking = false;
     const onScroll = () => {
       if (ticking) return;
@@ -96,6 +101,7 @@ export default function Navbar() {
             <Image src="/image-2@2x.png" alt="Grainzz" width={140} height={40} className="object-contain h-[32px]" priority />
           </Link>
           <div className="flex items-center justify-end gap-5 flex-1">
+            <Link href="/" className="text-[#222]"><Home size={24} strokeWidth={2} /></Link>
             <button className="text-[#222]" onClick={() => setIsSearchOpen(true)}><Search size={24} strokeWidth={2} /></button>
             <button onClick={openCart} className="text-[#222] relative pb-1">
               <ShoppingCart size={24} strokeWidth={2} />
@@ -136,21 +142,13 @@ export default function Navbar() {
 
             {/* LAYER 2 — Compact: Nav left | Logo center | Icons right */}
             <div className="hdr-layer hdr-compact">
-              <div className="shrink-0 flex items-center gap-10">
-                <div className="relative group">
-                  <div className="flex items-center gap-1 cursor-pointer text-[#222] group-hover:text-primary transition-colors py-2">
-                    <Link href="/products" className="text-[15px] font-medium tracking-wide">Shop</Link>
-                    <ChevronDown size={14} className="mt-px transition-transform group-hover:rotate-180" />
-                  </div>
-                  <div className="absolute top-full left-0 mt-0 w-48 bg-white shadow-lg rounded-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 overflow-hidden border border-[#EAEAEA]">
-                    <Link href="/products" className="block px-4 py-3 text-[#222] hover:bg-brand-light hover:text-primary transition-colors text-[14px] font-medium border-b border-[#f5f5f5]">All Products</Link>
-                    <Link href="/products?category=Healthy%20Chips" className="block px-4 py-3 text-[#222] hover:bg-brand-light hover:text-primary transition-colors text-[14px] font-medium border-b border-[#f5f5f5]">Healthy Chips</Link>
-                    <Link href="/products?category=Grain%20Puffs" className="block px-4 py-3 text-[#222] hover:bg-brand-light hover:text-primary transition-colors text-[14px] font-medium border-b border-[#f5f5f5]">Grain Puffs</Link>
-                    <Link href="/combos" className="block px-4 py-3 text-[#222] hover:bg-brand-light hover:text-primary transition-colors text-[14px] font-medium">Combos</Link>
-                  </div>
-                </div>
-                <Link href="/about" className="text-[15px] font-medium text-[#222] hover:text-primary transition-colors">About Us</Link>
-                <Link href="/contact" className="text-[15px] font-medium text-[#222] hover:text-primary transition-colors">Contact Us</Link>
+              <div className="shrink-0 flex items-center gap-8">
+                <Link href="/" className={clsx('text-[#222] hover:text-brand-green transition-colors', pathname === '/' && 'text-brand-green')}>
+                  <Home size={22} strokeWidth={2.5} />
+                </Link>
+                <Link href="/products" className={clsx('text-[15px] font-medium transition-all relative group', pathname === '/products' ? 'text-brand-green underline decoration-2 underline-offset-8' : 'text-[#222] hover:underline decoration-2 underline-offset-8')}>Shop All</Link>
+                <Link href="/about" className={clsx('text-[15px] font-medium transition-all relative group', pathname === '/about' ? 'text-brand-green underline decoration-2 underline-offset-8' : 'text-[#222] hover:underline decoration-2 underline-offset-8')}>About Us</Link>
+                <Link href="/contact" className={clsx('text-[15px] font-medium transition-all relative group', pathname === '/contact' ? 'text-brand-green underline decoration-2 underline-offset-8' : 'text-[#222] hover:underline decoration-2 underline-offset-8')}>Contact Us</Link>
               </div>
               <div className="flex-1 flex justify-center">
                 <Link href="/" className="flex items-center">
@@ -197,20 +195,19 @@ export default function Navbar() {
               {navLinks.map((link) => (
                 <div key={link.href} className="relative group flex items-center h-full">
                   <div className="flex items-center gap-1 cursor-pointer group-hover:text-primary transition-colors">
-                    <Link href={link.href} className={clsx('text-[15px] font-medium tracking-wide transition-colors py-4', link.className || 'text-[#222]')}>
+                    <Link 
+                      href={link.href} 
+                      className={clsx(
+                        'text-[15px] font-medium tracking-wide transition-colors py-4',
+                        pathname === link.href 
+                          ? 'text-brand-green underline decoration-2 underline-offset-8' 
+                          : 'text-[#222] hover:underline decoration-2 underline-offset-8',
+                        link.className
+                      )}
+                    >
                       {link.label}
                     </Link>
-                    {link.dropdown && <ChevronDown size={14} className="mt-px transition-transform group-hover:rotate-180" />}
                   </div>
-                  {link.dropdown && (
-                    <div className="absolute top-full left-1/2 -translate-x-1/2 w-48 bg-white shadow-[0_4px_20px_rgba(0,0,0,0.08)] rounded-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 overflow-hidden border border-[#EAEAEA]">
-                      {link.dropdown.map((drop, idx) => (
-                        <Link key={drop.href} href={drop.href} className={clsx('block px-4 py-3 text-[#222] hover:bg-brand-light hover:text-primary transition-colors text-[14px] font-medium', idx < link.dropdown!.length - 1 && 'border-b border-[#f5f5f5]')}>
-                          {drop.label}
-                        </Link>
-                      ))}
-                    </div>
-                  )}
                 </div>
               ))}
             </nav>
@@ -239,13 +236,16 @@ export default function Navbar() {
             </div>
           </div>
           <nav className="flex flex-col px-4 mt-2">
-            <Link href="/products" onClick={() => setMobileOpen(false)} className="py-4 text-[15px] font-medium text-[#222] border-b border-[#E5DFCC]">Shop All</Link>
-            <Link href="/combos" onClick={() => setMobileOpen(false)} className="py-4 text-[15px] font-medium text-[#222] border-b border-[#E5DFCC]">Combos</Link>
-            <Link href="/sale" onClick={() => setMobileOpen(false)} className="py-4 text-[15px] font-semibold text-brand-red border-b border-[#E5DFCC]">Sales!</Link>
-            <Link href="/about" onClick={() => setMobileOpen(false)} className="py-4 text-[15px] font-medium text-[#222] border-b border-[#E5DFCC]">About Us</Link>
-            <Link href="/faqs" onClick={() => setMobileOpen(false)} className="py-4 text-[15px] font-medium text-[#222] border-b border-[#E5DFCC]">FAQs</Link>
-            <Link href="/account" onClick={handleAccountClick} className="py-4 text-[15px] font-medium text-[#222] border-b border-[#E5DFCC]">My account</Link>
-            <Link href="/contact" onClick={() => setMobileOpen(false)} className="py-4 text-[15px] font-medium text-[#222]">Contact Us</Link>
+            <Link href="/" onClick={() => setMobileOpen(false)} className={clsx('py-4 text-[15px] font-medium border-b border-[#E5DFCC] flex items-center gap-3', pathname === '/' ? 'text-brand-green underline underline-offset-8 decoration-2' : 'text-[#222] hover:underline underline-offset-8 decoration-2')}>
+              <Home size={18} /> Home
+            </Link>
+            <Link href="/products" onClick={() => setMobileOpen(false)} className={clsx('py-4 text-[15px] font-medium border-b border-[#E5DFCC]', pathname === '/products' ? 'text-brand-green underline underline-offset-8 decoration-2' : 'text-[#222] hover:underline underline-offset-8 decoration-2')}>Shop All</Link>
+            <Link href="/combos" onClick={() => setMobileOpen(false)} className={clsx('py-4 text-[15px] font-medium border-b border-[#E5DFCC]', pathname === '/combos' ? 'text-brand-green underline underline-offset-8 decoration-2' : 'text-[#222] hover:underline underline-offset-8 decoration-2')}>Combos</Link>
+            <Link href="/sale" onClick={() => setMobileOpen(false)} className={clsx('py-4 text-[15px] font-semibold border-b border-[#E5DFCC]', pathname === '/sale' ? 'text-brand-green underline underline-offset-8 decoration-2' : 'text-brand-red hover:underline underline-offset-8 decoration-2')}>Sales!</Link>
+            <Link href="/about" onClick={() => setMobileOpen(false)} className={clsx('py-4 text-[15px] font-medium border-b border-[#E5DFCC]', pathname === '/about' ? 'text-brand-green underline underline-offset-8 decoration-2' : 'text-[#222] hover:underline underline-offset-8 decoration-2')}>About Us</Link>
+            <Link href="/faqs" onClick={() => setMobileOpen(false)} className={clsx('py-4 text-[15px] font-medium border-b border-[#E5DFCC]', pathname === '/faqs' ? 'text-brand-green underline underline-offset-8 decoration-2' : 'text-[#222] hover:underline underline-offset-8 decoration-2')}>FAQs</Link>
+            <Link href="/account" onClick={handleAccountClick} className={clsx('py-4 text-[15px] font-medium border-b border-[#E5DFCC]', pathname === '/account' ? 'text-brand-green underline underline-offset-8 decoration-2' : 'text-[#222] hover:underline underline-offset-8 decoration-2')}>My account</Link>
+            <Link href="/contact" onClick={() => setMobileOpen(false)} className={clsx('py-4 text-[15px] font-medium', pathname === '/contact' ? 'text-brand-green underline underline-offset-8 decoration-2' : 'text-[#222] hover:underline underline-offset-8 decoration-2')}>Contact Us</Link>
           </nav>
         </div>
       )}

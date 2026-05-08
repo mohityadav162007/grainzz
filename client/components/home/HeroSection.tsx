@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { getHeroSlides } from '@/lib/api';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface HeroSlide {
   id?: string;
@@ -13,6 +14,12 @@ interface HeroSlide {
   is_active?: boolean;
 }
 
+const slideVariants = {
+  initial: { x: '100%', opacity: 0 },
+  animate: { x: 0, opacity: 1 },
+  exit: { x: '-100%', opacity: 0 }
+};
+
 export default function HeroSection() {
   const [current, setCurrent] = useState(0);
   const [slides, setSlides] = useState<HeroSlide[] | null>(null);
@@ -21,11 +28,6 @@ export default function HeroSection() {
 
   // Prevent hydration mismatch — only check window after mount
   useEffect(() => { setMounted(true); }, []);
-
-  const isMobile = useMemo(() => {
-    if (!mounted) return false;
-    return window.innerWidth < 768;
-  }, [mounted]);
 
   // Re-check on resize
   const [windowWidth, setWindowWidth] = useState(0);
@@ -66,7 +68,7 @@ export default function HeroSection() {
   // Auto-advance
   useEffect(() => {
     if (slideCount <= 1) return;
-    const timer = setInterval(nextSlide, 4000);
+    const timer = setInterval(nextSlide, 5000);
     return () => clearInterval(timer);
   }, [nextSlide, slideCount]);
 
@@ -91,31 +93,31 @@ export default function HeroSection() {
   if (slides.length === 0) return null;
 
   const slide = slides[current];
-  const bgImage = isMobileActual
-    ? (slide.mobile_image_url || slide.image_url)
-    : slide.image_url;
 
   return (
     <section className="w-full flex justify-center flex-col items-center">
-      <div
-        className="w-full md:h-[540px] lg:h-[600px] relative flex flex-col overflow-hidden bg-[#F5F5F0] cursor-pointer"
-        onClick={() => handleSlideClick(slide)}
-      >
-        {/* Mobile naturally scales height to fit image without cropping */}
-        <img 
-          src={bgImage} 
-          alt="Banner" 
-          className="block md:hidden w-full h-auto object-contain"
-        />
-        {/* Desktop keeps the exact same behavior and fixed heights */}
-        <div 
-          className="hidden md:block absolute inset-0 w-full h-full"
-          style={{
-            background: bgImage
-              ? `url(${bgImage}) center center/cover no-repeat`
-              : undefined,
-          }}
-        />
+      <div className="w-full relative overflow-hidden bg-[#F5F5F0]">
+        <AnimatePresence initial={false} mode="popLayout">
+          <motion.div
+            key={current}
+            variants={slideVariants}
+            initial="initial"
+            animate="animate"
+            exit="exit"
+            transition={{
+              x: { duration: 0.8, ease: [0.32, 0.72, 0, 1] },
+              opacity: { duration: 0.6 }
+            }}
+            className="w-full cursor-pointer"
+            onClick={() => handleSlideClick(slide)}
+          >
+            <img 
+              src={isMobileActual ? (slide.mobile_image_url || slide.image_url) : slide.image_url} 
+              alt="Banner" 
+              className="w-full h-auto block"
+            />
+          </motion.div>
+        </AnimatePresence>
       </div>
 
       {slides.length > 1 && (

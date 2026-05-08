@@ -15,7 +15,7 @@ declare global {
 }
 
 export default function CheckoutPage() {
-  const { items, subtotal, discount, total, coupon, clearCart } = useCartStore();
+  const { items, quickBuyItem, subtotal, discount, total, coupon, clearCart, setQuickBuy } = useCartStore();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -23,13 +23,18 @@ export default function CheckoutPage() {
     name: '', phone: '', email: '', address: '', city: '', state: '', pincode: '',
   });
 
+  const displayItems = quickBuyItem ? [quickBuyItem] : items;
+  const displaySubtotal = quickBuyItem ? quickBuyItem.price * quickBuyItem.quantity : subtotal();
+  const displayDiscount = quickBuyItem ? 0 : discount(); // Coupons don't apply to quick buy in this implementation unless specifically handled
+  const displayTotal = quickBuyItem ? displaySubtotal : total();
+
   const [pendingOrderId, setPendingOrderId] = useState<string | null>(null);
 
-  // If the user modifies their cart after initiating a checkout,
+  // If the user modifies their cart or quick buy item after initiating a checkout,
   // we must discard the pending order so a new one is created with updated items/totals.
   useEffect(() => {
     setPendingOrderId(null);
-  }, [items, total]);
+  }, [items, quickBuyItem, total]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -37,7 +42,7 @@ export default function CheckoutPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (items.length === 0) return;
+    if (displayItems.length === 0) return;
     setLoading(true);
     setError('');
     try {
@@ -46,7 +51,7 @@ export default function CheckoutPage() {
       // Create order only if we don't have a pending one
       if (!orderId) {
         const orderRes = await createOrder({
-          items: items.map((i) => ({
+          items: displayItems.map((i) => ({
             product_id: i.id,
             name: i.name,
             image: i.image,
@@ -55,10 +60,10 @@ export default function CheckoutPage() {
             quantity: i.quantity,
           })),
           userDetails: form,
-          subtotal: subtotal(),
-          couponCode: coupon?.code || '',
-          discountAmount: discount(),
-          totalAmount: total(),
+          subtotal: displaySubtotal,
+          couponCode: quickBuyItem ? '' : (coupon?.code || ''),
+          discountAmount: displayDiscount,
+          totalAmount: displayTotal,
         });
         orderId = orderRes.data.id;
         setPendingOrderId(orderId);
@@ -69,11 +74,13 @@ export default function CheckoutPage() {
       }
 
       // Initiate PhonePe payment
-      const payRes = await initiatePayment({ orderId, amount: total(), userPhone: form.phone });
+      const payRes = await initiatePayment({ orderId, amount: displayTotal, userPhone: form.phone });
       
       if (payRes.data?.redirectUrl) {
         if (typeof window !== 'undefined' && window.PhonePeCheckout) {
-          clearCart();
+          if (quickBuyItem) setQuickBuy(null);
+          else clearCart();
+          
           setLoading(false);
           window.PhonePeCheckout.transact({
             tokenUrl: payRes.data.redirectUrl,
@@ -91,7 +98,8 @@ export default function CheckoutPage() {
           return;
         } else {
           // Fallback to direct redirect if SDK failed to load
-          clearCart();
+          if (quickBuyItem) setQuickBuy(null);
+          else clearCart();
           window.location.href = payRes.data.redirectUrl;
           return;
         }
@@ -104,7 +112,7 @@ export default function CheckoutPage() {
     }
   };
 
-  if (items.length === 0) {
+  if (displayItems.length === 0) {
     return (
       <div className="min-h-[60vh] flex flex-col items-center justify-center gap-4 text-center px-4">
         <p className="text-lg font-semibold text-text-muted">Your cart is empty</p>
@@ -188,8 +196,9 @@ export default function CheckoutPage() {
           <div className="md:col-span-1">
             <div className="bg-white border border-gray-100 rounded-2xl p-6 sticky top-24">
               <h2 className="font-bold mb-4">Order Summary</h2>
+              {quickBuyItem && <div className="text-xs bg-brand-light/50 text-brand-dark px-3 py-1.5 rounded-md mb-3 font-medium">Quick Buy Checkout</div>}
               <div className="space-y-3 mb-4 max-h-64 overflow-y-auto">
-                {items.map((item) => (
+                {displayItems.map((item) => (
                   <div key={item.id} className="flex justify-between text-sm gap-3">
                     <div className="flex-1 min-w-0">
                       <p className="font-medium truncate">{item.name}</p>
@@ -202,12 +211,12 @@ export default function CheckoutPage() {
               <div className="border-t pt-4 space-y-2 text-sm">
                 <div className="flex justify-between">
                   <span className="text-text-muted">Subtotal</span>
-                  <span>₹{subtotal()}</span>
+                  <span>₹{displaySubtotal}</span>
                 </div>
-                {discount() > 0 && (
+                {displayDiscount > 0 && (
                   <div className="flex justify-between text-green-600">
                     <span>Discount ({coupon?.code})</span>
-                    <span>−₹{discount()}</span>
+                    <span>−₹{displayDiscount}</span>
                   </div>
                 )}
                 <div className="flex justify-between text-text-muted text-xs">
@@ -216,7 +225,7 @@ export default function CheckoutPage() {
                 </div>
                 <div className="flex justify-between text-base font-black border-t pt-2 mt-2">
                   <span>Total</span>
-                  <span>₹{total()}</span>
+                  <span>₹{displayTotal}</span>
                 </div>
               </div>
               <button

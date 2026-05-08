@@ -20,9 +20,11 @@ interface CouponData {
 
 interface CartStore {
   items: CartItem[];
+  quickBuyItem: CartItem | null;
   coupon: CouponData | null;
   isOpen: boolean;
   addItem: (item: CartItem) => void;
+  setQuickBuy: (item: CartItem | null) => void;
   removeItem: (id: string) => void;
   updateQuantity: (id: string, quantity: number) => void;
   clearCart: () => void;
@@ -41,6 +43,7 @@ export const useCartStore = create<CartStore>()(
   persist(
     (set, get) => ({
       items: [],
+      quickBuyItem: null,
       coupon: null,
       isOpen: false,
 
@@ -58,6 +61,8 @@ export const useCartStore = create<CartStore>()(
         }
         set({ isOpen: true });
       },
+
+      setQuickBuy: (item) => set({ quickBuyItem: item }),
 
       removeItem: (id) => set({ items: get().items.filter((i) => i.id !== id) }),
 

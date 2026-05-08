@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { ChevronRight, User, MapPin, Package, Settings, LogOut, PackageOpen, ExternalLink, Truck } from 'lucide-react';
+import { ChevronRight, User, MapPin, Package, Settings, LogOut, PackageOpen, ExternalLink, Truck, Check, X } from 'lucide-react';
 import { getUserOrders } from '@/lib/api';
 import { useAuthStore } from '@/store/authStore';
 
@@ -220,94 +220,150 @@ function OrdersTab({ userEmail }: { userEmail: string }) {
   }
 
   return (
-    <div className="animate-fade-in space-y-4">
-      <h2 className="text-[24px] font-bold text-brand-black mb-4">My Orders</h2>
+    <div className="animate-fade-in space-y-6">
+      <h2 className="text-[24px] font-bold text-brand-black mb-6">Your Orders</h2>
       {orders.map(order => {
         const isExpanded = expandedId === order.id;
         const stepIdx = getStepIndex(order.delivery_status || (order.status === 'delivered' ? 'Delivered' : order.status === 'shipped' ? 'Shipped' : ''));
 
         return (
-          <div key={order.id} className="border border-[#EAEAEA] rounded-[16px] overflow-hidden transition-all">
-            <button
-              onClick={() => setExpandedId(isExpanded ? null : order.id)}
-              className="w-full flex items-center justify-between p-4 md:p-5 hover:bg-[#FAFAFA] transition-colors text-left"
-            >
-              <div className="flex-1">
-                <div className="flex items-center gap-3 flex-wrap">
-                  <span className="font-mono text-[13px] text-[#888]">#{order.id?.slice(0, 8)}</span>
-                  <span className={`px-2 py-0.5 rounded-full text-[11px] font-bold ${
-                    order.payment_status === 'paid' ? 'bg-[#E8F5E9] text-[#2E7D32]' :
-                    order.payment_status === 'failed' ? 'bg-[#FFEBEE] text-[#C62828]' :
-                    'bg-[#FFF8E1] text-[#F57F17]'
-                  }`}>
-                    {order.payment_status?.toUpperCase()}
-                  </span>
-                  {order.is_sent_to_shiprocket && (
-                    <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-[#E3F2FD] text-[#1565C0] flex items-center gap-1">
-                      <Truck size={10} /> Shipped
-                    </span>
-                  )}
+          <div key={order.id} className="border border-[#D5D9D9] rounded-xl overflow-hidden bg-white shadow-sm mb-6">
+            {/* Header */}
+            <div className="bg-[#F0F2F2] border-b border-[#D5D9D9] p-4 flex flex-wrap md:flex-nowrap items-start md:items-center justify-between gap-4 text-sm text-[#565959]">
+              <div className="flex gap-8 flex-wrap">
+                <div className="flex flex-col">
+                  <span className="text-[12px] uppercase">Order Placed</span>
+                  <span className="text-[#0F1111] font-medium">{new Date(order.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
                 </div>
-                <p className="font-bold text-brand-black mt-1">₹{order.total_amount}</p>
-                <p className="text-[12px] text-[#999] mt-0.5">{new Date(order.created_at).toLocaleDateString('en-IN', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
+                <div className="flex flex-col">
+                  <span className="text-[12px] uppercase">Total</span>
+                  <span className="text-[#0F1111] font-medium">₹{order.total_amount}</span>
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-[12px] uppercase">Ship To</span>
+                  <span className="text-brand-green font-medium cursor-pointer hover:underline truncate max-w-[120px]">{order.user_address?.split(',')[0] || userEmail.split('@')[0]}</span>
+                </div>
               </div>
-              <ChevronRight size={18} className={`text-[#999] transition-transform ${isExpanded ? 'rotate-90' : ''}`} />
-            </button>
-
-            {isExpanded && (
-              <div className="border-t border-[#EAEAEA] p-4 md:p-5 space-y-5">
-                <div>
-                  <p className="font-bold text-[14px] text-brand-black mb-2">Items</p>
-                  {order.order_items?.map((item: any, i: number) => (
-                    <div key={i} className="flex justify-between py-1.5 border-b border-[#F0F0F0] last:border-0 text-[14px]">
-                      <span>{item.name} <span className="text-[#999]">×{item.quantity}</span></span>
-                      <span className="font-semibold">₹{item.price * item.quantity}</span>
-                    </div>
-                  ))}
+              <div className="flex flex-col md:items-end w-full md:w-auto mt-2 md:mt-0">
+                <span className="text-[12px] uppercase">Order # {order.id?.slice(0, 12).toUpperCase()}</span>
+                <div className="flex gap-2 mt-1">
+                  <span className="text-[#007185] hover:text-[#C45500] hover:underline cursor-pointer">View order details</span>
+                  <span className="text-[#D5D9D9]">|</span>
+                  <span className="text-[#007185] hover:text-[#C45500] hover:underline cursor-pointer">Invoice</span>
                 </div>
+              </div>
+            </div>
 
-                {order.is_sent_to_shiprocket && (
+            {/* Body */}
+            <div className="p-5 md:p-6">
+              {/* Status Section */}
+              <div className="mb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <div className="flex items-center gap-3">
+                  {order.payment_status === 'paid' ? (
+                    <div className="w-8 h-8 rounded-full bg-[#E8F5E9] flex items-center justify-center text-[#2E7D32]">
+                      <PackageOpen size={18} strokeWidth={2.5}/>
+                    </div>
+                  ) : order.payment_status === 'failed' ? (
+                    <div className="w-8 h-8 rounded-full bg-[#FFEBEE] flex items-center justify-center text-[#C62828]">
+                      <X size={18} strokeWidth={2.5}/>
+                    </div>
+                  ) : (
+                    <div className="w-8 h-8 rounded-full bg-[#FFF8E1] flex items-center justify-center text-[#F57F17]">
+                      <Package size={18} strokeWidth={2.5}/>
+                    </div>
+                  )}
                   <div>
-                    <p className="font-bold text-[14px] text-brand-black mb-3">Delivery Status</p>
-                    <div className="flex items-center gap-1 overflow-x-auto pb-2">
-                      {TRACKING_STEPS.map((step, i) => (
-                        <div key={step} className="flex items-center">
-                          <div className="flex flex-col items-center min-w-[70px]">
-                            <div className={`w-[24px] h-[24px] rounded-full flex items-center justify-center text-[11px] font-bold ${
-                              i <= stepIdx ? 'bg-brand-green text-white' : 'bg-[#E0E0E0] text-[#999]'
-                            }`}>
-                              {i < stepIdx ? '✓' : i + 1}
-                            </div>
-                            <span className={`text-[10px] mt-1 font-semibold text-center leading-tight ${
-                              i <= stepIdx ? 'text-brand-green' : 'text-[#BBB]'
-                            }`}>{step}</span>
-                          </div>
-                          {i < TRACKING_STEPS.length - 1 && (
-                            <div className={`w-[20px] h-[2px] mb-4 ${i < stepIdx ? 'bg-brand-green' : 'bg-[#E0E0E0]'}`} />
-                          )}
-                        </div>
-                      ))}
-                    </div>
-
-                    <div className="mt-3 grid grid-cols-2 gap-3 text-[13px]">
-                      {order.awb_code && (
-                        <div><span className="text-[#999]">AWB: </span><span className="font-mono font-semibold">{order.awb_code}</span></div>
-                      )}
-                      {order.courier_name && (
-                        <div><span className="text-[#999]">Courier: </span><span className="font-semibold">{order.courier_name}</span></div>
-                      )}
-                    </div>
-
-                    {order.tracking_url && (
-                      <a href={order.tracking_url} target="_blank" rel="noopener noreferrer"
-                        className="inline-flex items-center gap-2 mt-3 px-4 py-2 rounded-full bg-brand-green text-white font-bold text-[13px] hover:bg-[#1E8A38] transition-colors">
-                        <ExternalLink size={14} /> Track Shipment
-                      </a>
-                    )}
+                    <h3 className={`text-lg font-bold ${order.payment_status === 'failed' ? 'text-[#C62828]' : 'text-[#0F1111]'}`}>
+                      {order.delivery_status || (order.is_sent_to_shiprocket ? 'Shipped via Shiprocket' : order.status === 'delivered' ? 'Delivered' : order.payment_status === 'failed' ? 'Payment Failed' : 'Preparing for Dispatch')}
+                    </h3>
+                    <p className="text-sm text-[#565959]">
+                      {order.payment_status === 'paid' && !order.is_sent_to_shiprocket && 'Your package is being processed in our warehouse.'}
+                      {order.payment_status === 'failed' && 'Your payment could not be processed. Please try again.'}
+                      {order.is_sent_to_shiprocket && `Tracking: ${order.awb_code || 'Pending'} (${order.courier_name || 'Carrier'})`}
+                    </p>
                   </div>
+                </div>
+                
+                {order.is_sent_to_shiprocket && (
+                  <button 
+                    onClick={() => setExpandedId(isExpanded ? null : order.id)}
+                    className="px-4 py-2 bg-white border border-[#D5D9D9] hover:bg-[#F7FABA] rounded-[8px] text-sm font-medium shadow-[0_2px_5px_rgba(213,217,217,0.5)] transition-all flex items-center gap-2"
+                  >
+                    {isExpanded ? 'Hide Tracking' : 'Track Package'}
+                  </button>
                 )}
               </div>
-            )}
+
+              {/* Items List */}
+              <div className="space-y-6">
+                {order.order_items?.map((item: any, i: number) => (
+                  <div key={i} className="flex flex-col sm:flex-row gap-4 border-t border-[#F0F2F2] pt-6">
+                    <div className="w-20 h-20 bg-[#F5F0E8] rounded-md overflow-hidden flex-shrink-0 border border-[#EAEAEA]">
+                      {item.image ? (
+                        <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-[#CCC]"><Package size={24} /></div>
+                      )}
+                    </div>
+                    
+                    <div className="flex-1 min-w-0">
+                      <Link href={`/products/${item.product_id || '#'}`} className="text-[#007185] hover:text-[#C45500] hover:underline font-medium text-base line-clamp-2 leading-snug">
+                        {item.name}
+                      </Link>
+                      <div className="text-sm text-[#565959] mt-1">Quantity: {item.quantity}</div>
+                      <div className="text-sm font-bold text-[#B12704] mt-1">₹{item.price}</div>
+                      
+                      <div className="mt-3 flex flex-wrap gap-3">
+                        <button className="px-4 py-1.5 bg-[#FFD814] hover:bg-[#F7CA00] text-[#0F1111] rounded-full text-sm font-medium transition-colors shadow-sm border border-[#FCD200]">
+                          Buy it again
+                        </button>
+                        <button className="px-4 py-1.5 bg-white border border-[#D5D9D9] hover:bg-[#F3F3F3] text-[#0F1111] rounded-full text-sm font-medium transition-colors shadow-sm">
+                          Write a product review
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Expandable Tracking Area */}
+              {isExpanded && order.is_sent_to_shiprocket && (
+                <div className="mt-8 pt-6 border-t border-[#D5D9D9] bg-[#F8F9FA] -mx-5 -mb-6 p-6 rounded-b-xl">
+                  <h4 className="font-bold text-[#0F1111] mb-6">Tracking Details</h4>
+                  
+                  <div className="flex items-center w-full max-w-3xl mx-auto mb-8 px-4">
+                    {TRACKING_STEPS.map((step, i) => (
+                      <div key={step} className="flex-1 flex flex-col items-center relative group">
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold z-10 ${
+                          i <= stepIdx ? 'bg-brand-green text-white shadow-md' : 'bg-white border-2 border-[#D5D9D9] text-[#999]'
+                        }`}>
+                          {i < stepIdx ? <Check size={16} strokeWidth={3} /> : i + 1}
+                        </div>
+                        <span className={`text-[11px] mt-2 font-semibold text-center absolute top-10 whitespace-nowrap ${
+                          i <= stepIdx ? 'text-[#0F1111]' : 'text-[#767676]'
+                        }`}>{step}</span>
+                        {i < TRACKING_STEPS.length - 1 && (
+                          <div className={`absolute top-4 left-1/2 w-full h-[3px] -z-0 ${
+                            i < stepIdx ? 'bg-brand-green' : 'bg-[#D5D9D9]'
+                          }`} />
+                        )}
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="flex justify-center mt-12 mb-2">
+                    {order.tracking_url ? (
+                      <a href={order.tracking_url} target="_blank" rel="noopener noreferrer"
+                        className="px-6 py-2.5 bg-[#FFD814] hover:bg-[#F7CA00] text-[#0F1111] border border-[#FCD200] rounded-[8px] font-medium text-sm transition-colors shadow-sm flex items-center gap-2">
+                        <ExternalLink size={16} /> Open Courier Tracking Page
+                      </a>
+                    ) : (
+                      <p className="text-sm text-[#565959] italic">Detailed tracking URL will be available shortly.</p>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         );
       })}

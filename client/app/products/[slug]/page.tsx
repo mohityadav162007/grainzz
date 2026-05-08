@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useState, useRef } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 import { ChevronRight, ChevronLeft, Plus, Minus, Star, Check, X, Upload, Loader2 } from 'lucide-react';
@@ -22,7 +22,8 @@ export default function ProductDetailPage() {
   const [relatedProducts, setRelatedProducts] = useState<any[]>([]);
   const [mobileRelatedIndex, setMobileRelatedIndex] = useState(0);
   const [reviews, setReviews] = useState<any[]>([]);
-  const { addItem } = useCartStore();
+  const { addItem, setQuickBuy } = useCartStore();
+  const router = useRouter();
 
   // Notification State
   const [notificationEmail, setNotificationEmail] = useState('');
@@ -99,6 +100,20 @@ export default function ProductDetailPage() {
     });
     setAdded(true);
     setTimeout(() => setAdded(false), 2000);
+  };
+
+  const handleQuickBuy = () => {
+    if (!product) return;
+    setQuickBuy({
+      id: product.id,
+      name: product.name,
+      price: product.price,
+      mrp: product.mrp,
+      image: product.images?.[0] || '',
+      quantity: qty,
+      tags: product.tags,
+    });
+    router.push('/checkout');
   };
 
   const handleNotifySubmit = async (e: React.FormEvent) => {
@@ -399,6 +414,7 @@ export default function ProductDetailPage() {
                 {added ? 'Added ✓' : 'Add to Cart'}
               </button>
               <button 
+                onClick={handleQuickBuy}
                 disabled={product.stock === 0}
                 className={`w-full lg:flex-1 h-[64px] lg:h-[64px] rounded-full font-bold text-[18px] lg:text-[18px] transition-all shadow-sm
                   ${product.stock === 0 

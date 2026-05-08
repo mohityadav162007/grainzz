@@ -188,7 +188,7 @@ serve(async (req) => {
           const shiprocketPayload = {
             order_id: order.id.substring(0, 20), // Shiprocket has char limits
             order_date: formatDate(order.created_at),
-            pickup_location: 'Primary', // Uses the default pickup address configured in Shiprocket
+            pickup_location: 'warehouse',
             billing_customer_name: firstName,
             billing_last_name: lastName,
             billing_address: order.user_address,
@@ -224,6 +224,7 @@ serve(async (req) => {
 
           const shiprocketData = await shiprocketResponse.json();
 
+          // Log exactly what Shiprocket says for debugging
           await logEvent(supabase, 'shiprocket_create_order', {
             orderId,
             payload: shiprocketPayload,
@@ -231,7 +232,8 @@ serve(async (req) => {
             status: shiprocketResponse.status,
           });
 
-          if (!shiprocketResponse.ok || shiprocketData.status_code === 0) {
+          // Check if Shiprocket explicitly returned success (status_code: 1) and actually generated an order ID
+          if (!shiprocketResponse.ok || shiprocketData.status_code !== 1 || !shiprocketData.order_id) {
             const errorMsg = shiprocketData.message || shiprocketData.errors || `Shiprocket API error (${shiprocketResponse.status})`;
             errors.push({ orderId, error: typeof errorMsg === 'object' ? JSON.stringify(errorMsg) : errorMsg });
             continue;
@@ -281,6 +283,25 @@ serve(async (req) => {
 
       return new Response(
         JSON.stringify({ success: true, results, errors, total: orderIds.length, shipped: results.length, failed: errors.length }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // ═══════════════════════════════════════════════════════════════════
+    // DEBUG — Get recent Shiprocket responses
+    // ═══════════════════════════════════════════════════════════════════
+
+    if (action === 'debug') {
+      const { data, error } = await supabase
+        .from('analytics_logs')
+        .select('*')
+        .eq('event_type', 'shiprocket_create_order')
+        .order('created_at', { ascending: false })
+        .limit(5);
+
+      if (error) throw new Error(error.message);
+      return new Response(
+        JSON.stringify({ success: true, logs: data }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }

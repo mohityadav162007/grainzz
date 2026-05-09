@@ -454,7 +454,12 @@ export const initiatePayment = async (body: { orderId: string; amount: number; u
   const { data, error } = await supabase.functions.invoke('phonepe-payment', {
     body: { action: 'initiate', ...body },
   });
-  if (error) throw new Error(error.message);
+  if (error) {
+    let msg = error.message;
+    try { if (error.context) { const errData = await error.context.json(); if (errData.error) msg = errData.error; } } catch(e) {}
+    throw new Error(msg);
+  }
+  if (data?.error) throw new Error(data.error);
   return data;
 };
 
@@ -462,7 +467,12 @@ export const checkPaymentStatus = async (orderId: string) => {
   const { data, error } = await supabase.functions.invoke('phonepe-payment', {
     body: { action: 'status', orderId },
   });
-  if (error) throw new Error(error.message);
+  if (error) {
+    let msg = error.message;
+    try { if (error.context) { const errData = await error.context.json(); if (errData.error) msg = errData.error; } } catch(e) {}
+    throw new Error(msg);
+  }
+  if (data?.error) throw new Error(data.error);
   return data;
 };
 

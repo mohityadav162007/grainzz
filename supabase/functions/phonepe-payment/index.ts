@@ -11,7 +11,8 @@ const PHONEPE_CLIENT_ID = Deno.env.get('PHONEPE_CLIENT_ID') || '';
 const PHONEPE_CLIENT_SECRET = Deno.env.get('PHONEPE_CLIENT_SECRET') || '';
 const PHONEPE_CLIENT_VERSION = Deno.env.get('PHONEPE_CLIENT_VERSION') || '1';
 const PHONEPE_REDIRECT_URL = Deno.env.get('PHONEPE_REDIRECT_URL') || '';
-const PHONEPE_BASE_URL = 'https://api.phonepe.com/apis/hermes';
+const PHONEPE_BASE_URL = 'https://api.phonepe.com/apis/pg';
+const PHONEPE_TOKEN_URL = 'https://api.phonepe.com/apis/identity-manager/v1/oauth/token';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -50,7 +51,7 @@ async function getPhonePeToken(supabase: any): Promise<string> {
   }
 
   // Fetch new token
-  const tokenResponse = await fetch(`${PHONEPE_BASE_URL}/v1/oauth/token`, {
+  const tokenResponse = await fetch(PHONEPE_TOKEN_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: new URLSearchParams({

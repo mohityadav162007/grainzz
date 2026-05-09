@@ -1,56 +1,62 @@
+// @ts-ignore
 import { serve } from 'https://deno.land/std@0.177.0/http/server.ts';
+// @ts-ignore
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
+
+declare const Deno: any;
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-serve(async (req) => {
-  // Handle CORS
+serve(async (req: Request) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
   }
 
   try {
     const authHeader = req.headers.get('Authorization');
-    const expectedAuth = 'Basic ' + btoa('grainzz_admin:GRZ_Pay_2026!#');
+    const webhookUser = Deno.env.get('WEBHOOK_USERNAME') || 'grainzz_admin';
+    const webhookPass = Deno.env.get('WEBHOOK_PASSWORD') || 'GRZ_Pay_2026!#';
+    const expectedAuth = 'Basic ' + btoa(`${webhookUser}:${webhookPass}`);
 
     if (authHeader !== expectedAuth) {
-      console.error('Unauthorized webhook attempt: Invalid credentials');
+      console.error('Unauthorized webhook attempt');
       return new Response(JSON.stringify({ error: 'Unauthorized' }), { 
-        status: 401,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
     }
 
     const body = await req.json();
-    console.log('PhonePe Webhook received:', JSON.stringify(body));
+    const { event, payload } = body;
+
+    if (!payload || !payload.merchantOrderId) {
+      return new Response(JSON.stringify({ error: 'Invalid payload' }), { status: 400 });
+    }
 
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    // As per PhonePe Documentation:
-    // 1. Use the "event" parameter to identify the event type
-    // 2. Use the "payload.state" parameter for the payment status
-    const { event, payload } = body;
-
-    if (!payload || !payload.merchantOrderId) {
-      console.error('Invalid webhook payload: missing merchantOrderId');
-      return new Response(JSON.stringify({ error: 'Invalid payload' }), { status: 400 });
-    }
-
     const merchantOrderId = payload.merchantOrderId;
-    const paymentState = payload.state; // e.g., COMPLETED, FAILED, PENDING
+    const paymentState = payload.state;
     const transactionId = payload.paymentDetails?.[0]?.transactionId || '';
 
-    console.log(`Processing Order: ${merchantOrderId}, Event: ${event}, State: ${paymentState}`);
+    // Check current status to avoid redundant updates
+    const { data: currentOrder } = await supabase
+      .from('orders')
+      .select('payment_status')
+      .eq('merchant_transaction_id', merchantOrderId)
+      .single();
 
-    // Update the order based on the event and state
+    if (currentOrder?.payment_status === 'paid') {
+      return new Response(JSON.stringify({ success: true, message: 'Already processed' }), { status: 200 });
+    }
+
     if (event === 'checkout.order.completed' && paymentState === 'COMPLETED') {
-      const { error } = await supabase
+      await supabase
         .from('orders')
         .update({ 
           payment_status: 'paid', 
@@ -59,12 +65,8 @@ serve(async (req) => {
           updated_at: new Date().toISOString()
         })
         .eq('merchant_transaction_id', merchantOrderId);
-      
-      if (error) throw error;
-      console.log(`Successfully marked order ${merchantOrderId} as PAID`);
-
     } else if (event === 'checkout.order.failed' || paymentState === 'FAILED') {
-      const { error } = await supabase
+      await supabase
         .from('orders')
         .update({ 
           payment_status: 'failed', 
@@ -72,12 +74,8 @@ serve(async (req) => {
           updated_at: new Date().toISOString()
         })
         .eq('merchant_transaction_id', merchantOrderId);
-
-      if (error) throw error;
-      console.log(`Marked order ${merchantOrderId} as FAILED`);
     }
 
-    // Always log the event for analytics/debugging
     await supabase.from('analytics_logs').insert({
       event_type: `phonepe_webhook_${event}`,
       event_data: body
@@ -89,7 +87,6 @@ serve(async (req) => {
     });
 
   } catch (error: any) {
-    console.error('Webhook error:', error.message);
     return new Response(JSON.stringify({ error: error.message }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 500,

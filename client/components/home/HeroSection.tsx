@@ -4,11 +4,13 @@ import { useRouter } from 'next/navigation';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { getHeroSlides } from '@/lib/api';
 import { motion, AnimatePresence } from 'framer-motion';
+import Image from 'next/image';
 
 interface HeroSlide {
   id?: string;
-  image_url?: string;
+  image_url: string;
   mobile_image_url?: string;
+  title?: string;
   redirect_type?: string;
   redirect_value?: string;
   is_active?: boolean;
@@ -18,16 +20,14 @@ interface HeroSlide {
 
 export default function HeroSection() {
   const [[page, direction], setPage] = useState([0, 0]);
-  const current = page;
+  const imageIndex = page;
 
   const [slides, setSlides] = useState<HeroSlide[] | null>(null);
   const [mounted, setMounted] = useState(false);
   const router = useRouter();
 
-  // Prevent hydration mismatch — only check window after mount
   useEffect(() => { setMounted(true); }, []);
 
-  // Re-check on resize
   const [windowWidth, setWindowWidth] = useState(0);
   useEffect(() => {
     if (!mounted) return;
@@ -39,7 +39,6 @@ export default function HeroSection() {
 
   const isMobileActual = windowWidth < 768;
 
-  // Fetch slides once
   useEffect(() => {
     let cancelled = false;
     getHeroSlides()
@@ -63,10 +62,14 @@ export default function HeroSection() {
     });
   }, [slideCount]);
 
-  const nextSlide = useCallback(() => paginate(1), [paginate]);
-  const prevSlide = useCallback(() => paginate(-1), [paginate]);
+  const goToSlide = (newIndex: number) => {
+    if (slideCount <= 1 || newIndex === imageIndex) return;
+    const jumpDirection = newIndex > imageIndex ? 1 : -1;
+    setPage([newIndex, jumpDirection]);
+  };
 
-  // Auto-advance
+  const nextSlide = useCallback(() => paginate(1), [paginate]);
+
   useEffect(() => {
     if (slideCount <= 1) return;
     const timer = setInterval(nextSlide, 5000);
@@ -81,7 +84,6 @@ export default function HeroSection() {
     router.push(url);
   }, [router]);
 
-  // Loading state — data not fetched yet
   if (slides === null) {
     return (
       <section className="w-full">
@@ -90,12 +92,8 @@ export default function HeroSection() {
     );
   }
 
-  // No slides in DB
   if (slides.length === 0) return null;
 
-  const slide = slides[current];
-
-  // Direction-aware variants
   const variants = {
     enter: (dir: number) => ({
       x: dir > 0 ? '100%' : dir < 0 ? '-100%' : 0,
@@ -114,27 +112,29 @@ export default function HeroSection() {
   };
 
   return (
-    <section className="w-full flex justify-center flex-col items-center">
-      <div className="w-full relative overflow-hidden bg-[#F5F5F0] aspect-[1024/1537] md:aspect-auto md:h-[540px] lg:h-[600px]">
+    <section className="relative w-full overflow-hidden bg-[#f3f3f3] md:aspect-auto aspect-[1024/1537] md:h-[540px] lg:h-[600px]">
+      <div className="relative w-full h-full">
         <AnimatePresence initial={false} custom={direction} mode="popLayout">
           <motion.div
-            key={current}
+            key={page}
             custom={direction}
             variants={variants}
             initial="enter"
             animate="center"
             exit="exit"
             transition={{
-              x: { duration: 0.8, ease: [0.32, 0.72, 0, 1] },
-              opacity: { duration: 0.6 }
+              x: { type: "spring", stiffness: 300, damping: 30 },
+              opacity: { duration: 0.2 }
             }}
             className="w-full h-full absolute inset-0 cursor-pointer"
-            onClick={() => handleSlideClick(slide)}
+            onClick={() => handleSlideClick(slides[imageIndex])}
           >
-            <img 
-              src={isMobileActual ? (slide.mobile_image_url || slide.image_url) : slide.image_url} 
-              alt="Banner" 
-              className="w-full h-full object-cover block"
+            <Image
+              src={isMobileActual ? (slides[imageIndex].mobile_image_url || slides[imageIndex].image_url) : slides[imageIndex].image_url}
+              alt={slides[imageIndex].title || 'Hero Banner'}
+              fill
+              className="object-cover"
+              priority
             />
           </motion.div>
         </AnimatePresence>
@@ -143,22 +143,22 @@ export default function HeroSection() {
       {slides.length > 1 && (
         <div className="w-full bg-white flex items-center justify-center py-[24px]">
           <div className="flex items-center gap-[12px]">
-             <button onClick={prevSlide} className="text-[#A1A1A1] hover:text-[#222222] transition-colors bg-transparent border-none">
+             <button onClick={() => paginate(-1)} className="text-[#A1A1A1] hover:text-[#222222] transition-colors bg-transparent border-none">
                <ChevronLeft size={20} strokeWidth={3} />
              </button>
             {slides.map((_, i) => (
               <button
                 key={i}
-                onClick={() => setCurrent(i)}
+                onClick={() => goToSlide(i)}
                 className={`transition-all rounded-full border-none cursor-pointer ${
-                  i === current
+                  i === imageIndex
                     ? 'w-[32px] md:w-[40px] h-[8px] md:h-[8px] bg-[#1a5b23] shadow-sm'
                     : 'w-[8px] md:w-[8px] h-[8px] md:h-[8px] bg-[#E0E0E0] hover:bg-[#888888]'
                 }`}
                 aria-label={`Go to slide ${i + 1}`}
               />
             ))}
-             <button onClick={nextSlide} className="text-[#A1A1A1] hover:text-[#222222] transition-colors bg-transparent border-none">
+             <button onClick={() => paginate(1)} className="text-[#A1A1A1] hover:text-[#222222] transition-colors bg-transparent border-none">
                <ChevronRight size={20} strokeWidth={3} />
              </button>
           </div>

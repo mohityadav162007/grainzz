@@ -1,5 +1,9 @@
+// @ts-ignore
 import { serve } from 'https://deno.land/std@0.177.0/http/server.ts';
+// @ts-ignore
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
+
+declare const Deno: any;
 
 // ─── Configuration ───────────────────────────────────────────────────────────
 
@@ -99,7 +103,7 @@ async function getShiprocketToken(supabase: any): Promise<string> {
 
 // ─── Edge Function Handler ───────────────────────────────────────────────────
 
-serve(async (req) => {
+serve(async (req: Request) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
   }

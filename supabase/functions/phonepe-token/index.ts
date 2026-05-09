@@ -1,5 +1,9 @@
+// @ts-ignore
 import { serve } from 'https://deno.land/std@0.177.0/http/server.ts';
+// @ts-ignore
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
+
+declare const Deno: any;
 
 const PHONEPE_CLIENT_ID = Deno.env.get('PHONEPE_CLIENT_ID') || '';
 const PHONEPE_CLIENT_SECRET = Deno.env.get('PHONEPE_CLIENT_SECRET') || '';
@@ -100,7 +104,7 @@ async function getPhonePeToken(supabase: any): Promise<string> {
 export { getPhonePeToken, PHONEPE_BASE_URL };
 
 // Also serve as a standalone function for testing
-serve(async (req) => {
+serve(async (req: Request) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
   }

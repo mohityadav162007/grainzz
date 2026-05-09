@@ -77,32 +77,12 @@ export default function CheckoutPage() {
       const payRes = await initiatePayment({ orderId, amount: displayTotal, userPhone: form.phone });
       
       if (payRes.data?.redirectUrl) {
-        if (typeof window !== 'undefined' && window.PhonePeCheckout) {
-          if (quickBuyItem) setQuickBuy(null);
-          else clearCart();
-          
-          setLoading(false);
-          window.PhonePeCheckout.transact({
-            tokenUrl: payRes.data.redirectUrl,
-            type: "IFRAME",
-            callback: function(response: string) {
-              if (response === 'CONCLUDED') {
-                router.push(`/payment/verify?orderId=${orderId}`);
-              } else if (response === 'USER_CANCEL') {
-                setError('Payment was cancelled by user.');
-              } else {
-                setError(`Payment issue occurred. Code: ${response}`);
-              }
-            }
-          });
-          return;
-        } else {
-          // Fallback to direct redirect if SDK failed to load
-          if (quickBuyItem) setQuickBuy(null);
-          else clearCart();
-          window.location.href = payRes.data.redirectUrl;
-          return;
-        }
+        if (quickBuyItem) setQuickBuy(null);
+        else clearCart();
+        
+        // Use full page redirect instead of iframe to prevent CSP/Referrer blocks
+        window.location.href = payRes.data.redirectUrl;
+        return;
       }
       
       throw new Error('Failed to initiate payment with PhonePe.');

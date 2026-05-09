@@ -74,6 +74,16 @@ export default function PoweredBy() {
     loadCards();
   }, []);
 
+  const [windowWidth, setWindowWidth] = useState(0);
+  useEffect(() => {
+    setWindowWidth(window.innerWidth);
+    const handleResize = () => setWindowWidth(window.innerWidth);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  const isMobile = windowWidth > 0 && windowWidth < 768;
+
   if (loading) {
     return (
       <section className="py-16 bg-white w-full">
@@ -102,11 +112,15 @@ export default function PoweredBy() {
           Powered by Real Grains
         </h2>
 
-        <div className="flex flex-col md:grid md:grid-cols-3 gap-6 lg:gap-8 relative mt-8">
+        <div className="flex flex-col md:grid md:grid-cols-3 gap-10 md:gap-6 lg:gap-8 relative mt-8 pb-10 md:pb-0">
           {cards.map((cat, idx) => (
             <div 
               key={idx} 
-              className="flex flex-col w-full rounded-[24px] overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.05)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.1)] transition-all duration-300"
+              className="flex flex-col w-full rounded-[24px] overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.05)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.1)] transition-all duration-300 sticky md:relative"
+              style={isMobile ? { 
+                top: `calc(100px + ${idx * 30}px)`,
+                zIndex: idx + 1,
+              } : {}}
             >
               {/* Top Image Section */}
               <div

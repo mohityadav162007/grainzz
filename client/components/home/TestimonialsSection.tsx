@@ -125,11 +125,11 @@ export default function TestimonialsSection() {
         <div className="absolute inset-0 bg-white/5" />
       </div>
 
-      <div className="relative z-10 max-w-[1440px] w-full mx-auto px-4 md:px-[60px] lg:px-[100px] flex flex-col md:flex-row items-stretch justify-between min-h-[600px]">
+      <div className="relative z-10 max-w-[1440px] w-full mx-auto px-0 md:px-[60px] lg:px-[100px] flex flex-col md:flex-row items-stretch justify-between min-h-[600px]">
         
         {/* Left: Product Card */}
-        <div className="w-full md:w-[45%] lg:w-[400px] flex items-center justify-start py-10 md:py-20">
-          <div className="w-full max-w-[340px] bg-white rounded-[24px] p-2 shadow-[0_24px_50px_rgba(0,0,0,0.1)]">
+        <div className="w-full md:w-[45%] lg:w-[400px] flex items-center justify-center md:justify-start py-10 md:py-20 px-4 md:px-0">
+          <div className="w-full max-w-[340px] bg-white rounded-[24px] p-4 md:p-2 shadow-[0_24px_50px_rgba(0,0,0,0.1)]">
             {product ? (
               <ProductCard product={product} />
             ) : (
@@ -139,7 +139,7 @@ export default function TestimonialsSection() {
         </div>
 
         {/* Right: Testimonial Box */}
-        <div className="w-full md:w-[50%] lg:w-[540px] bg-[#EEFBDC]/95 backdrop-blur-md p-10 md:p-14 lg:p-16 flex flex-col justify-between shadow-2xl">
+        <div className="w-full md:w-[50%] lg:w-[540px] bg-[#EEFBDC]/95 backdrop-blur-md px-6 py-10 md:p-14 lg:p-16 flex flex-col justify-between shadow-2xl">
           <div>
             <h4 className="text-[13px] md:text-[15px] font-semibold text-[#1A1A1A] mb-10 opacity-70 tracking-wide uppercase">
               What people are saying about Grainzz

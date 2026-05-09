@@ -7,7 +7,7 @@ const PHONEPE_CLIENT_ID = Deno.env.get('PHONEPE_CLIENT_ID') || '';
 const PHONEPE_CLIENT_SECRET = Deno.env.get('PHONEPE_CLIENT_SECRET') || '';
 const PHONEPE_CLIENT_VERSION = Deno.env.get('PHONEPE_CLIENT_VERSION') || '1';
 const PHONEPE_REDIRECT_URL = Deno.env.get('PHONEPE_REDIRECT_URL') || '';
-const PHONEPE_BASE_URL = 'https://api-preprod.phonepe.com/apis/pg-sandbox';
+const PHONEPE_BASE_URL = 'https://api.phonepe.com/apis/hermes';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -175,7 +175,13 @@ serve(async (req) => {
         merchantOrderId,
         amount: Math.round(totalAmountFromDB * 100), // Convert the exact DB amount (after discounts) to paise
         expireAfter: 1200,
-        paymentFlow: { type: 'PG_CHECKOUT', merchantUrls: { redirectUrl } },
+        paymentFlow: { 
+          type: 'PG_CHECKOUT', 
+          merchantUrls: { 
+            redirectUrl,
+            callbackUrl: Deno.env.get('PHONEPE_CALLBACK_URL') || ''
+          } 
+        },
       };
 
       const controller = new AbortController();

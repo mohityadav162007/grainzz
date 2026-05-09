@@ -14,14 +14,12 @@ interface HeroSlide {
   is_active?: boolean;
 }
 
-const slideVariants = {
-  initial: { x: '100%', opacity: 0 },
-  animate: { x: 0, opacity: 1 },
-  exit: { x: '-100%', opacity: 0 }
-};
+// Direction-aware variants are defined inside the component
 
 export default function HeroSection() {
-  const [current, setCurrent] = useState(0);
+  const [[page, direction], setPage] = useState([0, 0]);
+  const current = page;
+
   const [slides, setSlides] = useState<HeroSlide[] | null>(null);
   const [mounted, setMounted] = useState(false);
   const router = useRouter();
@@ -55,15 +53,18 @@ export default function HeroSection() {
 
   const slideCount = slides?.length || 0;
 
-  const nextSlide = useCallback(() => {
+  const paginate = useCallback((newDirection: number) => {
     if (slideCount <= 1) return;
-    setCurrent((prev) => (prev + 1) % slideCount);
+    setPage(([prevPage]) => {
+      let nextPage = prevPage + newDirection;
+      if (nextPage < 0) nextPage = slideCount - 1;
+      if (nextPage >= slideCount) nextPage = 0;
+      return [nextPage, newDirection];
+    });
   }, [slideCount]);
 
-  const prevSlide = useCallback(() => {
-    if (slideCount <= 1) return;
-    setCurrent((prev) => (prev === 0 ? slideCount - 1 : prev - 1));
-  }, [slideCount]);
+  const nextSlide = useCallback(() => paginate(1), [paginate]);
+  const prevSlide = useCallback(() => paginate(-1), [paginate]);
 
   // Auto-advance
   useEffect(() => {
@@ -84,7 +85,7 @@ export default function HeroSection() {
   if (slides === null) {
     return (
       <section className="w-full">
-        <div className="w-full aspect-[1537/1023] md:aspect-auto md:h-[540px] lg:h-[600px] bg-[#F5F5F0] animate-pulse" />
+        <div className="w-full aspect-[1024/1537] md:aspect-auto md:h-[540px] lg:h-[600px] bg-[#F5F5F0] animate-pulse" />
       </section>
     );
   }
@@ -94,27 +95,46 @@ export default function HeroSection() {
 
   const slide = slides[current];
 
+  // Direction-aware variants
+  const variants = {
+    enter: (dir: number) => ({
+      x: dir > 0 ? '100%' : dir < 0 ? '-100%' : 0,
+      opacity: 0
+    }),
+    center: {
+      x: 0,
+      opacity: 1,
+      zIndex: 1
+    },
+    exit: (dir: number) => ({
+      x: dir < 0 ? '100%' : dir > 0 ? '-100%' : 0,
+      opacity: 0,
+      zIndex: 0
+    })
+  };
+
   return (
     <section className="w-full flex justify-center flex-col items-center">
-      <div className="w-full relative overflow-hidden bg-[#F5F5F0]">
-        <AnimatePresence initial={false} mode="popLayout">
+      <div className="w-full relative overflow-hidden bg-[#F5F5F0] aspect-[1024/1537] md:aspect-auto md:h-[540px] lg:h-[600px]">
+        <AnimatePresence initial={false} custom={direction} mode="popLayout">
           <motion.div
             key={current}
-            variants={slideVariants}
-            initial="initial"
-            animate="animate"
+            custom={direction}
+            variants={variants}
+            initial="enter"
+            animate="center"
             exit="exit"
             transition={{
               x: { duration: 0.8, ease: [0.32, 0.72, 0, 1] },
               opacity: { duration: 0.6 }
             }}
-            className="w-full cursor-pointer"
+            className="w-full h-full absolute inset-0 cursor-pointer"
             onClick={() => handleSlideClick(slide)}
           >
             <img 
               src={isMobileActual ? (slide.mobile_image_url || slide.image_url) : slide.image_url} 
               alt="Banner" 
-              className="w-full h-auto block"
+              className="w-full h-full object-cover block"
             />
           </motion.div>
         </AnimatePresence>

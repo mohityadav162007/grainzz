@@ -11,9 +11,8 @@ const PHONEPE_CLIENT_ID = Deno.env.get('PHONEPE_CLIENT_ID') || '';
 const PHONEPE_CLIENT_SECRET = Deno.env.get('PHONEPE_CLIENT_SECRET') || '';
 const PHONEPE_CLIENT_VERSION = Deno.env.get('PHONEPE_CLIENT_VERSION') || '1';
 const PHONEPE_REDIRECT_URL = Deno.env.get('PHONEPE_REDIRECT_URL') || '';
-// Setup for Sandbox/UAT testing
-const PHONEPE_BASE_URL = 'https://api-preprod.phonepe.com/apis/pg-sandbox';
-const PHONEPE_TOKEN_URL = 'https://api-preprod.phonepe.com/apis/pg-sandbox/v1/oauth/token';
+const PHONEPE_BASE_URL = 'https://api.phonepe.com/apis/pg';
+const PHONEPE_TOKEN_URL = 'https://api.phonepe.com/apis/identity-manager/v1/oauth/token';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -179,13 +178,14 @@ serve(async (req: Request) => {
 
       const payPayload = {
         merchantOrderId,
-        amount: Math.round(totalAmountFromDB * 100), // Convert the exact DB amount (after discounts) to paise
+        amount: Math.round(totalAmountFromDB * 100),
         expireAfter: 1200,
         paymentFlow: { 
           type: 'PG_CHECKOUT', 
           message: 'Grainzz Order Payment',
           merchantUrls: { 
-            redirectUrl
+            redirectUrl,
+            callbackUrl: Deno.env.get('PHONEPE_CALLBACK_URL') || ''
           } 
         },
       };

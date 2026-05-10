@@ -23,9 +23,9 @@ export default function AnnouncementBar() {
   }, []);
 
   return (
-    <div className="hidden md:flex bg-brand-green text-white items-center justify-center h-[44px] px-4 md:px-[80px] w-full text-[18px] font-medium leading-[132%] tracking-normal gap-2">
+    <div className="hidden md:flex bg-brand-green text-white items-center justify-center h-[36px] px-4 md:px-[80px] w-full text-[15px] font-medium leading-[132%] tracking-normal gap-2">
       <span>{text.replace(/🇮🇳/g, '').replace(/IN$/g, '').trim()}</span>
-      <span className="emoji-font text-[18px]">🇮🇳</span>
+      <span className="emoji-font text-[15px]">🇮🇳</span>
     </div>
   );
 }

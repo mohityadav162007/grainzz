@@ -267,7 +267,7 @@ export default function ProductDetailPage() {
             {/* Main Image */}
             <div 
               className="relative w-full rounded-[24px] overflow-hidden bg-[#F5F0E8] shadow-sm border border-[#EAEAEA]"
-              style={{ aspectRatio: '1024 / 1536' }}
+              style={{ aspectRatio: '1 / 1' }}
             >
               {product.images?.length > 0 ? (
                 <Image src={product.images[selectedImage % product.images.length]} alt={product.name} fill className="object-cover transition-transform duration-700 hover:scale-[1.03]" priority />

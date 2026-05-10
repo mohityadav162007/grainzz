@@ -70,15 +70,18 @@ export default function TestimonialsSection() {
       .from('products')
       .select('*')
       .in('id', productIds)
+      .eq('is_active', true)
       .then(({ data, error }) => {
         if (cancelled) return;
         if (error) { console.error('Testimonials error:', error); setReviews([]); return; }
 
         const productMap = new Map((data || []).map(p => [p.id, p]));
-        const resolved = HOMEPAGE_REVIEWS.map(review => ({
-          ...review,
-          product: productMap.get(review.product_id) || null,
-        }));
+        const resolved = HOMEPAGE_REVIEWS
+          .map(review => ({
+            ...review,
+            product: productMap.get(review.product_id) || null,
+          }))
+          .filter(r => r.product !== null); // Only show testimonials with active products
         setReviews(resolved);
       });
     return () => { cancelled = true; };
@@ -128,8 +131,8 @@ export default function TestimonialsSection() {
       <div className="relative z-10 max-w-[1440px] w-full mx-auto px-0 md:px-[60px] lg:px-[100px] flex flex-col md:flex-row items-stretch justify-between min-h-[600px]">
         
         {/* Left: Product Card */}
-        <div className="w-full md:w-[45%] lg:w-[400px] flex items-center justify-center md:justify-start py-10 md:py-20 px-4 md:px-0">
-          <div className="w-full max-w-[340px] bg-white rounded-[24px] p-4 md:p-2 shadow-[0_24px_50px_rgba(0,0,0,0.1)]">
+        <div className="w-full md:w-[45%] lg:w-[525px] flex items-center justify-center md:justify-center py-10 md:py-20 px-4 md:px-0">
+          <div className="w-full max-w-[340px] bg-white rounded-[24px] p-6 shadow-[0_24px_50px_rgba(0,0,0,0.1)]">
             {product ? (
               <ProductCard product={product} />
             ) : (

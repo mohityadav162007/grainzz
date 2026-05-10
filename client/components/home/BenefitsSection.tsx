@@ -27,8 +27,8 @@ export default function BenefitsSection() {
             {/* Visual Box */}
             <div className="w-full lg:w-[480px] relative rounded-[16px] overflow-hidden flex-shrink-0 min-h-[360px] md:min-h-[500px]">
               <Image 
-                src="/image-24@2x.png" 
-                alt="Grainzz Quality Snacking"
+                src="/founders.png" 
+                alt="Grainzz Founders"
                 fill
                 className="object-cover"
                 sizes="(max-width: 1024px) 100vw, 480px"

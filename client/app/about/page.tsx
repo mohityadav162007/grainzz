@@ -5,6 +5,7 @@ import Image from 'next/image';
 import TeamFavourites from '@/components/about/TeamFavourites';
 import OurValues from '@/components/about/OurValues';
 import CustomerTestimonials from '@/components/about/CustomerTestimonials';
+import FAQSection from '@/components/home/FAQSection';
 
 export const metadata: Metadata = {
   title: 'About Us – Grainzz',
@@ -13,19 +14,19 @@ export const metadata: Metadata = {
 
 const story = [
   {
-    emoji: '🦸',
-    title: 'From Sidekick to Superhero',
-    desc: 'Puffed rice is a staple in 90% of Indian homes, yet it has always been hidden away as a "filler" in bhel or namkeens. We felt this humble, light, and low-calorie grain deserved the spotlight.',
+    image: '/story-1.png',
+    title: 'From Ingredient to Hero',
+    desc: 'Puffed rice has lived in Indian homes for generations, but mostly as a side ingredient in bhel, namkeen or mixtures. Grainzz was created to give this light, familiar grain the spotlight it always deserved.',
   },
   {
-    emoji: '🍜',
-    title: 'Solving the Flavor Gap',
-    desc: 'We realized that while people love the lightness of puffed grains, they were bored of the plain, bland options available. We stepped in to bridge that gap with authentic Indian flavors.',
+    image: '/story-2.png',
+    title: 'The Taste Gap We Saw',
+    desc: 'We noticed a simple problem: tasty snacks often felt too heavy, while healthier snacks often felt too boring. Grainzz was built to bring both sides together: bold flavour and better ingredients in one snack.',
   },
   {
-    emoji: '🍪',
-    title: 'Redefining the "Crunch"',
-    desc: 'We believe snacking shouldn\'t be a choice between a greasy bag of chips or a boring diet. By perfecting a roasted process, we created a snack that is fun, functional, & 100% guilt-free.',
+    image: '/story-3.png',
+    title: 'Snacking, Reimagined',
+    desc: 'From ragi and bajra to jowar, oats, quinoa, beetroot and puffed rice, we are turning familiar grains into modern snacks made for office breaks, IPL nights, chai time and everyday cravings.',
   },
 ];
 
@@ -96,10 +97,15 @@ export default function AboutPage() {
             The Grainzz Story
           </h2>
           <div className="grid md:grid-cols-3 gap-[20px] md:gap-[24px]">
-            {story.map(({ emoji, title, desc }) => (
-              <div key={title} className="bg-[#F5F3EF] rounded-[16px] px-[28px] py-[36px] text-center flex flex-col items-center">
-                <div className="text-[72px] mb-[20px] leading-none">
-                  {emoji}
+            {story.map(({ image, title, desc }) => (
+              <div key={title} className="bg-[#FBF5EB] rounded-[16px] px-[28px] py-[48px] text-center flex flex-col items-center border-b-4 border-transparent hover:border-[#A01A1A] transition-all duration-300">
+                <div className="relative w-[72px] h-[72px] mb-[24px]">
+                  <Image 
+                    src={image} 
+                    alt={title} 
+                    fill 
+                    className="object-contain" 
+                  />
                 </div>
                 <h3 className="text-[18px] md:text-[20px] font-bold text-brand-black leading-[1.3] tracking-tight mb-[12px]">{title}</h3>
                 <p className="text-[13px] md:text-[14px] text-[#555] leading-[1.65] font-normal">{desc}</p>
@@ -111,15 +117,18 @@ export default function AboutPage() {
 
       {/* Founders */}
       <section className="py-[64px] md:py-[96px] bg-[#1D5E20] text-white w-full overflow-hidden">
-        <div className="max-w-[1200px] mx-auto px-4 md:px-[40px] lg:px-[60px] grid md:grid-cols-[1fr_auto] gap-[48px] md:gap-[64px] items-center">
-          <div className="max-w-[520px]">
+        <div className="max-w-[1440px] mx-auto px-4 md:px-[60px] lg:px-[100px] grid md:grid-cols-[1.2fr_auto] gap-[48px] md:gap-[80px] items-center">
+          <div className="max-w-[800px]">
             <h2 className="text-[36px] md:text-[48px] font-semibold mb-[28px] leading-[1.15] tracking-tight text-white">Meet The Founders</h2>
             <div className="space-y-6">
               <p className="text-white/90 text-[16px] md:text-[18px] leading-[1.6] font-normal">
-                GRAINZZ was founded by Vibhor Kataria (Operations Specialist) and Rishel Puri (Branding &amp; Marketing Strategist).
+                Grainzz was founded by Vibhor Kataria and Rishel Puri, two young entrepreneurs who first met during their bachelor&apos;s at JIMS Vasant Kunj and later pursued their MBA from Delhi Technological University. Their journey started like many young professionals in India: college, corporate roles, long workdays, late evenings and endless conversations about what they could build on their own.
               </p>
               <p className="text-white/90 text-[16px] md:text-[18px] leading-[1.6] font-normal">
-                Together, they are building India&apos;s next big healthy snacking brand, a homegrown company turning traditional puffed rice into a structured, premium snack category.
+                During that phase, they realised how deeply snacks had become part of everyday life. Office breaks, travel, study sessions, IPL nights, family time and late-night work all had one thing in common: people were snacking more than ever, but better options were still hard to find. Most snacks were either tasty but heavy, or healthier but not exciting enough to repeat.
+              </p>
+              <p className="text-white/90 text-[16px] md:text-[18px] leading-[1.6] font-normal">
+                That gap became the starting point for Grainzz. Vibhor brings execution, operations and ground-level problem solving to the brand, while Rishel brings branding, marketing and growth strategy. Together, they are building Grainzz as a modern Indian snack company that makes better snacking easier to choose without making it feel boring.
               </p>
             </div>
           </div>
@@ -152,6 +161,9 @@ export default function AboutPage() {
 
       {/* Customer Testimonials */}
       <CustomerTestimonials />
+
+      {/* FAQs */}
+      <FAQSection />
     </div>
   );
 }

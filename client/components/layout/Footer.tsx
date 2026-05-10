@@ -39,7 +39,7 @@ export default function Footer() {
     'Shop': [
       { name: 'All Products', href: '/products' },
       { name: 'Combos', href: '/combos' },
-      { name: 'Sale!', href: '/sale' },
+      ...(settings.show_sale_page !== 'false' ? [{ name: 'Sale!', href: '/sale' }] : []),
     ],
     'Policies': [
       { name: 'Shipping', href: '/shipping' },
@@ -52,47 +52,47 @@ export default function Footer() {
   return (
     <footer className="w-full font-sans">
       <div className="bg-[#1D5E20] text-white">
-        <div className="max-w-[1440px] mx-auto px-4 lg:px-[120px] py-[60px] lg:py-[80px]">
+        <div className="max-w-[1440px] mx-auto px-4 lg:px-[40px] py-[60px] lg:py-[80px]">
           
           {/* Desktop Layout -> 5 Columns. Mobile Layout -> Stacked with Accordions */}
-          <div className="grid grid-cols-1 lg:grid-cols-[1.5fr_1fr_1fr_1fr_1.5fr] gap-8 lg:gap-12">
+          <div className="grid grid-cols-1 lg:grid-cols-[2fr_0.7fr_0.7fr_0.7fr_2fr] gap-8 lg:gap-4">
             
-            {/* 1. Brand & Contact (Always visible) */}
-            <div className="flex flex-col gap-6 items-start">
-              <Link href="/" className="inline-block transition-transform hover:scale-105 mb-2">
+            {/* 1. Brand & Contact */}
+            <div className="flex flex-col gap-8 items-start">
+              <Link href="/" className="inline-block transition-transform hover:scale-105">
                 <Image 
                   src="/image-2@2x.png" 
                   alt="Grainzz Logo" 
-                  width={200} 
-                  height={56} 
-                  className="object-contain h-[45px] lg:h-[56px] w-auto brightness-0 invert"
+                  width={240} 
+                  height={64} 
+                  className="object-contain h-[56px] lg:h-[72px] w-auto brightness-0 invert"
                 />
               </Link>
-              <div className="flex flex-col gap-4 text-[14px] lg:text-[15px] font-medium text-white/90">
-                <div className="flex items-start gap-4">
-                  <Phone size={20} className="shrink-0 text-white/80" strokeWidth={1.5} />
-                  <div className="flex flex-col lg:flex-row gap-1 lg:gap-2">
-                    {settings.contact_phone.split(',').map((num, i) => (
-                      <div key={i} className="flex items-center gap-2">
+              <div className="flex flex-col gap-6 text-[15px] lg:text-[16px] font-medium text-white/90">
+                <div className="flex items-center gap-4">
+                  <Phone size={22} className="shrink-0 text-white" strokeWidth={1.5} />
+                  <div className="flex flex-wrap items-center gap-1">
+                    {settings.contact_phone.split(',').map((num, i, arr) => (
+                      <div key={i} className="flex items-center gap-1">
                         <a href={`tel:${num.trim()}`} className="hover:text-white transition-colors">{num.trim()}</a>
-                        {i < settings.contact_phone.split(',').length - 1 && <span className="hidden lg:inline text-white/40">|</span>}
+                        {i < arr.length - 1 && <span>,</span>}
                       </div>
                     ))}
                   </div>
                 </div>
-                <div className="flex items-start gap-4">
-                  <Mail size={20} className="shrink-0 text-white/80" strokeWidth={1.5} />
+                <div className="flex items-center gap-4">
+                  <Mail size={22} className="shrink-0 text-white" strokeWidth={1.5} />
                   <a href={`mailto:${(settings.contact_email || '').trim()}`} className="hover:text-white transition-colors break-all">
                     {(settings.contact_email || '').trim()}
                   </a>
                 </div>
                 <div className="flex items-start gap-4">
-                  <MapPin size={20} className="shrink-0 text-white/80 mt-1" strokeWidth={1.5} />
+                  <MapPin size={22} className="shrink-0 text-white mt-1" strokeWidth={1.5} />
                   <a 
                     href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(settings.contact_address)}`} 
                     target="_blank" 
                     rel="noopener noreferrer"
-                    className="leading-[1.4] hover:text-white transition-colors"
+                    className="leading-[1.5] hover:text-white transition-colors"
                   >
                     {settings.contact_address}
                   </a>
@@ -102,12 +102,12 @@ export default function Footer() {
 
             {/* Desktop Links / Mobile Accordions */}
             {Object.entries(footerLinks).map(([title, links]) => (
-              <div key={title} className="flex flex-col border-b border-white/10 lg:border-none pb-4 lg:pb-0">
+              <div key={title} className="flex flex-col border-b border-white/10 lg:border-none pb-4 lg:pb-0 lg:pl-2">
                 <button 
                   onClick={() => toggleSection(title)}
                   className="flex items-center justify-between lg:cursor-default w-full text-left"
                 >
-                  <h4 className="text-[18px] lg:text-[20px] font-semibold text-white tracking-wide">{title}</h4>
+                  <h4 className="text-[18px] lg:text-[20px] font-semibold text-white tracking-wide whitespace-nowrap">{title}</h4>
                   <ChevronDown 
                     size={20} 
                     className={`lg:hidden transition-transform duration-300 ${openSection === title ? 'rotate-180' : ''}`} 
@@ -115,7 +115,7 @@ export default function Footer() {
                 </button>
                 <div className={`mt-4 lg:mt-6 flex-col gap-[14px] lg:flex ${openSection === title ? 'flex' : 'hidden'}`}>
                   {links.map((link) => (
-                    <Link key={link.name} href={link.href} className="text-[14px] lg:text-[15px] font-medium text-white/80 hover:text-white hover:underline decoration-2 underline-offset-8 transition-all block">
+                    <Link key={link.name} href={link.href} className="text-[14px] lg:text-[15px] font-medium text-white/80 hover:text-white hover:underline decoration-2 underline-offset-8 transition-all block whitespace-nowrap">
                       {link.name}
                     </Link>
                   ))}
@@ -123,34 +123,34 @@ export default function Footer() {
               </div>
             ))}
 
-            {/* Subscribe & Social */}
-            <div className="flex flex-col gap-6 lg:gap-8 pt-4 lg:pt-0">
+            {/* 5. Subscribe & Social */}
+            <div className="flex flex-col gap-6 lg:gap-8 pt-4 lg:pt-0 lg:pl-4">
               <div className="flex flex-col gap-4">
-                <h4 className="text-[18px] lg:text-[20px] font-semibold text-white">{settings.about_text}</h4>
+                <h4 className="text-[18px] lg:text-[20px] font-medium text-white">{settings.about_text}</h4>
                 <div className="relative w-full max-w-[320px]">
                   <input 
                     type="email" 
                     placeholder="Enter your email" 
-                    className="w-full h-[48px] bg-transparent border border-white/40 rounded-[6px] px-4 pr-12 text-[15px] text-white placeholder:text-white/60 focus:outline-none focus:border-white transition-colors"
+                    className="w-full h-[48px] bg-transparent border border-white/60 rounded-[12px] px-4 pr-12 text-[15px] text-white placeholder:text-white/60 focus:outline-none focus:border-white transition-colors"
                   />
-                  <button className="absolute right-3 top-[14px] text-white/80 hover:text-white transition-colors flex items-center justify-center">
+                  <button className="absolute right-3 top-[12px] text-white/80 hover:text-white transition-colors flex items-center justify-center">
                     <Send size={20} strokeWidth={1.5} />
                   </button>
                 </div>
               </div>
               
               <div className="flex items-center gap-[12px]">
-                <a href={settings.social_facebook} target="_blank" rel="noopener noreferrer" className="w-[36px] h-[36px] bg-white text-[#1D5E20] rounded-full flex items-center justify-center hover:scale-110 transition-transform">
-                  <Facebook size={18} strokeWidth={2} fill="currentColor" />
+                <a href={settings.social_facebook} target="_blank" rel="noopener noreferrer" className="hover:scale-110 transition-transform block">
+                  <Image src="/Icon-1.svg" alt="Facebook" width={36} height={36} />
                 </a>
-                <a href={settings.social_twitter} target="_blank" rel="noopener noreferrer" className="w-[36px] h-[36px] bg-white text-[#1D5E20] rounded-full flex items-center justify-center hover:scale-110 transition-transform">
-                  <Twitter size={18} strokeWidth={2} fill="currentColor" />
+                <a href={settings.social_twitter} target="_blank" rel="noopener noreferrer" className="hover:scale-110 transition-transform block">
+                  <Image src="/Icon-5.svg" alt="X" width={36} height={36} />
                 </a>
-                <a href={settings.social_linkedin} target="_blank" rel="noopener noreferrer" className="w-[36px] h-[36px] bg-white text-[#1D5E20] rounded-full flex items-center justify-center hover:scale-110 transition-transform">
-                  <Linkedin size={18} strokeWidth={2} fill="currentColor" />
+                <a href={settings.social_linkedin} target="_blank" rel="noopener noreferrer" className="hover:scale-110 transition-transform block">
+                  <Image src="/Icon-3.svg" alt="LinkedIn" width={36} height={36} />
                 </a>
-                <a href={settings.social_instagram} target="_blank" rel="noopener noreferrer" className="w-[36px] h-[36px] bg-white text-[#1D5E20] rounded-full flex items-center justify-center hover:scale-110 transition-transform">
-                  <Instagram size={18} strokeWidth={2} fill="currentColor" />
+                <a href={settings.social_instagram} target="_blank" rel="noopener noreferrer" className="hover:scale-110 transition-transform block">
+                  <Image src="/Icon-4.svg" alt="Instagram" width={36} height={36} />
                 </a>
               </div>
             </div>

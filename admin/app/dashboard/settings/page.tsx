@@ -12,7 +12,24 @@ export default function AdminSettingsPage() {
     setLoading(true);
     try {
       const res = await getStoreSettings();
-      setSettings(res.data);
+      let data = res.data || [];
+      // Ensure show_sale_page is in the list
+      if (!data.find((s: any) => s.key === 'show_sale_page')) {
+        data.push({ 
+          key: 'show_sale_page', 
+          value: 'true', 
+          description: 'Whether to show the Sale page and menu item on the website.' 
+        });
+      }
+      // Ensure social_linkedin is in the list
+      if (!data.find((s: any) => s.key === 'social_linkedin')) {
+        data.push({ 
+          key: 'social_linkedin', 
+          value: '', 
+          description: 'LinkedIn profile URL for the footer.' 
+        });
+      }
+      setSettings(data);
     } catch (err) {
       console.error(err);
     } finally {
@@ -66,7 +83,20 @@ export default function AdminSettingsPage() {
                   <p className="text-xs text-gray-500 mt-0.5">{setting.description}</p>
                 </div>
                 <div className="flex-1 flex gap-3">
-                  {setting.key === 'contact_address' || setting.key === 'about_text' ? (
+                  {setting.key === 'show_sale_page' ? (
+                    <button
+                      onClick={() => handleUpdate(setting.key, setting.value === 'true' ? 'false' : 'true')}
+                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${
+                        setting.value === 'true' ? 'bg-primary' : 'bg-gray-300'
+                      }`}
+                    >
+                      <span
+                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                          setting.value === 'true' ? 'translate-x-6' : 'translate-x-1'
+                        }`}
+                      />
+                    </button>
+                  ) : setting.key === 'contact_address' || setting.key === 'about_text' ? (
                     <textarea
                       className="admin-input flex-1 min-h-[80px]"
                       defaultValue={setting.value}

@@ -22,9 +22,10 @@ interface Product {
 
 interface ProductCardProps {
   product: Product;
+  centered?: boolean;
 }
 
-export default function ProductCard({ product }: ProductCardProps) {
+export default function ProductCard({ product, centered = false }: ProductCardProps) {
   const { addItem: addCartItem } = useCartStore();
   const { hasItem, addItem: addWishlistItem, removeItem: removeWishlistItem } = useWishlistStore();
   const isOutOfStock = product.stock === 0;
@@ -73,7 +74,7 @@ export default function ProductCard({ product }: ProductCardProps) {
 
   return (
     <Link href={`/products/${product.slug}`} className="group block h-full">
-      <div className="h-full flex flex-col relative">
+      <div className={`h-full flex flex-col relative ${centered ? 'md:items-center' : ''}`}>
 
         {/* Image Container */}
         <div className="relative aspect-square overflow-hidden rounded-2xl bg-white w-full mb-4">
@@ -136,9 +137,9 @@ export default function ProductCard({ product }: ProductCardProps) {
         </div>
 
         {/* Info */}
-        <div className={`flex flex-col ${isOutOfStock ? 'opacity-60 grayscale' : ''}`}>
+        <div className={`flex flex-col ${centered ? 'md:items-center md:text-center' : ''} ${isOutOfStock ? 'opacity-60 grayscale' : ''}`}>
           {/* Tags */}
-          <div className="flex items-center gap-2 mb-3">
+          <div className={`flex items-center gap-2 mb-3 ${centered ? 'md:justify-center' : ''}`}>
             {tagBadges.map((tag, idx) => (
               <span
                 key={idx}
@@ -162,7 +163,7 @@ export default function ProductCard({ product }: ProductCardProps) {
           )}
 
           {/* Price Row */}
-          <div className="flex items-baseline gap-2">
+          <div className={`flex items-baseline gap-2 ${centered ? 'md:justify-center' : ''}`}>
             <span className="text-[18px] md:text-[22px] font-bold text-[#1A1A1A]">₹{product.price}</span>
             {product.mrp > product.price && (
               <span className="text-[13px] md:text-[16px] text-[#999] font-medium">

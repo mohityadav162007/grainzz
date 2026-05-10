@@ -6,7 +6,7 @@ import ProductCard from '@/components/products/ProductCard';
 import { getProducts } from '@/lib/api';
 import clsx from 'clsx';
 
-const productCategories = ['Puffed Rice', 'Healthy Chips', 'Grain Puffs'];
+const productCategories = ['Puffed Rice', 'Healthy Chips', 'Grainzz Puffs'];
 const bundleCategories = ['Combos', 'Gift Packs'];
 const sortOptions = [
   { label: 'Best Selling', value: 'best-selling' },

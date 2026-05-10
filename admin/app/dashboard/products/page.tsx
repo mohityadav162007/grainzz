@@ -1,23 +1,42 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { getProducts, deleteProduct } from '@/lib/api';
-import { Edit, Trash2, Plus, Search } from 'lucide-react';
+import { Edit, Trash2, Plus, Search, RefreshCw, Loader2 } from 'lucide-react';
 import Link from 'next/link';
+import { supabase } from '@/lib/supabase';
 
 export default function AdminProductsPage() {
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const [activating, setActivating] = useState(false);
+
+  const inactiveCount = products.filter(p => !p.is_active).length;
 
   const fetchProducts = async () => {
     setLoading(true);
     try {
-      const res = await getProducts();
-      setProducts(res.data);
+      const res = await getProducts({ limit: 1000 }); // Fetch all to see inactive ones too
+      setProducts(res.data || []);
     } catch (err) {
       console.error(err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleActivateAll = async () => {
+    if (!confirm('Reactivate all inactive products and make them visible on the website?')) return;
+    setActivating(true);
+    try {
+      const { error } = await supabase.from('products').update({ is_active: true }).eq('is_active', false);
+      if (error) throw error;
+      alert('All products reactivated!');
+      await fetchProducts();
+    } catch (err: any) {
+      alert('Failed to reactivate: ' + err.message);
+    } finally {
+      setActivating(false);
     }
   };
 
@@ -45,11 +64,31 @@ export default function AdminProductsPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
         <div>
           <h1 className="text-2xl font-black text-gray-900">Products</h1>
-          <p className="text-gray-500 text-sm mt-1">Manage your product catalog</p>
+          <div className="flex items-center gap-4 mt-1">
+            <p className="text-gray-500 text-sm">Total: {products.length}</p>
+            {inactiveCount > 0 && (
+              <p className="text-amber-600 text-sm font-bold flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
+                {inactiveCount} Inactive Products
+              </p>
+            )}
+          </div>
         </div>
-        <Link href="/dashboard/products/new" className="admin-btn self-start sm:self-auto">
-          <Plus size={18} /> Add Product
-        </Link>
+        <div className="flex items-center gap-3">
+          {inactiveCount > 0 && (
+            <button 
+              onClick={handleActivateAll}
+              disabled={activating}
+              className="admin-btn bg-amber-500 hover:bg-amber-600 border-amber-600 text-white"
+            >
+              {activating ? <Loader2 size={18} className="animate-spin" /> : <RefreshCw size={18} />}
+              Activate All
+            </button>
+          )}
+          <Link href="/dashboard/products/new" className="admin-btn self-start sm:self-auto">
+            <Plus size={18} /> Add Product
+          </Link>
+        </div>
       </div>
 
       <div className="admin-card overflow-hidden">

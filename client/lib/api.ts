@@ -307,7 +307,7 @@ export const getAvailabilityLogos = async () => {
   };
 
   export const getProductById = async (id: string) => {
-    const { data, error } = await supabase.from('products').select('*').eq('id', id).single();
+    const { data, error } = await supabase.from('products').select('*').eq('id', id).eq('is_active', true).single();
     if (error) return null;
     return sanitizeProduct(data);
   };

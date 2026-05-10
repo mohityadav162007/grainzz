@@ -159,7 +159,7 @@ export const createProduct = async (formData: FormData) => {
   const category = formData.get('category') as string;
   const stock = Number(formData.get('stock') || 0);
   const isSale = formData.get('isSale') === 'true';
-  const isActive = formData.get('isActive') !== 'false';
+  const isActive = formData.get('isActive') === 'true';
   const tagsStr = formData.get('tags') as string;
   const tags = tagsStr ? tagsStr.split(',').map((t) => t.trim()) : [];
   const nutritionTableStr = formData.get('nutritionTable') as string;
@@ -246,10 +246,20 @@ export const updateProduct = async (id: string, formData: FormData) => {
   if (stock !== null) updates.stock = Number(stock);
 
   const isSale = formData.get('isSale');
-  if (isSale !== null) updates.is_sale = isSale === 'true';
+  if (isSale !== null) {
+    updates.is_sale = isSale === 'true';
+  } else if (formData.has('name')) {
+    // If name is present, it's a product form submission. 
+    // Checkboxes are missing from FormData when unchecked.
+    updates.is_sale = false;
+  }
 
   const isActive = formData.get('isActive');
-  if (isActive !== null) updates.is_active = isActive === 'true';
+  if (isActive !== null) {
+    updates.is_active = isActive === 'true';
+  } else if (formData.has('name')) {
+    updates.is_active = false;
+  }
 
   const tagsStr = formData.get('tags') as string;
   if (tagsStr) updates.tags = tagsStr.split(',').map((t) => t.trim());
@@ -1237,7 +1247,7 @@ export const getStoreSettings = async () => {
 };
 
 export const updateStoreSetting = async (key: string, value: string) => {
-  const { error } = await supabase.from('store_settings').update({ value }).eq('key', key);
+  const { error } = await supabase.from('store_settings').upsert({ key, value }, { onConflict: 'key' });
   if (error) throw new Error(error.message);
   return { success: true };
 };

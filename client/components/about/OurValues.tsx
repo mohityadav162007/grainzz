@@ -5,18 +5,18 @@ import Image from 'next/image';
 const values = [
   {
     title: 'We are Bold',
-    desc: 'We refuse to settle for bland flavors or traditional deep-frying methods. We\'re here to disrupt the snack aisle. Our flavors are punchy, our mission is ambitious, and we are unapologetic about our goal to prove that you don\'t have to sacrifice "zing" to stay healthy.',
-    image: '/values-bold.jpg',
+    desc: 'We are not here to make healthy snacking feel safe, plain or forgettable. Grainzz stands for bold flavours, bold choices and the courage to give familiar grains a completely new identity.',
+    image: '/value-bold.png',
   },
   {
-    title: 'We are Authentic',
-    desc: 'We believe the best snacks don\'t come from a lab, but from the earth. Our journey began with a commitment to stay true to our Indian roots. By using real spices and staying away from "nature-identical" substitutes, we ensure that every bag of Grainzz offers an experience that is as genuine as the grains we source.',
-    image: '/values-authentic.jpg',
+    title: 'We are Honest',
+    desc: 'We believe people do not need complicated snack promises. They need products that taste good, feel lighter and are built with better ingredient choices. Our communication stays clear, simple and real.',
+    image: '/value-authentic.png',
   },
   {
     title: 'We are Mindful',
-    desc: 'Every decision we make is filtered through a lens of conscious responsibility. We are mindful of the impact our snacks have on your wellness, choosing nutrient-dense ingredients that keep you light and energized. Beyond the bag, we are conscious of our footprint, supporting drought-resilient supergrains that are kinder to our planet.',
-    image: '/values-mindful.jpg',
+    desc: 'Every Grainzz product is built around everyday snacking moments. We think about what people actually eat, when they eat it and how to make that choice better without making it difficult.',
+    image: '/value-mindful.png',
   },
 ];
 

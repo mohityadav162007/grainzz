@@ -5,33 +5,33 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 const testimonials = [
   {
-    quote: "Finally, a snack that doesn't make me choose between my health and my cravings! Grainzz has become my go-to for mid-day hunger. I love that it's roasted and made from millets!",
-    name: 'Sophia Maren',
-    role: 'Director of Product',
+    quote: "I tried Grainzz because I wanted something different from regular chips. The ragi chips surprised me the most. They have proper masala flavour and still feel much lighter than my usual evening snacks.",
+    name: 'Aarav Mehta',
+    role: 'Delhi',
     avatar: '/avatar-customer.jpg',
   },
   {
-    quote: "Finally, a snack that doesn't make me choose between my health and my cravings! Grainzz has become my go-to for mid-day hunger. I love that it's roasted and made from millets!",
-    name: 'Sophia Maren',
-    role: 'Director of Product',
+    quote: "The Bajra Puffs became my work desk snack very quickly. They are easy to share, not too heavy and the smoky flavour is exactly the kind of thing I like during office breaks.",
+    name: 'Ritika Sharma',
+    role: 'Gurugram',
     avatar: '/avatar-customer.jpg',
   },
   {
-    quote: "Finally, a snack that doesn't make me choose between my health and my cravings! Grainzz has become my go-to for mid-day hunger. I love that it's roasted and made from millets!",
-    name: 'Sophia Maren',
-    role: 'Director of Product',
+    quote: "I ordered the Beetroot Chips out of curiosity, but they actually tasted better than I expected. It is nice to see a snack that feels different without trying too hard.",
+    name: 'Sneha Nair',
+    role: 'Bengaluru',
     avatar: '/avatar-customer.jpg',
   },
   {
-    quote: "Finally, a snack that doesn't make me choose between my health and my cravings! Grainzz has become my go-to for mid-day hunger. I love that it's roasted and made from millets!",
-    name: 'Sophia Maren',
-    role: 'Director of Product',
+    quote: "The combo box made sense for my family because everyone picked a different favourite. The jars are convenient and the flavours do not feel like typical diet snacks.",
+    name: 'Kunal Arora',
+    role: 'Noida',
     avatar: '/avatar-customer.jpg',
   },
   {
-    quote: "Finally, a snack that doesn't make me choose between my health and my cravings! Grainzz has become my go-to for mid-day hunger. I love that it's roasted and made from millets!",
-    name: 'Sophia Maren',
-    role: 'Director of Product',
+    quote: "The puffed rice packets are simple, light and very easy to finish. Royal Mint Blast was my favourite because it feels fresh but still has that chatpata snack feeling.",
+    name: 'Nidhi Kapoor',
+    role: 'Mumbai',
     avatar: '/avatar-customer.jpg',
   },
 ];

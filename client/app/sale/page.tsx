@@ -5,7 +5,7 @@ import { SlidersHorizontal, ChevronDown, ChevronUp, X } from 'lucide-react';
 import ProductCard from '@/components/products/ProductCard';
 import { getProducts } from '@/lib/api';
 
-const productCategories = ['Puffed Rice', 'Healthy Chips', 'Grain Puffs'];
+const productCategories = ['Puffed Rice', 'Healthy Chips', 'Grainzz Puffs'];
 const bundleCategories = ['Combos', 'Gift Packs'];
 const discountOptions = ['Upto 40% off', 'Upto 10% off'];
 const sortOptions = [
@@ -28,6 +28,7 @@ function SaleContent() {
   const [products, setProducts] = useState<any[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [showSale, setShowSale] = useState<boolean | null>(null);
   const [page, setPage] = useState(1);
   const [sort, setSort] = useState('best-selling');
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
@@ -46,6 +47,16 @@ function SaleContent() {
   const fetchProducts = useCallback(async () => {
     setLoading(true);
     try {
+      // Check visibility first
+      const { getStoreSettings } = await import('@/lib/api');
+      const settings = await getStoreSettings();
+      if (settings.show_sale_page === 'false') {
+        setShowSale(false);
+        window.location.href = '/products';
+        return;
+      }
+      setShowSale(true);
+
       const params: Record<string, string> = { page: String(page), limit: '9', sort, isSale: 'true' };
       if (selectedCategories.length === 1) params.category = selectedCategories[0];
       if (search) params.search = search;

@@ -140,7 +140,7 @@ export default function PrivacyPolicyPage() {
             <h2 className="text-[22px] md:text-[24px] font-bold text-brand-black mb-[12px] leading-[1.3]">Contact Us</h2>
             <p>
               If you have any questions about this Privacy Policy, please contact us at{' '}
-              <a href="mailto:support@grainzz.in" className="text-brand-green underline hover:no-underline">support@grainzz.in</a>.
+              <a href="mailto:contact@grainzzindia.com" className="text-brand-green underline hover:no-underline">contact@grainzzindia.com</a>.
             </p>
           </section>
 

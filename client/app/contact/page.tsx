@@ -1,8 +1,8 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Phone, Mail, MapPin, ArrowRight, HelpCircle, RefreshCw, Truck, Loader2 } from 'lucide-react';
 import Link from 'next/link';
-import { submitEnquiry } from '@/lib/api';
+import { submitEnquiry, getStoreSettings } from '@/lib/api';
 
 const helpCards = [
   { icon: HelpCircle, title: 'Support', desc: 'Already purchased and have a question about your product? Try our FAQs.', cta: 'FAQs', href: '/faqs' },
@@ -15,6 +15,17 @@ export default function ContactPage() {
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [settings, setSettings] = useState<Record<string, string>>({
+    contact_phone: '96262425 , 93756546',
+    contact_email: 'katariavibhor9@gmail.com',
+    contact_address: 'B-291, MIG Flats, East of Loni road, Delhi, Delhi - 110093, India',
+  });
+
+  useEffect(() => {
+    getStoreSettings().then(data => {
+      if (data) setSettings(prev => ({ ...prev, ...data }));
+    }).catch(console.error);
+  }, []);
 
   const validate = () => {
     const errs: Record<string, string> = {};
@@ -42,56 +53,75 @@ export default function ContactPage() {
   };
 
   return (
-    <div className="bg-white min-h-screen">
-      {/* Header */}
-      <div className="bg-[#FCF9F2] py-[80px] text-center w-full">
-        <p className="text-[16px] font-bold text-brand-green uppercase tracking-widest mb-[16px] font-sans">Contact Us</p>
-        <h1 className="text-[40px] md:text-[64px] font-bold text-brand-black font-brand tracking-tight">How can we help?</h1>
-      </div>
+    <div className="bg-[#FBF5EB] min-h-screen">
+      {/* Top Section with Cards */}
+      <div className="pt-[80px] pb-[100px]">
+        {/* Header */}
+        <div className="text-center w-full mb-[60px]">
+          <p className="text-[16px] font-bold text-brand-green uppercase tracking-widest mb-[16px] font-sans">Contact Us</p>
+          <h1 className="text-[40px] md:text-[64px] font-bold text-brand-black font-brand tracking-tight">How can we help?</h1>
+        </div>
 
-      {/* Help Cards */}
-      <section className="max-w-[1440px] mx-auto px-4 md:px-[60px] lg:px-[120px] py-[60px] md:py-[80px] grid md:grid-cols-3 gap-[24px]">
-        {helpCards.map(({ icon: Icon, title, desc, cta, href }) => (
-          <div key={title} className="bg-white border border-[#EAEAEA] rounded-[24px] p-[40px] flex flex-col items-center text-center shadow-[0_4px_20px_rgba(0,0,0,0.03)] hover:border-brand-green transition-colors">
-            <div className="w-[64px] h-[64px] bg-[#EEFBDC] rounded-full flex items-center justify-center mb-[24px]">
-              <Icon size={28} className="text-brand-green" />
+        {/* Help Cards */}
+        <section className="max-w-[1200px] mx-auto px-4 md:px-[60px] lg:px-[80px] grid md:grid-cols-3 gap-[24px]">
+          {helpCards.map(({ icon: Icon, title, desc, cta, href }) => (
+            <div key={title} className="bg-white rounded-[24px] p-[40px] flex flex-col items-center text-center shadow-[0_4px_20px_rgba(0,0,0,0.03)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.06)] transition-all h-full">
+              <div className="w-[64px] h-[64px] rounded-full border border-[#EAEAEA] flex items-center justify-center mb-[24px]">
+                <Icon size={28} className="text-brand-green" />
+              </div>
+              <h3 className="text-[24px] font-bold mb-[16px] text-brand-black font-sans">{title}</h3>
+              <p className="text-[15px] text-[#666666] mb-[32px] leading-[1.6] font-medium font-sans max-w-[280px] flex-grow">{desc}</p>
+              <Link href={href} className="mt-auto inline-flex items-center gap-[12px] border border-[#CCCCCC] text-[#333] font-bold pl-[24px] pr-[6px] py-[6px] rounded-full hover:bg-brand-green hover:border-brand-green hover:text-white transition-all text-[14px] group/btn">
+                {cta} 
+                <div className="w-[32px] h-[32px] bg-brand-green rounded-full flex items-center justify-center text-white group-hover/btn:bg-white group-hover/btn:text-brand-green transition-colors">
+                  <ArrowRight size={16} />
+                </div>
+              </Link>
             </div>
-            <h3 className="text-[24px] font-bold mb-[16px] text-brand-black font-sans">{title}</h3>
-            <p className="text-[16px] text-[#666666] mb-[32px] leading-[1.6] font-medium font-sans">{desc}</p>
-            <Link href={href} className="inline-flex items-center gap-[8px] border-2 border-brand-green text-brand-green font-bold px-[24px] py-[12px] rounded-full hover:bg-brand-green hover:text-white transition-all text-[15px]">
-              {cta} <ArrowRight size={16} />
-            </Link>
-          </div>
-        ))}
-      </section>
+          ))}
+        </section>
+      </div>
 
       {/* Contact Form + Details */}
       <section className="max-w-[1440px] mx-auto px-4 md:px-[60px] lg:px-[120px] pb-[100px]">
         <div className="grid md:grid-cols-[1fr_1.2fr] gap-[60px] lg:gap-[100px] items-start">
           {/* Details */}
-          <div className="bg-[#FCF9F2] p-[40px] md:p-[60px] rounded-[32px]">
+          <div className="bg-white p-[40px] md:p-[60px] rounded-[32px] shadow-[0_10px_40px_rgba(0,0,0,0.04)] border border-white">
             <h2 className="text-[32px] md:text-[40px] font-bold mb-[24px] text-brand-black font-brand tracking-tight">We would love to talk!</h2>
             <p className="text-[16px] text-[#666666] leading-[1.6] mb-[48px] font-medium font-sans">
               Got a question, feedback, or a business inquiry? Drop us a line. We are here to help make your snacking experience better!
             </p>
             <div className="space-y-[32px] text-[16px] text-brand-black font-bold font-sans">
               <div className="flex items-center gap-[16px]">
-                <div className="w-[48px] h-[48px] bg-white rounded-full flex items-center justify-center shadow-sm">
+                <div className="w-[48px] h-[48px] bg-[#FBF5EB] rounded-full flex items-center justify-center shadow-sm">
                   <Phone size={20} className="text-brand-green" />
                 </div>
-                <span>96262425 , 9375 6546</span>
+                <div className="flex flex-col">
+                  {settings.contact_phone.split(',').map((num, i) => (
+                    <a key={i} href={`tel:${num.trim()}`} className="hover:text-brand-green transition-colors">{num.trim()}</a>
+                  ))}
+                </div>
               </div>
               <div className="flex items-center gap-[16px]">
-                <div className="w-[48px] h-[48px] bg-white rounded-full flex items-center justify-center shadow-sm">
+                <div className="w-[48px] h-[48px] bg-[#FBF5EB] rounded-full flex items-center justify-center shadow-sm">
                   <Mail size={20} className="text-brand-green" />
                 </div>
-                <span>katariavibhor9@gmail.com</span>
+                <a href={`mailto:${settings.contact_email.trim()}`} className="hover:text-brand-green transition-colors">
+                  {settings.contact_email.trim()}
+                </a>
               </div>
               <div className="flex items-start gap-[16px]">
-                <div className="w-[48px] h-[48px] bg-white rounded-full flex items-center justify-center shadow-sm flex-shrink-0">
+                <div className="w-[48px] h-[48px] bg-[#FBF5EB] rounded-full flex items-center justify-center shadow-sm flex-shrink-0">
                   <MapPin size={20} className="text-brand-green" />
                 </div>
-                <span className="mt-[12px]">B-291, MIG Flats, East of Loni road, Delhi, Delhi – 110093, India</span>
+                <a 
+                  href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(settings.contact_address)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-[12px] hover:text-brand-green transition-colors"
+                >
+                  {settings.contact_address}
+                </a>
               </div>
             </div>
           </div>

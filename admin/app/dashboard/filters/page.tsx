@@ -17,7 +17,7 @@ export default function FilterManagementPage() {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const res = await getProducts({ limit: 1000 });
+      const res = await getProducts({ limit: '1000' });
       setAllProducts(res.data || []);
     } catch (err) {
       console.error(err);

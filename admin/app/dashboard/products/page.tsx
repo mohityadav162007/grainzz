@@ -16,7 +16,7 @@ export default function AdminProductsPage() {
   const fetchProducts = async () => {
     setLoading(true);
     try {
-      const res = await getProducts({ limit: 1000 }); // Fetch all to see inactive ones too
+      const res = await getProducts({ limit: '1000' }); // Fetch all to see inactive ones too
       setProducts(res.data || []);
     } catch (err) {
       console.error(err);

@@ -8,6 +8,8 @@ export const siteConfig = {
   links: {
     instagram: 'https://instagram.com/grainzz',
     facebook: 'https://facebook.com/grainzz',
+    amazon: 'https://www.amazon.in/stores/GRAINZZ/page/D592ACFC-CB1C-4ED5-9636-89B17E7C955C',
+    blinkit: 'https://blinkit.com/dc/?collection_uuid=',
   },
 };
 
@@ -87,7 +89,7 @@ export function generateOrganizationSchema() {
     name: siteConfig.name,
     url: siteConfig.url,
     logo: `${siteConfig.url}/image-2@2x.png`,
-    sameAs: [siteConfig.links.instagram, siteConfig.links.facebook],
+    sameAs: Object.values(siteConfig.links),
   };
 }
 

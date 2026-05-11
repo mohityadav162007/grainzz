@@ -25,7 +25,7 @@ export const FAQS = [
   },
   {
     question: "Where can I buy Grainzz?",
-    answer: "Grainzz is available online through the official website, Amazon, Blinkit and MyStore. Availability may vary by product and location."
+    answer: "Grainzz is available online through our official website, Amazon (https://www.amazon.in/stores/GRAINZZ/page/D592ACFC-CB1C-4ED5-9636-89B17E7C955C), Blinkit, and MyStore. Availability may vary by product and location."
   },
   {
     question: "Why does Grainzz talk so much about puffed rice?",

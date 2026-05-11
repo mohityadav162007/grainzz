@@ -70,10 +70,10 @@ export default function BenefitsSection() {
             <div key={i} className="flex items-center">
               <span className="text-[16px] md:text-[18px] font-bold tracking-wide mr-[16px]">Also Available on:</span>
               <div className="flex items-center gap-[24px] mx-[16px]">
-                <a href="#" target="_blank" rel="noopener noreferrer" className="hover:scale-105 transition-transform cursor-pointer block">
+                <a href="https://www.amazon.in/stores/GRAINZZ/page/D592ACFC-CB1C-4ED5-9636-89B17E7C955C?lp_asin=B0G1TKBT28&ref_=cm_sw_r_ud_ast_store_XFZ37JTDT6VE7CQS5HQH&store_ref=bl_ast_dp_brandlogo_sto" target="_blank" rel="noopener noreferrer" className="hover:scale-105 transition-transform cursor-pointer block">
                   <img src="/Amazon-logo-1.svg" alt="Amazon" className="h-[28px] md:h-[32px] object-contain invert brightness-0" />
                 </a>
-                <a href="#" target="_blank" rel="noopener noreferrer" className="hover:scale-105 transition-transform cursor-pointer block">
+                <a href="https://blinkit.com/prn/x/prid/766665" target="_blank" rel="noopener noreferrer" className="hover:scale-105 transition-transform cursor-pointer block">
                   <img src="/blinkit-logo.svg" alt="Blinkit" className="h-[28px] md:h-[32px] object-contain" />
                 </a>
               </div>

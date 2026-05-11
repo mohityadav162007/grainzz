@@ -26,9 +26,14 @@ export function getSupabaseAdmin(): SupabaseClient {
   if (!supabaseAdmin) {
     const url = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || '';
     const key = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
-    if (!url || !key) {
-      throw new Error('Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY');
+    
+    if (!url) {
+      throw new Error('Environment variable SUPABASE_URL or NEXT_PUBLIC_SUPABASE_URL is missing.');
     }
+    if (!key) {
+      throw new Error('Environment variable SUPABASE_SERVICE_ROLE_KEY is missing.');
+    }
+
     supabaseAdmin = createClient(url, key, {
       auth: { autoRefreshToken: false, persistSession: false },
     });

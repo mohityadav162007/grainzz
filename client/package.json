@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "prebuild": "env | grep -E 'SUPABASE_|NEXT_PUBLIC_|PHONEPE_' > .env.production || true",
     "build": "next build",
     "start": "next start",
     "lint": "next lint"

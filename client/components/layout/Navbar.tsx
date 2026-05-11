@@ -155,7 +155,7 @@ export default function Navbar() {
 
             {/* LAYER 2 — Compact: Nav left | Logo center | Icons right */}
             <div className="hdr-layer hdr-compact">
-              <div className="shrink-0 flex items-center gap-8">
+              <div className="flex-1 flex items-center justify-start gap-8">
                 <Link href="/" className={clsx('text-[#222] hover:text-brand-green transition-colors', pathname === '/' && 'text-brand-green')}>
                   <Home size={22} strokeWidth={2.5} />
                 </Link>
@@ -163,12 +163,12 @@ export default function Navbar() {
                 <Link href="/about" className={clsx('text-[15px] font-medium transition-all relative group', pathname === '/about' ? 'text-brand-green underline decoration-2 underline-offset-8' : 'text-[#222] hover:underline decoration-2 underline-offset-8')}>About Us</Link>
                 <Link href="/contact" className={clsx('text-[15px] font-medium transition-all relative group', pathname === '/contact' ? 'text-brand-green underline decoration-2 underline-offset-8' : 'text-[#222] hover:underline decoration-2 underline-offset-8')}>Contact Us</Link>
               </div>
-              <div className="flex-1 flex justify-center">
+              <div className="shrink-0 flex justify-center">
                 <Link href="/" className="flex items-center">
                   <Image src="/image-2@2x.png" alt="Grainzz" width={180} height={50} className="object-contain h-[42px] w-auto" priority />
                 </Link>
               </div>
-              <div className="shrink-0 flex items-center gap-7">
+              <div className="flex-1 flex items-center justify-end gap-7">
                 <button onClick={() => setIsSearchOpen(!isSearchOpen)} className="text-[#222] hover:text-primary transition-colors"><Search size={24} strokeWidth={2} /></button>
                 <Link href="/account" onClick={handleAccountClick} className="text-[#222] hover:text-primary transition-colors"><User size={24} strokeWidth={2} /></Link>
                 <button onClick={openCart} className="relative text-[#222] hover:text-primary transition-colors">

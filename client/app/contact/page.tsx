@@ -6,8 +6,8 @@ import { submitEnquiry, getStoreSettings } from '@/lib/api';
 
 const helpCards = [
   { icon: HelpCircle, title: 'Support', desc: 'Already purchased and have a question about your product? Try our FAQs.', cta: 'FAQs', href: '/faqs' },
-  { icon: RefreshCw, title: 'Returns', desc: 'We understand things don\'t always work out. Visit our returns policy for more.', cta: 'Return Policy', href: '/policies' },
-  { icon: Truck, title: 'Shipping', desc: 'Need an idea on how long delivery may take, see our policy?', cta: 'Shipping Policy', href: '/policies' },
+  { icon: RefreshCw, title: 'Returns', desc: 'We understand things don\'t always work out. Visit our returns policy for more.', cta: 'Return Policy', href: '/returns' },
+  { icon: Truck, title: 'Shipping', desc: 'Need an idea on how long delivery may take, see our policy?', cta: 'Shipping Policy', href: '/shipping' },
 ];
 
 export default function ContactPage() {
@@ -115,7 +115,7 @@ export default function ContactPage() {
                   <MapPin size={20} className="text-brand-green" />
                 </div>
                 <a 
-                  href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(settings.contact_address)}`}
+                  href="https://share.google/4bpZne93ifNNwSOVl"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="mt-[12px] hover:text-brand-green transition-colors"

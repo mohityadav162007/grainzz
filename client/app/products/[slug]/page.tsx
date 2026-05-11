@@ -7,7 +7,7 @@ import { ChevronRight, ChevronLeft, Plus, Minus, Star, Check, X, Upload, Loader2
 import { getProductBySlug, getProductReviews, submitProductReview, uploadReviewImage, getRelatedProductsSection, submitStockNotification } from '@/lib/api';
 import { useCartStore } from '@/store/cartStore';
 import ProductCard from '@/components/products/ProductCard';
-import ProductTestimonialsSection from '@/components/products/ProductTestimonialsSection';
+import ProductTestimonialsSection from '@/components/about/CustomerTestimonials';
 import { supabase } from '@/lib/supabase';
 
 export default function ProductDetailPage() {

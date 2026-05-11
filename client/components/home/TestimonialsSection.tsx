@@ -108,7 +108,7 @@ export default function TestimonialsSection() {
     if (!reviews || reviews.length <= 1) return;
     const timer = setInterval(() => {
       nextSlide();
-    }, 3000);
+    }, 5000);
     return () => clearInterval(timer);
   }, [reviews, nextSlide]);
 
@@ -131,17 +131,17 @@ export default function TestimonialsSection() {
 
   const variants = {
     enter: (direction: number) => ({
-      x: direction > 0 ? 500 : -500,
+      y: 20,
       opacity: 0
     }),
     center: {
       zIndex: 1,
-      x: 0,
+      y: 0,
       opacity: 1
     },
     exit: (direction: number) => ({
       zIndex: 0,
-      x: direction < 0 ? 500 : -500,
+      y: -20,
       opacity: 0
     })
   };
@@ -173,8 +173,8 @@ export default function TestimonialsSection() {
                 animate="center"
                 exit="exit"
                 transition={{
-                  x: { type: "spring", stiffness: 300, damping: 30 },
-                  opacity: { duration: 0.2 }
+                  y: { type: "spring", stiffness: 100, damping: 20 },
+                  opacity: { duration: 0.4 }
                 }}
               >
                 {product ? (
@@ -198,8 +198,8 @@ export default function TestimonialsSection() {
               animate="center"
               exit="exit"
               transition={{
-                x: { type: "spring", stiffness: 300, damping: 30 },
-                opacity: { duration: 0.2 }
+                y: { type: "spring", stiffness: 100, damping: 20 },
+                opacity: { duration: 0.4 }
               }}
               className="h-full flex flex-col justify-between"
             >

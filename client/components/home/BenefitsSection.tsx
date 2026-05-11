@@ -70,8 +70,12 @@ export default function BenefitsSection() {
             <div key={i} className="flex items-center">
               <span className="text-[16px] md:text-[18px] font-bold tracking-wide mr-[16px]">Also Available on:</span>
               <div className="flex items-center gap-[24px] mx-[16px]">
-                <img src="/Amazon-logo-1.svg" alt="Amazon" className="h-[28px] md:h-[32px] object-contain invert brightness-0" />
-                <img src="/blinkit-logo.svg" alt="Blinkit" className="h-[28px] md:h-[32px] object-contain" />
+                <a href="#" target="_blank" rel="noopener noreferrer" className="hover:scale-105 transition-transform cursor-pointer block">
+                  <img src="/Amazon-logo-1.svg" alt="Amazon" className="h-[28px] md:h-[32px] object-contain invert brightness-0" />
+                </a>
+                <a href="#" target="_blank" rel="noopener noreferrer" className="hover:scale-105 transition-transform cursor-pointer block">
+                  <img src="/blinkit-logo.svg" alt="Blinkit" className="h-[28px] md:h-[32px] object-contain" />
+                </a>
               </div>
               <span className="mx-[24px] text-[18px] md:text-[24px] text-white">✦</span>
             </div>

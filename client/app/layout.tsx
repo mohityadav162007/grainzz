@@ -21,6 +21,9 @@ export const metadata: Metadata = {
     description: 'Healthy, roasted, guilt-free grain snacks. Shop now.',
     type: 'website',
   },
+  icons: {
+    icon: '/image-2@2x.png',
+  },
 };
 
 import Script from 'next/script';

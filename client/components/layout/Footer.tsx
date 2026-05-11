@@ -88,7 +88,7 @@ export default function Footer() {
                 <div className="flex items-start gap-4">
                   <MapPin size={22} className="shrink-0 text-white mt-1" strokeWidth={1.5} />
                   <a 
-                    href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(settings.contact_address)}`} 
+                    href="https://share.google/4bpZne93ifNNwSOVl" 
                     target="_blank" 
                     rel="noopener noreferrer"
                     className="leading-[1.5] hover:text-white transition-colors"

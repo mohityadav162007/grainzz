@@ -14,21 +14,21 @@ export default function TermsPage() {
           Terms & Conditions
         </h1>
         <p className="text-[13px] text-[#888] text-center mb-[40px] md:mb-[48px]">
-          Last updated: May 10, 2026
+          Last updated: May 11, 2026
         </p>
 
         {/* Content */}
-        <div className="space-y-[32px] md:space-y-[40px] text-[14px] md:text-[15px] leading-[1.75] text-[#333] font-normal">
+        <div className="space-y-[32px] text-[14px] md:text-[15px] leading-[1.75] text-[#333] font-normal">
           <section>
             <p>
-              Welcome to Grainzz Gifting, operated by Vitalicious India (“we”, “our”, “us”). By visiting our website <a href="https://www.vitaliciousindia.com" className="text-brand-green underline">www.vitaliciousindia.com</a> or making a purchase, you agree to the following Terms & Conditions. Please read them carefully before using our website or placing an order.
+              Welcome to Grainzz Gifting, operated by GRAINZZ India (“we”, “our”, “us”). By visiting our website <a href="https://www.grainzzindia.com" className="text-brand-green underline">www.grainzzindia.com</a> or making a purchase, you agree to the following Terms & Conditions. Please read them carefully before using our website or placing an order.
             </p>
           </section>
 
           <section>
             <h2 className="text-[20px] font-bold text-brand-black mb-[12px]">1. General Information</h2>
             <p>
-              This website is operated by Vitalicious India, the parent company of Grainzz. Throughout the site, the terms “we”, “us”, and “our” refer to Vitalicious India. By accessing or purchasing from our site, you agree to be bound by these Terms of Service, including any additional terms, conditions, and policies referenced herein.
+              This website is operated by GRAINZZ India. Throughout the site, the terms “we”, “us”, and “our” refer to Grainzz India. By accessing or purchasing from our site, you agree to be bound by these Terms of Service, including any additional terms, conditions, and policies referenced herein.
             </p>
           </section>
 
@@ -63,7 +63,7 @@ export default function TermsPage() {
           <section>
             <h2 className="text-[20px] font-bold text-brand-black mb-[12px]">6. Intellectual Property</h2>
             <p>
-              All content on this website, including images, text, product names, and designs, are the exclusive property of Vitalicious India and Grainzz. Unauthorized use, reproduction, or distribution of any material is strictly prohibited.
+              All content on this website, including images, text, product names, and designs, are the exclusive property of Grainzz India. Unauthorized use, reproduction, or distribution of any material is strictly prohibited.
             </p>
           </section>
 

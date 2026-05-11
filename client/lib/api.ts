@@ -586,15 +586,54 @@ export const getShippingRates = async (params: {
   subtotal: number;
   has_combo: boolean;
 }) => {
-  const { data, error } = await supabase.functions.invoke('shiprocket-orders', {
-    body: { action: 'check-serviceability', ...params },
-  });
-  if (error) {
-    console.error('getShippingRates error:', error);
-    // Return a fallback so checkout doesn't break
-    return { success: true, serviceable: true, shipping_charge: params.has_combo ? 99 : 50, estimated_delivery: '', courier_name: '', free_shipping: false, fallback: true };
+  try {
+    const { data, error } = await supabase.functions.invoke('shiprocket-orders', {
+      body: { action: 'check-serviceability', ...params },
+    });
+
+    if (error) {
+      console.error('getShippingRates invocation error:', error);
+      // Return a fallback so checkout doesn't break
+      return { 
+        success: true, 
+        serviceable: true, 
+        shipping_charge: params.has_combo ? 99 : 50, 
+        estimated_delivery: '', 
+        courier_name: '', 
+        free_shipping: false, 
+        fallback: true,
+        error: error.message
+      };
+    }
+    
+    if (!data || data.error) {
+       console.warn('getShippingRates API error:', data?.error || 'Empty response');
+       return { 
+        success: true, 
+        serviceable: true, 
+        shipping_charge: params.has_combo ? 99 : 50, 
+        estimated_delivery: '', 
+        courier_name: '', 
+        free_shipping: false, 
+        fallback: true,
+        error: data?.error
+      };
+    }
+
+    return data;
+  } catch (err: any) {
+    console.error('getShippingRates network error:', err);
+    return { 
+      success: true, 
+      serviceable: true, 
+      shipping_charge: params.has_combo ? 99 : 50, 
+      estimated_delivery: '', 
+      courier_name: '', 
+      free_shipping: false, 
+      fallback: true,
+      error: err.message
+    };
   }
-  return data;
 };
 
 // ─── Saved Addresses ─────────────────────────────────────────────────────────

@@ -151,6 +151,12 @@ export default function CheckoutPage() {
     if (!validateForm()) return;
     setShippingLoading(true);
     setError('');
+    
+    // Create a timeout promise to prevent infinite loading
+    const timeoutPromise = new Promise((_, reject) => 
+      setTimeout(() => reject(new Error('Shipping calculation timed out. Please try again.')), 12000)
+    );
+
     try {
       // Calculate total weight from product weights
       let totalWeight = 0;
@@ -161,19 +167,28 @@ export default function CheckoutPage() {
       // Minimum weight 0.5 kg
       totalWeight = Math.max(totalWeight, 0.5);
 
-      const rates = await getShippingRates({
+      const ratesPromise = getShippingRates({
         delivery_pincode: form.pincode,
         weight: totalWeight,
         subtotal: displaySubtotal,
         has_combo: hasCombo,
       });
 
+      // Race the API call against the timeout
+      const rates = await Promise.race([ratesPromise, timeoutPromise]) as any;
+
+      if (rates.fallback && rates.error) {
+        console.warn('Using fallback shipping rates due to API error:', rates.error);
+        // We still proceed, but maybe log it
+      }
+
       setShippingCharge(rates.shipping_charge || 0);
       setEstimatedDelivery(rates.estimated_delivery || '');
       setFreeShipping(rates.free_shipping || false);
       setCurrentStep(2);
     } catch (err: any) {
-      setError('Failed to calculate shipping. Please try again.');
+      console.error('Shipping calculation error:', err);
+      setError(err.message || 'Failed to calculate shipping. Please try again.');
     } finally {
       setShippingLoading(false);
     }

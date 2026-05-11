@@ -23,57 +23,58 @@ let cachedToken: { token: string; expires_at: number } | null = null;
 async function getShiprocketToken(supabase: any): Promise<string> {
   const now = Date.now();
 
+  // 1. Check in-memory cache
   if (cachedToken && cachedToken.expires_at > now + 5 * 60 * 1000) {
     return cachedToken.token;
   }
 
-  const { data: cached } = await supabase
-    .from('store_settings')
-    .select('value')
-    .eq('key', 'shiprocket_auth_token')
-    .single();
+  // 2. Check DB cache
+  try {
+    const { data: cached } = await supabase
+      .from('store_settings')
+      .select('value')
+      .eq('key', 'shiprocket_auth_token')
+      .single();
 
-  if (cached?.value) {
-    try {
+    if (cached?.value) {
       const parsed = JSON.parse(cached.value);
       if (parsed.expires_at && parsed.expires_at > now + 5 * 60 * 1000) {
         cachedToken = parsed;
         return parsed.token;
       }
-    } catch { /* expired */ }
+    }
+  } catch { /* Cache miss or parse error — continue to fetch */ }
+
+  // 3. Fetch new token from Shiprocket
+  if (!SHIPROCKET_EMAIL || !SHIPROCKET_PASSWORD) {
+    throw new Error('Shiprocket credentials (SHIPROCKET_EMAIL/PASSWORD) not configured in Edge Function secrets.');
   }
 
-  // Fetch new token
   const response = await fetch(`${SHIPROCKET_BASE_URL}/v1/external/auth/login`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ email: SHIPROCKET_EMAIL, password: SHIPROCKET_PASSWORD }),
+    signal: AbortSignal.timeout(10000), // 10s timeout
   });
 
   if (!response.ok) {
     const errText = await response.text();
+    console.error('Shiprocket Login Failed:', errText);
     throw new Error(`Shiprocket auth failed (${response.status}): ${errText}`);
   }
 
   const tokenData = await response.json();
   const token = tokenData.token;
-  if (!token) throw new Error('No token from Shiprocket login');
+  if (!token) throw new Error('No token in Shiprocket login response');
 
-  const expires_at = now + 9 * 24 * 60 * 60 * 1000;
+  const expires_at = now + 9 * 24 * 60 * 60 * 1000; // 9 days
   cachedToken = { token, expires_at };
 
+  // Cache in DB (non-blocking)
   const tokenJson = JSON.stringify({ token, expires_at });
-  const { data: existing } = await supabase
-    .from('store_settings').select('id').eq('key', 'shiprocket_auth_token').single();
-
-  if (existing) {
-    await supabase.from('store_settings').update({ value: tokenJson }).eq('key', 'shiprocket_auth_token');
-  } else {
-    await supabase.from('store_settings').insert({
-      key: 'shiprocket_auth_token', value: tokenJson,
-      description: 'Shiprocket auth token cache (auto-managed)',
-    });
-  }
+  supabase.from('store_settings')
+    .upsert({ key: 'shiprocket_auth_token', value: tokenJson, description: 'Shiprocket auth token cache (auto-managed)' })
+    .then(() => {});
 
   return token;
 }
@@ -113,8 +114,154 @@ serve(async (req: Request) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    const body = await req.json();
+    const body = await req.json().catch(() => ({}));
     const { action } = body;
+
+    console.log(`Shiprocket Action: ${action || 'None'}`);
+
+    if (!action) {
+      return new Response(
+        JSON.stringify({ error: 'Missing action parameter' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // ═══════════════════════════════════════════════════════════════════
+    // CHECK SERVICEABILITY — Get shipping rates for a destination
+    // ═══════════════════════════════════════════════════════════════════
+
+    if (action === 'check-serviceability') {
+      const { delivery_pincode, weight, subtotal, has_combo } = body;
+
+      if (!delivery_pincode) {
+        return new Response(
+          JSON.stringify({ error: 'Missing delivery_pincode' }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      // Read shipping config from store_settings
+      const { data: settings } = await supabase
+        .from('store_settings')
+        .select('key, value')
+        .in('key', [
+          'shiprocket_pickup_pincode',
+          'free_shipping_enabled',
+          'free_shipping_threshold',
+          'fallback_shipping_charge_single',
+          'fallback_shipping_charge_combo',
+        ]);
+
+      const cfg: Record<string, string> = {};
+      (settings || []).forEach((s: any) => { cfg[s.key] = s.value; });
+
+      const pickupPincode = cfg.shiprocket_pickup_pincode || '110093';
+      const freeShippingEnabled = cfg.free_shipping_enabled !== 'false';
+      const freeShippingThreshold = Number(cfg.free_shipping_threshold) || 499;
+      const fallbackSingle = Number(cfg.fallback_shipping_charge_single) || 50;
+      const fallbackCombo = Number(cfg.fallback_shipping_charge_combo) || 99;
+      const fallbackCharge = has_combo ? fallbackCombo : fallbackSingle;
+
+      // Check free shipping first
+      const cartSubtotal = Number(subtotal) || 0;
+      if (freeShippingEnabled && cartSubtotal >= freeShippingThreshold) {
+        return new Response(
+          JSON.stringify({
+            success: true,
+            serviceable: true,
+            shipping_charge: 0,
+            estimated_delivery: '',
+            courier_name: '',
+            free_shipping: true,
+          }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      // Fetch rates from Shiprocket
+      try {
+        const token = await getShiprocketToken(supabase);
+        const packageWeight = Number(weight) || 0.5;
+
+        // Use standard serviceability endpoint
+        const srUrl = `${SHIPROCKET_BASE_URL}/v1/external/courier/serviceability/?pickup_postcode=${pickupPincode}&delivery_postcode=${delivery_pincode}&weight=${packageWeight}&cod=0`;
+
+        console.log(`Requesting Shiprocket Rates: ${srUrl}`);
+
+        const srResponse = await fetch(srUrl, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+          },
+          signal: AbortSignal.timeout(8000), // 8s timeout
+        });
+
+        if (!srResponse.ok) {
+          const errText = await srResponse.text();
+          throw new Error(`Shiprocket API error (${srResponse.status}): ${errText}`);
+        }
+
+        const srData = await srResponse.json();
+        const couriers = srData?.data?.available_courier_companies || [];
+
+        if (couriers.length === 0) {
+          console.warn(`No couriers found for pincode ${delivery_pincode}. Using fallback.`);
+          return new Response(
+            JSON.stringify({
+              success: true,
+              serviceable: false,
+              shipping_charge: fallbackCharge,
+              estimated_delivery: '',
+              courier_name: '',
+              free_shipping: false,
+              fallback: true,
+              message: 'No couriers available for this location',
+            }),
+            { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+
+        // Find cheapest courier
+        const cheapest = couriers.reduce((min: any, c: any) => {
+          const rate = Number(c.freight_charge || c.rate || 0);
+          const minRate = Number(min.freight_charge || min.rate || 0);
+          return rate < minRate ? c : min;
+        }, couriers[0]);
+
+        const shippingCharge = Math.ceil(Number(cheapest.freight_charge || cheapest.rate || 0));
+        const etd = cheapest.etd || cheapest.estimated_delivery_days || '';
+        const courierName = cheapest.courier_name || '';
+
+        return new Response(
+          JSON.stringify({
+            success: true,
+            serviceable: true,
+            shipping_charge: shippingCharge,
+            estimated_delivery: etd,
+            courier_name: courierName,
+            free_shipping: false,
+          }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      } catch (srError: any) {
+        console.error('Shiprocket serviceability error:', srError);
+        // Failsafe: return fallback charge
+        return new Response(
+          JSON.stringify({
+            success: true,
+            serviceable: true,
+            shipping_charge: fallbackCharge,
+            estimated_delivery: '',
+            courier_name: '',
+            free_shipping: false,
+            fallback: true,
+            fallback_reason: srError.message,
+          }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+    }
 
     // ═══════════════════════════════════════════════════════════════════
     // CREATE SHIPMENT — Send orders to Shiprocket
@@ -168,8 +315,6 @@ serve(async (req: Request) => {
           const firstName = nameParts[0] || '';
           const lastName = nameParts.slice(1).join(' ') || firstName;
 
-          // Shiprocket order_id limit is 20 chars. 
-          // We'll use "GRZ-" + first 8 of UUID + last 4 of timestamp for uniqueness.
           const srShortId = `GRZ-${order.id.substring(0, 8)}-${Date.now().toString().slice(-4)}`;
 
           const shiprocketPayload = {
@@ -205,6 +350,7 @@ serve(async (req: Request) => {
                 'Authorization': `Bearer ${token}`,
               },
               body: JSON.stringify(shiprocketPayload),
+              signal: AbortSignal.timeout(10000),
             }
           );
 
@@ -259,25 +405,6 @@ serve(async (req: Request) => {
     }
 
     // ═══════════════════════════════════════════════════════════════════
-    // DEBUG — Get recent Shiprocket responses
-    // ═══════════════════════════════════════════════════════════════════
-
-    if (action === 'debug') {
-      const { data, error } = await supabase
-        .from('analytics_logs')
-        .select('*')
-        .eq('event_type', 'shiprocket_create_order')
-        .order('created_at', { ascending: false })
-        .limit(5);
-
-      if (error) throw new Error(error.message);
-      return new Response(
-        JSON.stringify({ success: true, logs: data }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    // ═══════════════════════════════════════════════════════════════════
     // REQUEST AWB — Assign courier and generate AWB for a shipment
     // ═══════════════════════════════════════════════════════════════════
 
@@ -293,7 +420,6 @@ serve(async (req: Request) => {
 
       const token = await getShiprocketToken(supabase);
 
-      // First get courier serviceability
       const courierResponse = await fetch(
         `${SHIPROCKET_BASE_URL}/v1/external/courier/assign/awb`,
         {
@@ -303,6 +429,7 @@ serve(async (req: Request) => {
             'Authorization': `Bearer ${token}`,
           },
           body: JSON.stringify({ shipment_id: shipmentId }),
+          signal: AbortSignal.timeout(10000),
         }
       );
 
@@ -321,7 +448,6 @@ serve(async (req: Request) => {
       const courierName = courierData.response?.data?.courier_name || '';
 
       if (awbCode) {
-        // Update in database
         await supabase
           .from('orders')
           .update({
@@ -368,6 +494,7 @@ serve(async (req: Request) => {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`,
         },
+        signal: AbortSignal.timeout(10000),
       });
 
       const trackData = await trackResponse.json();
@@ -379,7 +506,6 @@ serve(async (req: Request) => {
         );
       }
 
-      // Extract delivery status from tracking data
       const trackingInfo = trackData.tracking_data || trackData;
       const currentStatus = trackingInfo.track_status || trackingInfo.shipment_status || '';
       const currentActivity = trackingInfo.shipment_track_activities || [];
@@ -398,7 +524,7 @@ serve(async (req: Request) => {
     }
 
     // ═══════════════════════════════════════════════════════════════════
-    // SYNC TRACKING — Bulk update tracking statuses for active shipments
+    // SYNC TRACKING — Bulk update tracking statuses
     // ═══════════════════════════════════════════════════════════════════
 
     if (action === 'sync-tracking') {
@@ -426,6 +552,7 @@ serve(async (req: Request) => {
           const resp = await fetch(trackUrl, {
             method: 'GET',
             headers: { 'Authorization': `Bearer ${token}` },
+            signal: AbortSignal.timeout(5000),
           });
 
           if (!resp.ok) continue;
@@ -488,6 +615,7 @@ serve(async (req: Request) => {
             'Authorization': `Bearer ${token}`,
           },
           body: JSON.stringify({ ids: shiprocketOrderIds }),
+          signal: AbortSignal.timeout(10000),
         }
       );
 
@@ -501,147 +629,15 @@ serve(async (req: Request) => {
       );
     }
 
-    // ═══════════════════════════════════════════════════════════════════
-    // CHECK SERVICEABILITY — Get shipping rates for a destination
-    // ═══════════════════════════════════════════════════════════════════
-
-    if (action === 'check-serviceability') {
-      const { delivery_pincode, weight, subtotal, has_combo } = body;
-
-      if (!delivery_pincode) {
-        return new Response(
-          JSON.stringify({ error: 'Missing delivery_pincode' }),
-          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
-
-      // Read shipping config from store_settings
-      const { data: settings } = await supabase
-        .from('store_settings')
-        .select('key, value')
-        .in('key', [
-          'shiprocket_pickup_pincode',
-          'free_shipping_enabled',
-          'free_shipping_threshold',
-          'fallback_shipping_charge_single',
-          'fallback_shipping_charge_combo',
-          'default_package_dimensions',
-        ]);
-
-      const cfg: Record<string, string> = {};
-      (settings || []).forEach((s: any) => { cfg[s.key] = s.value; });
-
-      const pickupPincode = cfg.shiprocket_pickup_pincode || '110093';
-      const freeShippingEnabled = cfg.free_shipping_enabled !== 'false';
-      const freeShippingThreshold = Number(cfg.free_shipping_threshold) || 499;
-      const fallbackSingle = Number(cfg.fallback_shipping_charge_single) || 50;
-      const fallbackCombo = Number(cfg.fallback_shipping_charge_combo) || 99;
-      const fallbackCharge = has_combo ? fallbackCombo : fallbackSingle;
-
-      // Check free shipping first
-      const cartSubtotal = Number(subtotal) || 0;
-      if (freeShippingEnabled && cartSubtotal >= freeShippingThreshold) {
-        return new Response(
-          JSON.stringify({
-            success: true,
-            serviceable: true,
-            shipping_charge: 0,
-            estimated_delivery: '',
-            courier_name: '',
-            free_shipping: true,
-          }),
-          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
-
-      // Fetch rates from Shiprocket
-      try {
-        const token = await getShiprocketToken(supabase);
-        const packageWeight = Number(weight) || 0.5;
-
-        const srUrl = `${SHIPROCKET_BASE_URL}/v1/external/courier/serviceability/?pickup_postcode=${pickupPincode}&delivery_postcode=${delivery_pincode}&weight=${packageWeight}&cod=0`;
-
-        const srResponse = await fetch(srUrl, {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`,
-          },
-        });
-
-        if (!srResponse.ok) {
-          throw new Error(`Shiprocket serviceability API returned ${srResponse.status}`);
-        }
-
-        const srData = await srResponse.json();
-        const couriers = srData?.data?.available_courier_companies || [];
-
-        if (couriers.length === 0) {
-          // Not serviceable — use fallback
-          return new Response(
-            JSON.stringify({
-              success: true,
-              serviceable: false,
-              shipping_charge: fallbackCharge,
-              estimated_delivery: '',
-              courier_name: '',
-              free_shipping: false,
-              fallback: true,
-            }),
-            { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-          );
-        }
-
-        // Find cheapest courier
-        const cheapest = couriers.reduce((min: any, c: any) => {
-          const rate = Number(c.freight_charge || c.rate || 0);
-          const minRate = Number(min.freight_charge || min.rate || 0);
-          return rate < minRate ? c : min;
-        }, couriers[0]);
-
-        const shippingCharge = Math.ceil(Number(cheapest.freight_charge || cheapest.rate || 0));
-        const etd = cheapest.etd || cheapest.estimated_delivery_days || '';
-        const courierName = cheapest.courier_name || '';
-
-        return new Response(
-          JSON.stringify({
-            success: true,
-            serviceable: true,
-            shipping_charge: shippingCharge,
-            estimated_delivery: etd,
-            courier_name: courierName,
-            free_shipping: false,
-          }),
-          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      } catch (srError: any) {
-        console.error('Shiprocket serviceability error:', srError);
-        // Failsafe: return fallback charge
-        return new Response(
-          JSON.stringify({
-            success: true,
-            serviceable: true,
-            shipping_charge: fallbackCharge,
-            estimated_delivery: '',
-            courier_name: '',
-            free_shipping: false,
-            fallback: true,
-            fallback_reason: srError.message,
-          }),
-          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
-    }
-
     return new Response(
-      JSON.stringify({ error: 'Invalid action. Use: create-shipment, request-awb, track, sync-tracking, cancel, check-serviceability' }),
+      JSON.stringify({ error: `Invalid action: ${action}. Use: check-serviceability, create-shipment, request-awb, track, sync-tracking, cancel` }),
       { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 
   } catch (error: any) {
     console.error('shiprocket-orders error:', error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: error.message || 'Internal Server Error' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }

@@ -58,10 +58,20 @@ export async function POST(req: NextRequest) {
     }
 
     // 3. Get PhonePe access token
-    const accessToken = await getAccessToken();
+    let accessToken;
+    try {
+      accessToken = await getAccessToken();
+    } catch (tokenErr: any) {
+      console.error('Failed to get PhonePe access token:', tokenErr);
+      return NextResponse.json(
+        { error: `Payment system configuration error: ${tokenErr.message}` },
+        { status: 501 }
+      );
+    }
 
     // 4. Build site URL for redirects
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || req.nextUrl.origin;
+    console.log(`Initiating PhonePe payment for order ${orderId}. Site URL: ${siteUrl}`);
 
     // 5. Create PhonePe payment
     const payPayload = {
@@ -88,7 +98,7 @@ export async function POST(req: NextRequest) {
       signal: AbortSignal.timeout(15000), // 15s timeout
     });
 
-    const payData = await payResponse.json();
+    const payData = await payResponse.json().catch(() => ({ error: 'Invalid JSON response from PhonePe' }));
 
     // Log the event (non-blocking)
     logPaymentEvent('phonepe_create_payment', {
@@ -97,12 +107,12 @@ export async function POST(req: NextRequest) {
       payload: payPayload,
       response: payData,
       status: payResponse.status,
-    });
+    }).catch(e => console.error('Failed to log payment event:', e));
 
     if (!payResponse.ok) {
-      console.error('PhonePe create payment failed:', payData);
+      console.error('PhonePe API error:', payResponse.status, payData);
       return NextResponse.json(
-        { error: 'Payment initiation failed. Please try again.' },
+        { error: payData.message || 'Payment gateway returned an error. Please try again.' },
         { status: 502 }
       );
     }
@@ -111,9 +121,9 @@ export async function POST(req: NextRequest) {
     const checkoutSessionId = payData?.orderId || payData?.data?.orderId || '';
 
     if (!redirectUrl) {
-      console.error('No redirectUrl from PhonePe:', payData);
+      console.error('No redirectUrl in PhonePe response:', payData);
       return NextResponse.json(
-        { error: 'Payment gateway did not return checkout URL. Please try again.' },
+        { error: 'Payment gateway did not return a checkout URL. Please try again.' },
         { status: 502 }
       );
     }
@@ -135,10 +145,10 @@ export async function POST(req: NextRequest) {
       },
     });
   } catch (error: any) {
-    console.error('Create payment error:', error);
-    logPaymentEvent('phonepe_create_error', { error: error.message });
+    console.error('CRITICAL: Create payment error:', error);
+    logPaymentEvent('phonepe_create_error', { error: error.message }).catch(() => {});
     return NextResponse.json(
-      { error: 'An unexpected error occurred. Please try again.' },
+      { error: `Internal server error: ${error.message}` },
       { status: 500 }
     );
   }

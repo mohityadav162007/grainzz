@@ -1,4 +1,30 @@
 import { supabase } from './supabase';
+ 
+ export const sendOTP = async (email: string) => {
+   const { error } = await supabase.auth.signInWithOtp({ 
+     email,
+     options: {
+       shouldCreateUser: false,
+     }
+   });
+   if (error) throw new Error(error.message);
+   return { success: true };
+ };
+ 
+ export const verifyOTPAndSetPassword = async (email: string, token: string, newPassword: string) => {
+   // 1. Verify OTP
+   const { error: verifyError } = await supabase.auth.verifyOtp({
+     email,
+     token,
+     type: 'email',
+   });
+   if (verifyError) throw new Error('Invalid or expired verification code');
+ 
+   // 2. Update Password
+   const { data, error: updateError } = await supabase.auth.updateUser({ password: newPassword });
+   if (updateError) throw new Error(updateError.message);
+   return { success: true, data };
+ };
 
 const sanitizeImage = (url: string) => url.includes('placeholder.jpg') ? '/image-2@2x.png' : url;
 const sanitizeProduct = (product: any) => {
@@ -379,8 +405,9 @@ export const createOrder = async (body: {
   couponCode?: string;
   discountAmount?: number;
   totalAmount: number;
+  userId?: string;
 }) => {
-  const { items, userDetails, subtotal, couponCode, discountAmount, totalAmount } = body;
+  const { items, userDetails, subtotal, couponCode, discountAmount, totalAmount, userId } = body;
 
   // Generate UUID v4 for the order to bypass needing .select() and running into RLS errors for guests
   const orderId = crypto.randomUUID();
@@ -401,6 +428,7 @@ export const createOrder = async (body: {
       coupon_code: couponCode || '',
       discount_amount: discountAmount || 0,
       total_amount: totalAmount,
+      user_id: userId || null,
     });
 
   if (orderError) throw new Error(orderError.message);
@@ -426,14 +454,22 @@ export const createOrder = async (body: {
 };
 
 export const getOrderById = async (id: string) => {
-  const { data, error } = await supabase
+  // Fetch order first
+  const { data: order, error: orderError } = await supabase
     .from('orders')
-    .select('*, order_items(*)')
+    .select('*')
     .eq('id', id)
     .single();
 
-  if (error) throw new Error(error.message);
-  return { success: true, data };
+  if (orderError) throw new Error(orderError.message);
+
+  // Fetch items separately as a fallback to ensure they are retrieved
+  const { data: items, error: itemsError } = await supabase
+    .from('order_items')
+    .select('*')
+    .eq('order_id', id);
+
+  return { success: true, data: { ...order, order_items: items || [] } };
 };
 
 // ─── Coupons ─────────────────────────────────────────────────────────────────

@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ChevronRight, Loader2 } from 'lucide-react';
 import { useCartStore } from '@/store/cartStore';
+import { useAuthStore } from '@/store/authStore';
 import { createOrder, initiatePayment } from '@/lib/api';
 
 declare global {
@@ -16,6 +17,7 @@ declare global {
 
 export default function CheckoutPage() {
   const { items, quickBuyItem, subtotal, discount, total, coupon, clearCart, setQuickBuy } = useCartStore();
+  const { user } = useAuthStore();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -64,6 +66,7 @@ export default function CheckoutPage() {
           couponCode: quickBuyItem ? '' : (coupon?.code || ''),
           discountAmount: displayDiscount,
           totalAmount: displayTotal,
+          userId: user?.id,
         });
         orderId = orderRes.data.id;
         setPendingOrderId(orderId);

@@ -2,8 +2,8 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { ChevronRight, User, MapPin, Package, Settings, LogOut, PackageOpen, ExternalLink, Truck, Check, X } from 'lucide-react';
-import { getUserOrders } from '@/lib/api';
+import { ChevronRight, User, MapPin, Package, Settings, LogOut, PackageOpen, ExternalLink, Truck, Check, X, Lock, Eye, EyeOff } from 'lucide-react';
+import { getUserOrders, sendOTP, verifyOTPAndSetPassword } from '@/lib/api';
 import { useAuthStore } from '@/store/authStore';
 
 type Tab = 'profile' | 'orders' | 'addresses' | 'settings';
@@ -12,6 +12,7 @@ export default function AccountPage() {
   const { user, loading, signOut, setAuthModalOpen } = useAuthStore();
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<Tab>('profile');
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -142,29 +143,213 @@ export default function AccountPage() {
 
             {activeTab === 'settings' && (
               <div className="animate-fade-in">
-                <h2 className="text-[24px] font-bold text-brand-black mb-[32px]">Account Settings</h2>
-                <div className="space-y-6 max-w-[500px]">
-                  <div className="flex items-center justify-between p-4 rounded-xl border border-[#EAEAEA] hover:border-[#D0D0D0] transition-colors cursor-pointer group">
-                    <div>
-                      <h4 className="font-bold text-brand-black text-[15px]">Change Password</h4>
-                      <p className="text-[13px] text-[#888888] font-medium pt-0.5">Update your login credentials securely.</p>
-                    </div>
-                    <ChevronRight size={18} className="text-[#888888] group-hover:text-brand-black transition-colors" />
-                  </div>
-                  <div className="flex items-center justify-between p-4 rounded-xl border border-[#EAEAEA] hover:border-[#D0D0D0] transition-colors cursor-pointer group">
-                    <div>
-                      <h4 className="font-bold text-brand-black text-[15px]">Notification Preferences</h4>
-                      <p className="text-[13px] text-[#888888] font-medium pt-0.5">Manage your email alerts and SMS.</p>
-                    </div>
-                    <ChevronRight size={18} className="text-[#888888] group-hover:text-brand-black transition-colors" />
-                  </div>
+                <div className="flex items-center gap-3 mb-[32px]">
+                  {isChangingPassword && (
+                    <button onClick={() => setIsChangingPassword(false)} className="p-2 hover:bg-[#F2F2F2] rounded-full transition-colors text-[#888888] hover:text-brand-black">
+                      <ChevronRight size={20} className="rotate-180" />
+                    </button>
+                  )}
+                  <h2 className="text-[24px] font-bold text-brand-black">{isChangingPassword ? 'Change Password' : 'Account Settings'}</h2>
                 </div>
+
+                {!isChangingPassword ? (
+                  <div className="space-y-6 max-w-[500px]">
+                    <div 
+                      onClick={() => setIsChangingPassword(true)}
+                      className="flex items-center justify-between p-4 rounded-xl border border-[#EAEAEA] hover:border-[#D0D0D0] transition-colors cursor-pointer group"
+                    >
+                      <div className="flex items-center gap-4">
+                        <div className="w-10 h-10 bg-brand-light rounded-full flex items-center justify-center text-brand-green">
+                          <Lock size={20} />
+                        </div>
+                        <div>
+                          <h4 className="font-bold text-brand-black text-[15px]">Change Password</h4>
+                          <p className="text-[13px] text-[#888888] font-medium pt-0.5">Update your login credentials securely.</p>
+                        </div>
+                      </div>
+                      <ChevronRight size={18} className="text-[#888888] group-hover:text-brand-black transition-colors" />
+                    </div>
+                    <div className="flex items-center justify-between p-4 rounded-xl border border-[#EAEAEA] hover:border-[#D0D0D0] transition-colors cursor-pointer group opacity-60">
+                      <div className="flex items-center gap-4">
+                        <div className="w-10 h-10 bg-[#F5F5F5] rounded-full flex items-center justify-center text-[#888888]">
+                          <Settings size={20} />
+                        </div>
+                        <div>
+                          <h4 className="font-bold text-brand-black text-[15px]">Notification Preferences</h4>
+                          <p className="text-[13px] text-[#888888] font-medium pt-0.5">Manage your email alerts and SMS.</p>
+                        </div>
+                      </div>
+                      <ChevronRight size={18} className="text-[#888888]" />
+                    </div>
+                  </div>
+                ) : (
+                  <ChangePasswordForm onCancel={() => setIsChangingPassword(false)} />
+                )}
               </div>
             )}
           </div>
         </div>
       </div>
     </div>
+  );
+}
+
+// ─── Change Password Form ───────────────────────────────────────────────────
+
+function ChangePasswordForm({ onCancel }: { onCancel: () => void }) {
+  const { user } = useAuthStore();
+  const [step, setStep] = useState<'send' | 'verify'>('send');
+  const [otp, setOtp] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [status, setStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+
+  const handleSendOTP = async () => {
+    if (!user?.email) return;
+    setLoading(true);
+    setStatus(null);
+    try {
+      await sendOTP(user.email);
+      setStep('verify');
+      setStatus({ type: 'success', message: 'Verification code sent to your email!' });
+    } catch (err: any) {
+      setStatus({ type: 'error', message: err.message || 'Failed to send verification code.' });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleVerifyAndUpdate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user?.email) return;
+    if (password !== confirmPassword) {
+      setStatus({ type: 'error', message: 'Passwords do not match.' });
+      return;
+    }
+    if (password.length < 6) {
+      setStatus({ type: 'error', message: 'Password must be at least 6 characters.' });
+      return;
+    }
+
+    setLoading(true);
+    setStatus(null);
+    try {
+      await verifyOTPAndSetPassword(user.email, otp, password);
+      setStatus({ type: 'success', message: 'Password updated successfully!' });
+      // Clear fields
+      setOtp('');
+      setPassword('');
+      setConfirmPassword('');
+      setTimeout(onCancel, 2000);
+    } catch (err: any) {
+      setStatus({ type: 'error', message: err.message || 'Verification failed. Please check the code.' });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="max-w-[400px] animate-fade-in">
+      {step === 'send' ? (
+        <div className="space-y-6">
+          <p className="text-[14px] text-[#7A7A7A] leading-relaxed">
+            To ensure it's you, we'll send a 6-digit verification code to <span className="font-bold text-brand-black">{user?.email}</span>.
+          </p>
+          
+          {status?.type === 'error' && (
+            <div className="p-4 rounded-xl text-sm font-medium flex items-center gap-3 bg-[#FFEBEE] text-[#C62828]">
+              <X size={18} /> {status.message}
+            </div>
+          )}
+
+          <button
+            onClick={handleSendOTP}
+            disabled={loading}
+            className="w-full bg-brand-black hover:bg-[#1A1A1A] text-white py-3.5 rounded-xl font-bold transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+          >
+            {loading ? 'Sending...' : 'Send Verification Code'}
+          </button>
+        </div>
+      ) : (
+        <form onSubmit={handleVerifyAndUpdate} className="space-y-5">
+          <div className="space-y-2">
+            <label className="text-[14px] font-semibold text-[#888888]">Verification Code</label>
+            <input
+              type="text"
+              value={otp}
+              onChange={(e) => setOtp(e.target.value)}
+              required
+              maxLength={6}
+              className="w-full px-4 py-3 rounded-xl border border-[#EAEAEA] focus:border-brand-green outline-none transition-colors font-bold text-center text-[20px] tracking-[8px]"
+              placeholder="000000"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-[14px] font-semibold text-[#888888]">New Password</label>
+            <div className="relative">
+              <input
+                type={showPassword ? 'text' : 'password'}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                className="w-full px-4 py-3 rounded-xl border border-[#EAEAEA] focus:border-brand-green outline-none transition-colors pr-12 font-medium"
+                placeholder="Min. 6 characters"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-[#888888] hover:text-brand-black"
+              >
+                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-[14px] font-semibold text-[#888888]">Confirm New Password</label>
+            <input
+              type={showPassword ? 'text' : 'password'}
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              required
+              className="w-full px-4 py-3 rounded-xl border border-[#EAEAEA] focus:border-brand-green outline-none transition-colors font-medium"
+              placeholder="Repeat new password"
+            />
+          </div>
+
+          {status && (
+            <div className={`p-4 rounded-xl text-sm font-medium flex items-center gap-3 ${
+              status.type === 'success' ? 'bg-[#E8F5E9] text-[#2E7D32]' : 'bg-[#FFEBEE] text-[#C62828]'
+            }`}>
+              {status.type === 'success' ? <Check size={18} /> : <X size={18} />}
+              {status.message}
+            </div>
+          )}
+
+          <div className="flex gap-4 pt-2">
+            <button
+              type="submit"
+              disabled={loading}
+              className="flex-1 bg-brand-black hover:bg-[#1A1A1A] text-white py-3 rounded-xl font-bold transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+            >
+              {loading ? 'Verifying...' : 'Update Password'}
+            </button>
+            <button
+              type="button"
+              onClick={() => setStep('send')}
+              className="flex-1 border border-[#EAEAEA] hover:bg-[#F9F9F9] text-brand-black py-3 rounded-xl font-bold transition-all"
+            >
+              Resend Code
+            </button>
+          </div>
+        </form>
+      )}
+    </div>
+  );
+}
   );
 }
 
@@ -245,9 +430,9 @@ function OrdersTab({ userEmail }: { userEmail: string }) {
                 </div>
               </div>
               <div className="flex flex-col md:items-end w-full md:w-auto mt-2 md:mt-0">
-                <span className="text-[12px] uppercase">Order # {order.id?.slice(0, 12).toUpperCase()}</span>
+                <Link href={`/account/orders/${order.id}`} className="text-[12px] uppercase hover:text-brand-green transition-colors">Order # {order.id?.slice(0, 12).toUpperCase()}</Link>
                 <div className="flex gap-2 mt-1">
-                  <span className="text-[#007185] hover:text-[#C45500] hover:underline cursor-pointer">View order details</span>
+                  <Link href={`/account/orders/${order.id}`} className="text-[#007185] hover:text-[#C45500] hover:underline cursor-pointer">View order details</Link>
                   <span className="text-[#D5D9D9]">|</span>
                   <span className="text-[#007185] hover:text-[#C45500] hover:underline cursor-pointer">Invoice</span>
                 </div>

@@ -55,11 +55,13 @@ const HOMEPAGE_REVIEWS = [
   },
 ];
 
+import { motion, AnimatePresence } from 'framer-motion';
 import ProductCard from '@/components/products/ProductCard';
 
 export default function TestimonialsSection() {
   const [reviews, setReviews] = useState<any[] | null>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [direction, setDirection] = useState(0); // 1 for next, -1 for prev
   const { addItem } = useCartStore();
 
   useEffect(() => {
@@ -88,15 +90,27 @@ export default function TestimonialsSection() {
   }, []);
 
   const reviewCount = reviews?.length || 0;
+  
   const nextSlide = useCallback(() => {
     if (reviewCount <= 1) return;
+    setDirection(1);
     setCurrentIndex((prev) => (prev + 1) % reviewCount);
   }, [reviewCount]);
 
   const prevSlide = useCallback(() => {
     if (reviewCount <= 1) return;
+    setDirection(-1);
     setCurrentIndex((prev) => (prev - 1 + reviewCount) % reviewCount);
   }, [reviewCount]);
+
+  // Auto-play effect
+  useEffect(() => {
+    if (!reviews || reviews.length <= 1) return;
+    const timer = setInterval(() => {
+      nextSlide();
+    }, 3000);
+    return () => clearInterval(timer);
+  }, [reviews, nextSlide]);
 
   if (reviews === null) {
     return (
@@ -114,6 +128,23 @@ export default function TestimonialsSection() {
     ...current.product,
     subtitle: current.product.subtitle || 'High-Fibre | No Palm Oil | Baked Crunch'
   } : null;
+
+  const variants = {
+    enter: (direction: number) => ({
+      x: direction > 0 ? 500 : -500,
+      opacity: 0
+    }),
+    center: {
+      zIndex: 1,
+      x: 0,
+      opacity: 1
+    },
+    exit: (direction: number) => ({
+      zIndex: 0,
+      x: direction < 0 ? 500 : -500,
+      opacity: 0
+    })
+  };
 
   return (
     <section className="relative w-full min-h-[600px] flex items-center justify-center overflow-hidden">
@@ -133,46 +164,77 @@ export default function TestimonialsSection() {
         {/* Left: Product Card */}
         <div className="w-full md:w-[45%] lg:w-[525px] flex items-center justify-center md:justify-center py-10 md:py-20 px-4 md:px-0">
           <div className="w-full max-w-[340px] bg-white rounded-[24px] p-6 shadow-[0_24px_50px_rgba(0,0,0,0.1)]">
-            {product ? (
-              <ProductCard product={product} />
-            ) : (
-              <div className="aspect-[4/5] bg-white/20 backdrop-blur-md rounded-[24px]" />
-            )}
+            <AnimatePresence mode="wait" custom={direction}>
+              <motion.div
+                key={currentIndex}
+                custom={direction}
+                variants={variants}
+                initial="enter"
+                animate="center"
+                exit="exit"
+                transition={{
+                  x: { type: "spring", stiffness: 300, damping: 30 },
+                  opacity: { duration: 0.2 }
+                }}
+              >
+                {product ? (
+                  <ProductCard product={product} />
+                ) : (
+                  <div className="aspect-[4/5] bg-white/20 backdrop-blur-md rounded-[24px]" />
+                )}
+              </motion.div>
+            </AnimatePresence>
           </div>
         </div>
 
         {/* Right: Testimonial Box */}
-        <div className="w-full md:w-[50%] lg:w-[540px] bg-[#EEFBDC]/95 backdrop-blur-md px-6 py-10 md:p-14 lg:p-16 flex flex-col justify-between shadow-2xl">
-          <div>
-            <h4 className="text-[13px] md:text-[15px] font-semibold text-[#1A1A1A] mb-10 opacity-70 tracking-wide uppercase">
-              What people are saying about Grainzz
-            </h4>
+        <div className="w-full md:w-[50%] lg:w-[540px] bg-[#EEFBDC]/95 backdrop-blur-md px-6 py-10 md:p-14 lg:p-16 flex flex-col justify-between shadow-2xl relative overflow-hidden">
+          <AnimatePresence mode="wait" custom={direction}>
+            <motion.div
+              key={currentIndex}
+              custom={direction}
+              variants={variants}
+              initial="enter"
+              animate="center"
+              exit="exit"
+              transition={{
+                x: { type: "spring", stiffness: 300, damping: 30 },
+                opacity: { duration: 0.2 }
+              }}
+              className="h-full flex flex-col justify-between"
+            >
+              <div>
+                <h4 className="text-[13px] md:text-[15px] font-semibold text-[#1A1A1A] mb-10 opacity-70 tracking-wide uppercase">
+                  What people are saying about Grainzz
+                </h4>
 
-            <div className="min-h-[180px] mb-10">
-              <h2 className="text-[20px] md:text-[26px] lg:text-[28px] font-bold text-[#1A1A1A] leading-[1.6] tracking-tight">
-                &quot;{current.text}&quot;
-              </h2>
-            </div>
+                <div className="min-h-[180px] mb-10">
+                  <h2 className="text-[20px] md:text-[26px] lg:text-[28px] font-bold text-[#1A1A1A] leading-[1.6] tracking-tight">
+                    &quot;{current.text}&quot;
+                  </h2>
+                </div>
 
-            <div className="flex items-center gap-5 mb-12">
-              <div className="w-[68px] h-[68px] rounded-full overflow-hidden border-2 border-white shadow-md">
-                <Image
-                  src={`https://ui-avatars.com/api/?name=${encodeURIComponent(current.author)}&background=1A5B23&color=fff`}
-                  alt={current.author}
-                  width={68}
-                  height={68}
-                  className="object-cover"
-                />
+                <div className="flex items-center gap-5 mb-12">
+                  <div className="w-[68px] h-[68px] rounded-full overflow-hidden border-2 border-white shadow-md">
+                    <Image
+                      src={`https://ui-avatars.com/api/?name=${encodeURIComponent(current.author)}&background=1A5B23&color=fff`}
+                      alt={current.author}
+                      width={68}
+                      height={68}
+                      className="object-cover"
+                    />
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-[19px] font-bold text-[#1A1A1A]">{current.author}</span>
+                    <span className="text-[14px] text-[#4A4A4A] font-medium opacity-80">{current.role}</span>
+                  </div>
+                </div>
               </div>
-              <div className="flex flex-col">
-                <span className="text-[19px] font-bold text-[#1A1A1A]">{current.author}</span>
-                <span className="text-[14px] text-[#4A4A4A] font-medium opacity-80">{current.role}</span>
-              </div>
-            </div>
-          </div>
+            </motion.div>
+          </AnimatePresence>
 
-          {/* Navigation Controls */}
-          <div className="flex items-center gap-[28px]">
+          {/* Navigation Controls - Keep these static */}
+          <div className="flex items-center gap-[28px] z-20 mt-auto">
             <button onClick={prevSlide} className="text-[#888888] hover:text-[#1A5B23] transition-all active:scale-90">
               <ChevronLeft size={24} strokeWidth={2.5} />
             </button>
@@ -181,7 +243,10 @@ export default function TestimonialsSection() {
               {reviews.map((_, idx) => (
                 <div
                   key={idx}
-                  onClick={() => setCurrentIndex(idx)}
+                  onClick={() => {
+                    setDirection(idx > currentIndex ? 1 : -1);
+                    setCurrentIndex(idx);
+                  }}
                   className={`h-[10px] rounded-full cursor-pointer transition-all duration-500 ${idx === currentIndex ? 'w-[36px] bg-[#1A5B23]' : 'w-[10px] bg-[#D4E8B7]'}`}
                 />
               ))}

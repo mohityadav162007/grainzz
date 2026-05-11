@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Phone, Mail, MapPin, Facebook, Twitter, Linkedin, Instagram, Send, ChevronDown } from 'lucide-react';
+import { Phone, Mail, MapPin, Facebook, Linkedin, Instagram, Send, ChevronDown } from 'lucide-react';
 import { getStoreSettings } from '@/lib/api';
 
 export default function Footer() {
@@ -13,7 +13,6 @@ export default function Footer() {
     contact_address: 'B-291, MIG Flats, East of Loni road, Delhi, Delhi - 110093, India',
     social_instagram: '#',
     social_facebook: '#',
-    social_twitter: '#',
     social_linkedin: '#',
     about_text: 'Subscribe to get latest offers'
   });
@@ -143,9 +142,7 @@ export default function Footer() {
                 <a href={settings.social_facebook} target="_blank" rel="noopener noreferrer" className="hover:scale-110 transition-transform block">
                   <Image src="/Icon-1.svg" alt="Facebook" width={36} height={36} />
                 </a>
-                <a href={settings.social_twitter} target="_blank" rel="noopener noreferrer" className="hover:scale-110 transition-transform block">
-                  <Image src="/Icon-5.svg" alt="X" width={36} height={36} />
-                </a>
+
                 <a href={settings.social_linkedin} target="_blank" rel="noopener noreferrer" className="hover:scale-110 transition-transform block">
                   <Image src="/Icon-3.svg" alt="LinkedIn" width={36} height={36} />
                 </a>

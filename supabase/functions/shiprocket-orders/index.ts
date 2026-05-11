@@ -501,8 +501,140 @@ serve(async (req: Request) => {
       );
     }
 
+    // ═══════════════════════════════════════════════════════════════════
+    // CHECK SERVICEABILITY — Get shipping rates for a destination
+    // ═══════════════════════════════════════════════════════════════════
+
+    if (action === 'check-serviceability') {
+      const { delivery_pincode, weight, subtotal, has_combo } = body;
+
+      if (!delivery_pincode) {
+        return new Response(
+          JSON.stringify({ error: 'Missing delivery_pincode' }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      // Read shipping config from store_settings
+      const { data: settings } = await supabase
+        .from('store_settings')
+        .select('key, value')
+        .in('key', [
+          'shiprocket_pickup_pincode',
+          'free_shipping_enabled',
+          'free_shipping_threshold',
+          'fallback_shipping_charge_single',
+          'fallback_shipping_charge_combo',
+          'default_package_dimensions',
+        ]);
+
+      const cfg: Record<string, string> = {};
+      (settings || []).forEach((s: any) => { cfg[s.key] = s.value; });
+
+      const pickupPincode = cfg.shiprocket_pickup_pincode || '110093';
+      const freeShippingEnabled = cfg.free_shipping_enabled !== 'false';
+      const freeShippingThreshold = Number(cfg.free_shipping_threshold) || 499;
+      const fallbackSingle = Number(cfg.fallback_shipping_charge_single) || 50;
+      const fallbackCombo = Number(cfg.fallback_shipping_charge_combo) || 99;
+      const fallbackCharge = has_combo ? fallbackCombo : fallbackSingle;
+
+      // Check free shipping first
+      const cartSubtotal = Number(subtotal) || 0;
+      if (freeShippingEnabled && cartSubtotal >= freeShippingThreshold) {
+        return new Response(
+          JSON.stringify({
+            success: true,
+            serviceable: true,
+            shipping_charge: 0,
+            estimated_delivery: '',
+            courier_name: '',
+            free_shipping: true,
+          }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      // Fetch rates from Shiprocket
+      try {
+        const token = await getShiprocketToken(supabase);
+        const packageWeight = Number(weight) || 0.5;
+
+        const srUrl = `${SHIPROCKET_BASE_URL}/v1/external/courier/serviceability/?pickup_postcode=${pickupPincode}&delivery_postcode=${delivery_pincode}&weight=${packageWeight}&cod=0`;
+
+        const srResponse = await fetch(srUrl, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+          },
+        });
+
+        if (!srResponse.ok) {
+          throw new Error(`Shiprocket serviceability API returned ${srResponse.status}`);
+        }
+
+        const srData = await srResponse.json();
+        const couriers = srData?.data?.available_courier_companies || [];
+
+        if (couriers.length === 0) {
+          // Not serviceable — use fallback
+          return new Response(
+            JSON.stringify({
+              success: true,
+              serviceable: false,
+              shipping_charge: fallbackCharge,
+              estimated_delivery: '',
+              courier_name: '',
+              free_shipping: false,
+              fallback: true,
+            }),
+            { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+
+        // Find cheapest courier
+        const cheapest = couriers.reduce((min: any, c: any) => {
+          const rate = Number(c.freight_charge || c.rate || 0);
+          const minRate = Number(min.freight_charge || min.rate || 0);
+          return rate < minRate ? c : min;
+        }, couriers[0]);
+
+        const shippingCharge = Math.ceil(Number(cheapest.freight_charge || cheapest.rate || 0));
+        const etd = cheapest.etd || cheapest.estimated_delivery_days || '';
+        const courierName = cheapest.courier_name || '';
+
+        return new Response(
+          JSON.stringify({
+            success: true,
+            serviceable: true,
+            shipping_charge: shippingCharge,
+            estimated_delivery: etd,
+            courier_name: courierName,
+            free_shipping: false,
+          }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      } catch (srError: any) {
+        console.error('Shiprocket serviceability error:', srError);
+        // Failsafe: return fallback charge
+        return new Response(
+          JSON.stringify({
+            success: true,
+            serviceable: true,
+            shipping_charge: fallbackCharge,
+            estimated_delivery: '',
+            courier_name: '',
+            free_shipping: false,
+            fallback: true,
+            fallback_reason: srError.message,
+          }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+    }
+
     return new Response(
-      JSON.stringify({ error: 'Invalid action. Use: create-shipment, request-awb, track, sync-tracking, cancel' }),
+      JSON.stringify({ error: 'Invalid action. Use: create-shipment, request-awb, track, sync-tracking, cancel, check-serviceability' }),
       { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 

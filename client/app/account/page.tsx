@@ -2,9 +2,10 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { ChevronRight, User, MapPin, Package, Settings, LogOut, PackageOpen, ExternalLink, Truck, Check, X, Lock, Eye, EyeOff } from 'lucide-react';
-import { getUserOrders, sendOTP, verifyOTPAndSetPassword } from '@/lib/api';
+import { ChevronRight, User, MapPin, Package, Settings, LogOut, PackageOpen, ExternalLink, Truck, Check, X, Lock, Eye, EyeOff, Plus, Pencil, Trash2, Star, Loader2 } from 'lucide-react';
+import { getUserOrders, sendOTP, verifyOTPAndSetPassword, getProductSlugById, getSavedAddresses, addSavedAddress, updateSavedAddress, deleteSavedAddress, setDefaultAddress, type SavedAddress } from '@/lib/api';
 import { useAuthStore } from '@/store/authStore';
+import { useCartStore } from '@/store/cartStore';
 
 type Tab = 'profile' | 'orders' | 'addresses' | 'settings';
 
@@ -129,16 +130,7 @@ export default function AccountPage() {
             )}
 
             {activeTab === 'addresses' && (
-              <div className="animate-fade-in flex flex-col items-center justify-center text-center h-full pt-10">
-                <div className="w-[80px] h-[80px] bg-[#F5F5F5] rounded-full flex items-center justify-center mb-6">
-                  <MapPin size={40} className="text-[#CCCCCC]" strokeWidth={1.5} />
-                </div>
-                <h3 className="text-[22px] font-bold text-brand-black mb-2">No addresses saved</h3>
-                <p className="text-[15px] text-[#7A7A7A] mb-8 max-w-[300px]">Add your shipping addresses here for a faster checkout experience.</p>
-                <button className="bg-brand-black hover:bg-[#1A1A1A] text-white px-[32px] py-[12px] rounded-full font-bold text-[15px] transition-colors">
-                  Add New Address
-                </button>
-              </div>
+              <SavedAddressesTab userId={user.id} />
             )}
 
             {activeTab === 'settings' && (
@@ -350,8 +342,6 @@ function ChangePasswordForm({ onCancel }: { onCancel: () => void }) {
     </div>
   );
 }
-  );
-}
 
 // ─── Orders Sub-Component ────────────────────────────────────────────────────
 
@@ -371,6 +361,27 @@ function OrdersTab({ userEmail }: { userEmail: string }) {
   const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const { addItem, openCart } = useCartStore();
+  const router = useRouter();
+
+  const handleBuyAgain = (item: any) => {
+    addItem({
+      id: item.product_id,
+      name: item.name,
+      price: Number(item.price),
+      mrp: Number(item.mrp || item.price),
+      image: item.image || '',
+      quantity: item.quantity || 1,
+    });
+    router.push('/cart');
+  };
+
+  const handleWriteReview = async (productId: string) => {
+    const slug = await getProductSlugById(productId);
+    if (slug) {
+      router.push(`/products/${slug}#write-review`);
+    }
+  };
 
   useEffect(() => {
     if (!userEmail) return;
@@ -499,12 +510,14 @@ function OrdersTab({ userEmail }: { userEmail: string }) {
                       <div className="text-sm font-bold text-[#B12704] mt-1">₹{item.price}</div>
                       
                       <div className="mt-3 flex flex-wrap gap-3">
-                        <button className="px-4 py-1.5 bg-[#FFD814] hover:bg-[#F7CA00] text-[#0F1111] rounded-full text-sm font-medium transition-colors shadow-sm border border-[#FCD200]">
+                        <button onClick={() => handleBuyAgain(item)} className="px-4 py-1.5 bg-[#FFD814] hover:bg-[#F7CA00] text-[#0F1111] rounded-full text-sm font-medium transition-colors shadow-sm border border-[#FCD200]">
                           Buy it again
                         </button>
-                        <button className="px-4 py-1.5 bg-white border border-[#D5D9D9] hover:bg-[#F3F3F3] text-[#0F1111] rounded-full text-sm font-medium transition-colors shadow-sm">
-                          Write a product review
-                        </button>
+                        {item.product_id && (
+                          <button onClick={() => handleWriteReview(item.product_id)} className="px-4 py-1.5 bg-white border border-[#D5D9D9] hover:bg-[#F3F3F3] text-[#0F1111] rounded-full text-sm font-medium transition-colors shadow-sm">
+                            Write a product review
+                          </button>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -552,6 +565,221 @@ function OrdersTab({ userEmail }: { userEmail: string }) {
           </div>
         );
       })}
+    </div>
+  );
+}
+
+// ─── Saved Addresses Tab ────────────────────────────────────────────────────
+
+function SavedAddressesTab({ userId }: { userId: string }) {
+  const [addresses, setAddresses] = useState<SavedAddress[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [showForm, setShowForm] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+  const [form, setForm] = useState({
+    full_name: '', phone: '', address_line_1: '', address_line_2: '', city: '', state: '', pincode: '', is_default: false,
+  });
+
+  const fetchAddresses = async () => {
+    setLoading(true);
+    const data = await getSavedAddresses(userId);
+    setAddresses(data);
+    setLoading(false);
+  };
+
+  useEffect(() => { fetchAddresses(); }, [userId]);
+
+  const resetForm = () => {
+    setForm({ full_name: '', phone: '', address_line_1: '', address_line_2: '', city: '', state: '', pincode: '', is_default: false });
+    setEditingId(null);
+    setShowForm(false);
+  };
+
+  const handleEdit = (addr: SavedAddress) => {
+    setForm({
+      full_name: addr.full_name,
+      phone: addr.phone,
+      address_line_1: addr.address_line_1,
+      address_line_2: addr.address_line_2 || '',
+      city: addr.city,
+      state: addr.state,
+      pincode: addr.pincode,
+      is_default: addr.is_default || false,
+    });
+    setEditingId(addr.id || null);
+    setShowForm(true);
+  };
+
+  const handleSave = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSaving(true);
+    try {
+      if (editingId) {
+        await updateSavedAddress(editingId, userId, { ...form });
+      } else {
+        await addSavedAddress({ ...form, user_id: userId, country: 'India' });
+      }
+      await fetchAddresses();
+      resetForm();
+    } catch (err: any) {
+      alert(err.message || 'Failed to save address');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    try {
+      await deleteSavedAddress(id);
+      setDeleteConfirmId(null);
+      await fetchAddresses();
+    } catch (err: any) {
+      alert(err.message || 'Failed to delete address');
+    }
+  };
+
+  const handleSetDefault = async (id: string) => {
+    try {
+      await setDefaultAddress(userId, id);
+      await fetchAddresses();
+    } catch (err: any) {
+      alert(err.message || 'Failed to set default');
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="animate-fade-in flex items-center justify-center py-16">
+        <div className="animate-pulse text-brand-green font-bold">Loading addresses...</div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="animate-fade-in">
+      <div className="flex items-center justify-between mb-[32px]">
+        <h2 className="text-[24px] font-bold text-brand-black">Saved Addresses</h2>
+        {!showForm && (
+          <button
+            onClick={() => { resetForm(); setShowForm(true); }}
+            className="flex items-center gap-2 bg-brand-black hover:bg-[#1A1A1A] text-white px-[24px] py-[10px] rounded-full font-bold text-[14px] transition-colors"
+          >
+            <Plus size={16} strokeWidth={2.5} /> Add Address
+          </button>
+        )}
+      </div>
+
+      {/* Address Form */}
+      {showForm && (
+        <form onSubmit={handleSave} className="mb-8 p-6 rounded-[16px] border border-[#EAEAEA] bg-[#FAFAFA]">
+          <h3 className="font-bold text-[18px] text-brand-black mb-4">{editingId ? 'Edit Address' : 'Add New Address'}</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[13px] font-semibold text-[#888]">Full Name *</label>
+              <input required value={form.full_name} onChange={e => setForm(f => ({...f, full_name: e.target.value}))}
+                className="px-4 py-3 rounded-xl border border-[#EAEAEA] focus:border-brand-green outline-none transition-colors font-medium text-brand-black bg-white" placeholder="Rahul Kumar" />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[13px] font-semibold text-[#888]">Phone *</label>
+              <input required type="tel" value={form.phone} onChange={e => setForm(f => ({...f, phone: e.target.value}))}
+                className="px-4 py-3 rounded-xl border border-[#EAEAEA] focus:border-brand-green outline-none transition-colors font-medium text-brand-black bg-white" placeholder="9876543210" />
+            </div>
+            <div className="flex flex-col gap-1.5 md:col-span-2">
+              <label className="text-[13px] font-semibold text-[#888]">Address Line 1 *</label>
+              <input required value={form.address_line_1} onChange={e => setForm(f => ({...f, address_line_1: e.target.value}))}
+                className="px-4 py-3 rounded-xl border border-[#EAEAEA] focus:border-brand-green outline-none transition-colors font-medium text-brand-black bg-white" placeholder="House/Flat No, Street, Area" />
+            </div>
+            <div className="flex flex-col gap-1.5 md:col-span-2">
+              <label className="text-[13px] font-semibold text-[#888]">Address Line 2</label>
+              <input value={form.address_line_2} onChange={e => setForm(f => ({...f, address_line_2: e.target.value}))}
+                className="px-4 py-3 rounded-xl border border-[#EAEAEA] focus:border-brand-green outline-none transition-colors font-medium text-brand-black bg-white" placeholder="Landmark, Nearby" />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[13px] font-semibold text-[#888]">City *</label>
+              <input required value={form.city} onChange={e => setForm(f => ({...f, city: e.target.value}))}
+                className="px-4 py-3 rounded-xl border border-[#EAEAEA] focus:border-brand-green outline-none transition-colors font-medium text-brand-black bg-white" placeholder="Delhi" />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[13px] font-semibold text-[#888]">State *</label>
+              <input required value={form.state} onChange={e => setForm(f => ({...f, state: e.target.value}))}
+                className="px-4 py-3 rounded-xl border border-[#EAEAEA] focus:border-brand-green outline-none transition-colors font-medium text-brand-black bg-white" placeholder="Delhi" />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[13px] font-semibold text-[#888]">Pincode *</label>
+              <input required value={form.pincode} onChange={e => setForm(f => ({...f, pincode: e.target.value}))}
+                className="px-4 py-3 rounded-xl border border-[#EAEAEA] focus:border-brand-green outline-none transition-colors font-medium text-brand-black bg-white" placeholder="110001" />
+            </div>
+            <div className="flex items-center gap-3 md:col-span-2 pt-2">
+              <input type="checkbox" id="is_default" checked={form.is_default} onChange={e => setForm(f => ({...f, is_default: e.target.checked}))}
+                className="w-5 h-5 rounded border-[#EAEAEA] accent-brand-green" />
+              <label htmlFor="is_default" className="text-[14px] font-semibold text-brand-black cursor-pointer">Set as default address</label>
+            </div>
+          </div>
+          <div className="flex gap-3 mt-6">
+            <button type="submit" disabled={saving}
+              className="bg-brand-black hover:bg-[#1A1A1A] text-white px-[32px] py-[12px] rounded-full font-bold text-[14px] transition-colors disabled:opacity-50 flex items-center gap-2">
+              {saving ? <><Loader2 size={16} className="animate-spin" /> Saving...</> : (editingId ? 'Update Address' : 'Save Address')}
+            </button>
+            <button type="button" onClick={resetForm}
+              className="border border-[#EAEAEA] hover:bg-[#F2F2F2] text-brand-black px-[32px] py-[12px] rounded-full font-bold text-[14px] transition-colors">
+              Cancel
+            </button>
+          </div>
+        </form>
+      )}
+
+      {/* Address List */}
+      {addresses.length === 0 && !showForm ? (
+        <div className="flex flex-col items-center justify-center text-center pt-10">
+          <div className="w-[80px] h-[80px] bg-[#F5F5F5] rounded-full flex items-center justify-center mb-6">
+            <MapPin size={40} className="text-[#CCCCCC]" strokeWidth={1.5} />
+          </div>
+          <h3 className="text-[22px] font-bold text-brand-black mb-2">No addresses saved</h3>
+          <p className="text-[15px] text-[#7A7A7A] mb-8 max-w-[300px]">Add your shipping addresses here for a faster checkout experience.</p>
+          <button onClick={() => setShowForm(true)} className="bg-brand-black hover:bg-[#1A1A1A] text-white px-[32px] py-[12px] rounded-full font-bold text-[15px] transition-colors">
+            Add New Address
+          </button>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {addresses.map(addr => (
+            <div key={addr.id} className={`relative p-5 rounded-[16px] border ${addr.is_default ? 'border-brand-green bg-[#F8FDF5]' : 'border-[#EAEAEA] bg-white'} transition-colors`}>
+              {addr.is_default && (
+                <span className="absolute top-3 right-3 bg-brand-green text-white text-[11px] font-bold px-3 py-1 rounded-full">Default</span>
+              )}
+              <h4 className="font-bold text-brand-black text-[16px] mb-1">{addr.full_name}</h4>
+              <p className="text-[14px] text-[#666] leading-relaxed">
+                {addr.address_line_1}{addr.address_line_2 ? `, ${addr.address_line_2}` : ''}<br />
+                {addr.city}, {addr.state} - {addr.pincode}<br />
+                Phone: {addr.phone}
+              </p>
+              <div className="flex items-center gap-2 mt-4">
+                <button onClick={() => handleEdit(addr)} className="flex items-center gap-1.5 text-[13px] font-bold text-[#007185] hover:text-[#C45500] transition-colors">
+                  <Pencil size={14} /> Edit
+                </button>
+                {!addr.is_default && (
+                  <button onClick={() => handleSetDefault(addr.id!)} className="flex items-center gap-1.5 text-[13px] font-bold text-[#007185] hover:text-[#C45500] transition-colors">
+                    <Star size={14} /> Set Default
+                  </button>
+                )}
+                {deleteConfirmId === addr.id ? (
+                  <div className="flex items-center gap-2 ml-auto">
+                    <span className="text-[12px] text-[#888]">Delete?</span>
+                    <button onClick={() => handleDelete(addr.id!)} className="text-[13px] font-bold text-brand-red hover:underline">Yes</button>
+                    <button onClick={() => setDeleteConfirmId(null)} className="text-[13px] font-bold text-[#666] hover:underline">No</button>
+                  </div>
+                ) : (
+                  <button onClick={() => setDeleteConfirmId(addr.id!)} className="flex items-center gap-1.5 text-[13px] font-bold text-brand-red hover:underline ml-auto">
+                    <Trash2 size={14} /> Delete
+                  </button>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

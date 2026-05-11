@@ -120,14 +120,7 @@ const FooterContent: NextPage<FooterContentType> = ({ className = "" }) => {
               alt=""
               src="/Icon-1.svg"
             />
-            <Image
-              className="cursor-pointer [border:none] p-0 bg-[transparent] w-[32px] relative rounded-[100px] max-h-full"
-              width={32}
-              height={32}
-              sizes="100vw"
-              alt=""
-              src="/Icon-5.svg"
-            />
+
             <Image
               className="cursor-pointer [border:none] p-0 bg-[transparent] w-[32px] relative rounded-[100px] max-h-full"
               width={32}

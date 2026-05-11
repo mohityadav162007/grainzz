@@ -29,6 +29,8 @@ export default function AdminSettingsPage() {
           description: 'LinkedIn profile URL for the footer.' 
         });
       }
+      // Filter out Twitter/X as requested
+      data = data.filter((s: any) => s.key !== 'social_twitter');
       setSettings(data);
     } catch (err) {
       console.error(err);

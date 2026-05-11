@@ -3,11 +3,13 @@ import { Suspense, useEffect, useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { CheckCircle, Package, Loader2, AlertCircle } from 'lucide-react';
-import { checkPaymentStatus } from '@/lib/api';
+import { checkPaymentStatus, getOrderById, addressExists, addSavedAddress } from '@/lib/api';
+import { useAuthStore } from '@/store/authStore';
 
 function SuccessContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
+  const { user } = useAuthStore();
   const orderId = searchParams.get('orderId');
   const [isValidating, setIsValidating] = useState(true);
   const [isValid, setIsValid] = useState(false);
@@ -23,6 +25,33 @@ function SuccessContent() {
         const response = await checkPaymentStatus(orderId);
         if (response?.data?.state === 'COMPLETED') {
           setIsValid(true);
+          // Auto-save shipping address (fire-and-forget)
+          if (user?.id) {
+            try {
+              const orderData = await getOrderById(orderId);
+              const order = orderData?.data;
+              if (order?.user_address && order?.user_pincode && order?.user_phone) {
+                const exists = await addressExists(user.id, order.user_address, order.user_pincode, order.user_phone);
+                if (!exists) {
+                  await addSavedAddress({
+                    user_id: user.id,
+                    full_name: order.user_name || '',
+                    phone: order.user_phone,
+                    address_line_1: order.user_address,
+                    address_line_2: '',
+                    city: order.user_city || '',
+                    state: order.user_state || '',
+                    pincode: order.user_pincode,
+                    country: 'India',
+                    is_default: false,
+                  });
+                }
+              }
+            } catch (e) {
+              // Silent fail — address save is non-critical
+              console.error('Auto-save address failed:', e);
+            }
+          }
         } else {
           // If not paid, force them back through verify logic
           router.replace(`/payment/verify?orderId=${orderId}`);

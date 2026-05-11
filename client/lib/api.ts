@@ -406,8 +406,10 @@ export const createOrder = async (body: {
   discountAmount?: number;
   totalAmount: number;
   userId?: string;
+  shippingCharge?: number;
+  estimatedDelivery?: string;
 }) => {
-  const { items, userDetails, subtotal, couponCode, discountAmount, totalAmount, userId } = body;
+  const { items, userDetails, subtotal, couponCode, discountAmount, totalAmount, userId, shippingCharge, estimatedDelivery } = body;
 
   // Generate UUID v4 for the order to bypass needing .select() and running into RLS errors for guests
   const orderId = crypto.randomUUID();
@@ -429,6 +431,8 @@ export const createOrder = async (body: {
       discount_amount: discountAmount || 0,
       total_amount: totalAmount,
       user_id: userId || null,
+      shipping_charge: shippingCharge || 0,
+      estimated_delivery: estimatedDelivery || '',
     });
 
   if (orderError) throw new Error(orderError.message);
@@ -486,29 +490,34 @@ export const applyCoupon = async (code: string, orderTotal: number) => {
 
 // ─── Payment ─────────────────────────────────────────────────────────────────
 
-export const initiatePayment = async (body: { orderId: string; amount: number; userPhone: string }) => {
-  const { data, error } = await supabase.functions.invoke('phonepe-payment', {
-    body: { action: 'initiate', ...body },
+/**
+ * Initiate PhonePe payment via Next.js API route.
+ * Amount is read server-side from the database (anti-spoofing).
+ * Accepts orderId only — no client-side amount needed.
+ */
+export const initiatePayment = async (body: { orderId: string; amount?: number; userPhone?: string }) => {
+  const res = await fetch('/api/payments/phonepe/create', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ orderId: body.orderId }),
   });
-  if (error) {
-    let msg = error.message;
-    try { if (error.context) { const errData = await error.context.json(); if (errData.error) msg = errData.error; } } catch(e) {}
-    throw new Error(msg);
+  const data = await res.json();
+  if (!res.ok || data.error) {
+    throw new Error(data.error || 'Payment initiation failed');
   }
-  if (data?.error) throw new Error(data.error);
   return data;
 };
 
+/**
+ * Check payment status via Next.js API route.
+ * Reconciles PhonePe status with database.
+ */
 export const checkPaymentStatus = async (orderId: string) => {
-  const { data, error } = await supabase.functions.invoke('phonepe-payment', {
-    body: { action: 'status', orderId },
-  });
-  if (error) {
-    let msg = error.message;
-    try { if (error.context) { const errData = await error.context.json(); if (errData.error) msg = errData.error; } } catch(e) {}
-    throw new Error(msg);
+  const res = await fetch(`/api/payments/phonepe/status?orderId=${encodeURIComponent(orderId)}`);
+  const data = await res.json();
+  if (!res.ok || data.error) {
+    throw new Error(data.error || 'Failed to check payment status');
   }
-  if (data?.error) throw new Error(data.error);
   return data;
 };
 
@@ -563,4 +572,116 @@ export const getUserOrders = async (email: string) => {
 
   if (error) throw new Error(error.message);
   return data || [];
+};
+
+// ─── Shipping Rates ──────────────────────────────────────────────────────────
+
+/**
+ * Get shipping rates from Shiprocket via edge function.
+ * Uses the check-serviceability action.
+ */
+export const getShippingRates = async (params: {
+  delivery_pincode: string;
+  weight: number;
+  subtotal: number;
+  has_combo: boolean;
+}) => {
+  const { data, error } = await supabase.functions.invoke('shiprocket-orders', {
+    body: { action: 'check-serviceability', ...params },
+  });
+  if (error) {
+    console.error('getShippingRates error:', error);
+    // Return a fallback so checkout doesn't break
+    return { success: true, serviceable: true, shipping_charge: params.has_combo ? 99 : 50, estimated_delivery: '', courier_name: '', free_shipping: false, fallback: true };
+  }
+  return data;
+};
+
+// ─── Saved Addresses ─────────────────────────────────────────────────────────
+
+export interface SavedAddress {
+  id?: string;
+  user_id: string;
+  full_name: string;
+  phone: string;
+  address_line_1: string;
+  address_line_2?: string;
+  city: string;
+  state: string;
+  pincode: string;
+  country?: string;
+  is_default?: boolean;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export const getSavedAddresses = async (userId: string): Promise<SavedAddress[]> => {
+  const { data, error } = await supabase
+    .from('saved_addresses')
+    .select('*')
+    .eq('user_id', userId)
+    .order('is_default', { ascending: false })
+    .order('created_at', { ascending: false });
+  if (error) { console.error('getSavedAddresses error:', error); return []; }
+  return data || [];
+};
+
+export const addSavedAddress = async (address: Omit<SavedAddress, 'id' | 'created_at' | 'updated_at'>): Promise<SavedAddress | null> => {
+  // If setting as default, unset all other defaults first
+  if (address.is_default) {
+    await supabase.from('saved_addresses').update({ is_default: false }).eq('user_id', address.user_id);
+  }
+  const { data, error } = await supabase.from('saved_addresses').insert(address).select().single();
+  if (error) throw new Error(error.message);
+  return data;
+};
+
+export const updateSavedAddress = async (id: string, userId: string, updates: Partial<SavedAddress>): Promise<void> => {
+  // If setting as default, unset all other defaults first
+  if (updates.is_default) {
+    await supabase.from('saved_addresses').update({ is_default: false }).eq('user_id', userId);
+  }
+  const { error } = await supabase.from('saved_addresses').update(updates).eq('id', id);
+  if (error) throw new Error(error.message);
+};
+
+export const deleteSavedAddress = async (id: string): Promise<void> => {
+  const { error } = await supabase.from('saved_addresses').delete().eq('id', id);
+  if (error) throw new Error(error.message);
+};
+
+export const setDefaultAddress = async (userId: string, addressId: string): Promise<void> => {
+  // Unset all defaults for this user
+  await supabase.from('saved_addresses').update({ is_default: false }).eq('user_id', userId);
+  // Set the chosen one
+  const { error } = await supabase.from('saved_addresses').update({ is_default: true }).eq('id', addressId);
+  if (error) throw new Error(error.message);
+};
+
+/**
+ * Check if an address already exists for this user (duplicate check).
+ */
+export const addressExists = async (userId: string, addressLine1: string, pincode: string, phone: string): Promise<boolean> => {
+  const { data } = await supabase
+    .from('saved_addresses')
+    .select('id')
+    .eq('user_id', userId)
+    .eq('address_line_1', addressLine1)
+    .eq('pincode', pincode)
+    .eq('phone', phone)
+    .limit(1);
+  return (data && data.length > 0) || false;
+};
+
+/**
+ * Get a product's slug by its ID (for Write Review navigation).
+ */
+export const getProductSlugById = async (productId: string): Promise<string | null> => {
+  const { data, error } = await supabase
+    .from('products')
+    .select('slug')
+    .eq('id', productId)
+    .single();
+  if (error || !data) return null;
+  return data.slug;
 };

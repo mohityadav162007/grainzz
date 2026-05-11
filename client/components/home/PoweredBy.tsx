@@ -4,6 +4,8 @@ import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
 import Image from 'next/image';
 import { getPoweredByCards, getProductById } from '@/lib/api';
+import { useCartStore } from '@/store/cartStore';
+import { useRouter } from 'next/navigation';
 
 interface PoweredByCard {
   id: string;
@@ -26,11 +28,14 @@ interface ResolvedCard {
   link: string;
   price?: number;
   mrp?: number;
+  product?: any;
 }
 
 export default function PoweredBy() {
   const [cards, setCards] = useState<ResolvedCard[]>([]);
   const [loading, setLoading] = useState(true);
+  const { addItem } = useCartStore();
+  const router = useRouter();
 
   useEffect(() => {
     const loadCards = async () => {
@@ -60,6 +65,7 @@ export default function PoweredBy() {
               link,
               price: productData?.price,
               mrp: productData?.mrp,
+              product: productData,
             };
           })
         );
@@ -81,6 +87,17 @@ export default function PoweredBy() {
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
+
+  const handleBuyNow = (e: React.MouseEvent, card: ResolvedCard) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (card.product) {
+      addItem(card.product);
+      router.push('/checkout');
+    } else {
+      router.push(card.link);
+    }
+  };
 
   const isMobile = windowWidth > 0 && windowWidth < 768;
 
@@ -114,9 +131,10 @@ export default function PoweredBy() {
 
         <div className="flex flex-col md:grid md:grid-cols-3 gap-10 md:gap-6 lg:gap-8 relative mt-8 pb-10 md:pb-0">
           {cards.map((cat, idx) => (
-            <div 
+            <Link 
               key={idx} 
-              className="flex flex-col w-full rounded-[24px] overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.05)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.1)] transition-all duration-300 sticky md:relative"
+              href={cat.link}
+              className="flex flex-col w-full rounded-[24px] overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.05)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.1)] transition-all duration-300 sticky md:relative group/card"
               style={isMobile ? { 
                 top: `calc(100px + ${idx * 30}px)`,
                 zIndex: idx + 1,
@@ -132,7 +150,7 @@ export default function PoweredBy() {
                     src={cat.image}
                     alt={cat.title}
                     fill
-                    className="object-cover"
+                    className="object-cover group-hover/card:scale-105 transition-transform duration-500"
                   />
                 </div>
               </div>
@@ -151,17 +169,17 @@ export default function PoweredBy() {
                   {cat.title}
                 </h3>
                 
-                <Link
-                  href={cat.link}
-                  className="inline-flex items-center justify-between gap-4 bg-white/50 border border-black/10 text-brand-green pl-5 pr-1 py-1 rounded-full transition-all group hover:bg-brand-green hover:text-white hover:border-brand-green"
+                <button
+                  onClick={(e) => handleBuyNow(e, cat)}
+                  className="mt-auto inline-flex items-center justify-between gap-4 bg-white/50 border border-black/10 text-brand-green pl-5 pr-1 py-1 rounded-full transition-all group hover:bg-brand-green hover:text-white hover:border-brand-green"
                 >
                   <span className="font-bold text-[14px] md:text-[16px]">Buy Now</span>
                   <div className="w-8 h-8 md:w-9 md:h-9 bg-brand-green group-hover:bg-white rounded-full flex items-center justify-center text-white group-hover:text-brand-green transition-colors">
                     <ArrowRight size={16} strokeWidth={3}/>
                   </div>
-                </Link>
+                </button>
               </div>
-            </div>
+            </Link>
           ))}
         </div>
       </div>

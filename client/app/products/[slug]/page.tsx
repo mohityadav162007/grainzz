@@ -82,6 +82,27 @@ export default function ProductDetailPage() {
     };
   }, [slug]);
 
+  // Handle #write-review hash navigation
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const checkHash = () => {
+      if (window.location.hash === '#write-review') {
+        setTimeout(() => {
+          const el = document.getElementById('write-review');
+          if (el) {
+            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            // Focus the first input in the review form
+            const firstInput = el.querySelector('input[type="text"], textarea');
+            if (firstInput) (firstInput as HTMLElement).focus();
+          }
+        }, 500);
+      }
+    };
+    checkHash();
+    window.addEventListener('hashchange', checkHash);
+    return () => window.removeEventListener('hashchange', checkHash);
+  }, [loading]);
+
   const toggleSection = (label: string) => {
     setOpenSection(prev => prev === label ? null : label);
     if (label !== 'Nutrition breakdown') setOpenComboSub(null);
@@ -613,7 +634,7 @@ export default function ProductDetailPage() {
             </div>
 
             {/* RIGHT: Review Form */}
-            <div className="flex-1 w-full max-w-[500px] mx-auto lg:mx-0">
+            <div id="write-review" className="flex-1 w-full max-w-[500px] mx-auto lg:mx-0">
               <div className="bg-white rounded-[24px] p-[32px] md:p-[48px] border border-[#EAEAEA] shadow-sm">
                 <h3 className="text-[24px] font-bold text-brand-black mb-[32px] text-center">Leave us a review!</h3>
                 

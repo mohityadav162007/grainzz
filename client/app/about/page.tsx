@@ -7,10 +7,13 @@ import OurValues from '@/components/about/OurValues';
 import CustomerTestimonials from '@/components/about/CustomerTestimonials';
 import FAQSection from '@/components/home/FAQSection';
 
-export const metadata: Metadata = {
+import { constructMetadata } from '@/lib/seo';
+
+export const metadata: Metadata = constructMetadata({
   title: 'About Us – Grainzz',
   description: 'Learn about Grainzz — India\'s premium healthy grain snacks brand built on real supergrains.',
-};
+  path: '/about',
+});
 
 const story = [
   {

@@ -1,9 +1,12 @@
 import type { Metadata } from 'next';
 
-export const metadata: Metadata = {
+import { constructMetadata } from '@/lib/seo';
+
+export const metadata: Metadata = constructMetadata({
   title: 'Refund & Return Policy – Grainzz',
   description: 'Refund and Return Policy for Grainzz — how we handle returns and refunds for our food products.',
-};
+  path: '/returns',
+});
 
 export default function ReturnPolicyPage() {
   return (

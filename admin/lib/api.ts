@@ -1,5 +1,6 @@
 import { supabase } from './supabase';
 import { uploadProductImageCloudinary, uploadHeroImageCloudinary, uploadInstagramImageCloudinary, uploadToCloudinary } from './cloudinary';
+import { submitToIndexNow } from './indexnow';
 
 // ─── Auth ────────────────────────────────────────────────────────────────────
 
@@ -221,8 +222,13 @@ export const createProduct = async (formData: FormData) => {
     .single();
 
   if (error) throw new Error(error.message);
+  if (isActive) {
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.grainzz.com';
+    submitToIndexNow([`${siteUrl}/products/${slug}`]);
+  }
   return { success: true, data };
 };
+
 
 export const updateProduct = async (id: string, formData: FormData) => {
   const updates: Record<string, any> = {};
@@ -311,8 +317,13 @@ export const updateProduct = async (id: string, formData: FormData) => {
     .single();
 
   if (error) throw new Error(error.message);
+  if (data?.slug && data?.is_active) {
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.grainzz.com';
+    submitToIndexNow([`${siteUrl}/products/${data.slug}`]);
+  }
   return { success: true, data };
 };
+
 
 export const deleteProduct = async (id: string) => {
   // ── Cascade cleanup: remove product references from all JSON stores ──
@@ -382,9 +393,18 @@ export const deleteProduct = async (id: string) => {
   }
 
   // ── Now delete the actual product ──
+  const { data: productToDelete } = await supabase.from('products').select('slug').eq('id', id).single();
+  
   const { error } = await supabase.from('products').delete().eq('id', id);
   if (error) throw new Error(error.message);
+
+  if (productToDelete?.slug) {
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.grainzz.com';
+    submitToIndexNow([`${siteUrl}/products/${productToDelete.slug}`]);
+  }
+
   return { success: true, message: 'Product deleted permanently' };
+
 };
 
 export const setProductVisibility = async (id: string, isActive: boolean) => {

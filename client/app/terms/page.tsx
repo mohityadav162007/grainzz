@@ -1,9 +1,12 @@
 import type { Metadata } from 'next';
 
-export const metadata: Metadata = {
+import { constructMetadata } from '@/lib/seo';
+
+export const metadata: Metadata = constructMetadata({
   title: 'Terms & Conditions – Grainzz',
   description: 'Terms and Conditions for Grainzz Gifting — rules and guidelines for using our website.',
-};
+  path: '/terms',
+});
 
 export default function TermsPage() {
   return (

@@ -1,9 +1,12 @@
 import type { Metadata } from 'next';
 
-export const metadata: Metadata = {
+import { constructMetadata } from '@/lib/seo';
+
+export const metadata: Metadata = constructMetadata({
   title: 'Shipping Policy – Grainzz',
   description: 'Shipping Policy for Grainzz — how we handle delivery and logistics.',
-};
+  path: '/shipping',
+});
 
 export default function ShippingPolicyPage() {
   return (

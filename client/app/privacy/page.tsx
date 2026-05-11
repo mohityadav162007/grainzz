@@ -1,9 +1,12 @@
 import type { Metadata } from 'next';
 
-export const metadata: Metadata = {
+import { constructMetadata } from '@/lib/seo';
+
+export const metadata: Metadata = constructMetadata({
   title: 'Privacy Policy – Grainzz',
   description: 'Privacy Policy for Grainzz — how we collect, use, and protect your information.',
-};
+  path: '/privacy',
+});
 
 export default function PrivacyPolicyPage() {
   return (

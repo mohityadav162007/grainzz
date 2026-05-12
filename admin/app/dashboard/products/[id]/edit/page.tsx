@@ -156,8 +156,27 @@ export default function EditProductPage() {
     }
   };
 
+  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+
   const removeExistingImage = (index: number) => {
     setExistingImages((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const handleDragStart = (index: number) => {
+    setDraggedIndex(index);
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+  };
+
+  const handleDrop = (index: number) => {
+    if (draggedIndex === null) return;
+    const newImages = [...existingImages];
+    const [draggedItem] = newImages.splice(draggedIndex, 1);
+    newImages.splice(index, 0, draggedItem);
+    setExistingImages(newImages);
+    setDraggedIndex(null);
   };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -405,13 +424,30 @@ export default function EditProductPage() {
           {existingImages.length > 0 && (
             <div>
               <p className="text-sm text-gray-600 mb-2">Current Images</p>
-              <div className="flex gap-3 flex-wrap">
+              <div className="flex gap-4 flex-wrap">
                 {existingImages.map((url, i) => (
-                  <div key={i} className="relative">
-                    <img src={url} alt="" className="w-20 h-20 object-cover rounded-lg border" />
-                    <button type="button" onClick={() => removeExistingImage(i)} className="absolute -top-2 -right-2 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center">
-                      <X size={12} />
+                  <div 
+                    key={i} 
+                    draggable
+                    onDragStart={() => handleDragStart(i)}
+                    onDragOver={handleDragOver}
+                    onDrop={() => handleDrop(i)}
+                    className={`relative group cursor-grab active:cursor-grabbing transition-all duration-300 ${
+                      draggedIndex === i ? 'opacity-40 scale-95' : 'opacity-100 scale-100'
+                    }`}
+                  >
+                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors rounded-lg z-10 pointer-events-none" />
+                    <img src={url} alt="" className="w-24 h-24 object-cover rounded-lg border-2 border-transparent group-hover:border-primary transition-all shadow-sm" />
+                    <button 
+                      type="button" 
+                      onClick={() => removeExistingImage(i)} 
+                      className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center shadow-lg z-20 hover:bg-red-600 transition-colors"
+                    >
+                      <X size={14} />
                     </button>
+                    <div className="absolute bottom-1 right-1 bg-white/80 backdrop-blur-sm px-1.5 py-0.5 rounded text-[10px] font-bold text-gray-500 opacity-0 group-hover:opacity-100 transition-opacity">
+                      #{i + 1}
+                    </div>
                   </div>
                 ))}
               </div>

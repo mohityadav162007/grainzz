@@ -132,6 +132,8 @@ export default function NewProductPage() {
     }
   };
 
+  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files) return;
@@ -147,6 +149,23 @@ export default function NewProductPage() {
 
   const removeImage = (index: number) => {
     setImageFiles(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const handleDragStart = (index: number) => {
+    setDraggedIndex(index);
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+  };
+
+  const handleDrop = (index: number) => {
+    if (draggedIndex === null) return;
+    const newFiles = [...imageFiles];
+    const [draggedItem] = newFiles.splice(draggedIndex, 1);
+    newFiles.splice(index, 0, draggedItem);
+    setImageFiles(newFiles);
+    setDraggedIndex(null);
   };
 
   return (
@@ -375,13 +394,30 @@ export default function NewProductPage() {
             <input type="file" multiple accept="image/*" onChange={handleImageChange} className="w-full max-w-xs mx-auto text-sm" />
           </div>
           {imageFiles.length > 0 && (
-            <div className="flex gap-3 flex-wrap">
+            <div className="flex gap-4 flex-wrap">
               {imageFiles.map((f, i) => (
-                <div key={i} className="relative group">
-                  <img src={URL.createObjectURL(f)} alt="" className="w-20 h-20 object-cover rounded-lg border" />
-                  <button type="button" onClick={() => removeImage(i)} className="absolute -top-2 -right-2 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                    <X size={12} />
+                <div 
+                  key={i} 
+                  draggable
+                  onDragStart={() => handleDragStart(i)}
+                  onDragOver={handleDragOver}
+                  onDrop={() => handleDrop(i)}
+                  className={`relative group cursor-grab active:cursor-grabbing transition-all duration-300 ${
+                    draggedIndex === i ? 'opacity-40 scale-95' : 'opacity-100 scale-100'
+                  }`}
+                >
+                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors rounded-lg z-10 pointer-events-none" />
+                  <img src={URL.createObjectURL(f)} alt="" className="w-24 h-24 object-cover rounded-lg border-2 border-transparent group-hover:border-primary transition-all shadow-sm" />
+                  <button 
+                    type="button" 
+                    onClick={() => removeImage(i)} 
+                    className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center shadow-lg z-20 hover:bg-red-600 transition-colors"
+                  >
+                    <X size={14} />
                   </button>
+                  <div className="absolute bottom-1 right-1 bg-white/80 backdrop-blur-sm px-1.5 py-0.5 rounded text-[10px] font-bold text-gray-500 opacity-0 group-hover:opacity-100 transition-opacity">
+                    #{i + 1}
+                  </div>
                 </div>
               ))}
             </div>

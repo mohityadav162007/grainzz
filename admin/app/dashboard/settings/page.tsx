@@ -29,6 +29,14 @@ export default function AdminSettingsPage() {
           description: 'LinkedIn profile URL for the footer.' 
         });
       }
+      // Ensure shiprocket_pickup_location is in the list
+      if (!data.find((s: any) => s.key === 'shiprocket_pickup_location')) {
+        data.push({ 
+          key: 'shiprocket_pickup_location', 
+          value: 'warehouse', 
+          description: 'The exact Nickname of your pickup location in Shiprocket.' 
+        });
+      }
       // Filter out Twitter/X as requested
       data = data.filter((s: any) => s.key !== 'social_twitter');
       setSettings(data);

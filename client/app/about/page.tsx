@@ -44,7 +44,7 @@ export default function AboutPage() {
           {/* Left — Image */}
           <div className="w-full md:w-[50%] relative overflow-hidden bg-[#C24A2B]">
             <Image
-              src="/about-hero.jpg"
+              src="/about section cover.png"
               alt="Grainzz snack products on a table"
               fill
               className="object-cover"

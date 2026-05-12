@@ -1,7 +1,7 @@
 'use client';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { LayoutDashboard, Package, ShoppingBag, Tag, Star, LogOut, Menu, X, Home, BarChart3, MessageSquare, Settings, Ticket, Inbox, Truck, Filter } from 'lucide-react';
+import { LayoutDashboard, Package, ShoppingBag, Tag, Star, LogOut, Menu, X, Home, BarChart3, MessageSquare, Settings, Ticket, Inbox, Truck, Filter, User } from 'lucide-react';
 import { useState } from 'react';
 import { adminLogout } from '@/lib/api';
 
@@ -19,6 +19,7 @@ const navItems = [
   { label: 'Related Products', href: '/dashboard/related-products', icon: Package },
   { label: 'Homepage', href: '/dashboard/homepage', icon: Home },
   { label: 'Analytics', href: '/dashboard/export', icon: BarChart3 },
+  { label: 'Users', href: '/dashboard/users', icon: User },
   { label: 'Settings', href: '/dashboard/settings', icon: Settings },
 ];
 

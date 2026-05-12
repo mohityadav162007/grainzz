@@ -72,7 +72,7 @@ export default function InstagramSection() {
         {/* Reels Container — DB data ONLY */}
         <div className="w-full flex justify-center">
           <div className="flex w-full gap-[16px] md:gap-[24px] overflow-x-auto pb-8 snap-x snap-mandatory scrollbar-hide">
-            {posts.slice(0, 5).map((item, idx) => {
+            {posts.map((item, idx) => {
                const imageUrl = item.image_url;
                const postHref = item.post_url || `https://instagram.com/${handle.replace('@', '')}`;
                

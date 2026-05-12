@@ -2,7 +2,8 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { ChevronRight, User, MapPin, Package, Settings, LogOut, PackageOpen, ExternalLink, Truck, Check, X, Lock, Eye, EyeOff, Plus, Pencil, Trash2, Star, Loader2 } from 'lucide-react';
+import { supabase } from '@/lib/supabase';
+import { ChevronRight, User, MapPin, Package, Settings, LogOut, PackageOpen, ExternalLink, Truck, Check, X, Lock, Eye, EyeOff, Plus, Pencil, Trash2, Star, Loader2, Save } from 'lucide-react';
 import { getUserOrders, sendOTP, verifyOTPAndSetPassword, getProductSlugById, getSavedAddresses, addSavedAddress, updateSavedAddress, deleteSavedAddress, setDefaultAddress, type SavedAddress } from '@/lib/api';
 import { useAuthStore } from '@/store/authStore';
 import { useCartStore } from '@/store/cartStore';
@@ -101,28 +102,7 @@ export default function AccountPage() {
           {/* Main Content Pane */}
           <div className="flex-1 bg-white rounded-[20px] border border-[#EAEAEA] shadow-sm p-[32px] md:p-[48px] min-h-[400px]">
             {activeTab === 'profile' && (
-              <div className="animate-fade-in">
-                <h2 className="text-[24px] font-bold text-brand-black mb-[32px]">Profile Details</h2>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-[24px] max-w-[600px]">
-                  <div className="flex flex-col gap-2">
-                    <label className="text-[14px] font-semibold text-[#888888]">Full Name</label>
-                    <div className="px-4 py-3 rounded-xl border border-[#EAEAEA] bg-[#FAFAFA] font-medium text-brand-black">{user.user_metadata?.full_name || 'Not provided'}</div>
-                  </div>
-                  <div className="flex flex-col gap-2">
-                    <label className="text-[14px] font-semibold text-[#888888]">Email Address</label>
-                    <div className="px-4 py-3 rounded-xl border border-[#EAEAEA] bg-[#FAFAFA] font-medium text-brand-black">{user.email}</div>
-                  </div>
-                  <div className="flex flex-col gap-2 md:col-span-2">
-                    <label className="text-[14px] font-semibold text-[#888888]">Phone Number</label>
-                    <div className="px-4 py-3 rounded-xl border border-[#EAEAEA] bg-[#FAFAFA] font-medium text-brand-black">{user.phone || 'Not provided'}</div>
-                  </div>
-                </div>
-                
-                <button className="mt-[40px] bg-brand-black hover:bg-[#1A1A1A] text-white px-[32px] py-[12px] rounded-full font-bold text-[15px] transition-colors">
-                  Edit Details
-                </button>
-              </div>
+              <ProfileTab user={user} />
             )}
 
             {activeTab === 'orders' && (
@@ -247,7 +227,7 @@ function ChangePasswordForm({ onCancel }: { onCancel: () => void }) {
       {step === 'send' ? (
         <div className="space-y-6">
           <p className="text-[14px] text-[#7A7A7A] leading-relaxed">
-            To ensure it's you, we'll send a 6-digit verification code to <span className="font-bold text-brand-black">{user?.email}</span>.
+            To ensure it's you, we'll send a verification code to <span className="font-bold text-brand-black">{user?.email}</span>.
           </p>
           
           {status?.type === 'error' && (
@@ -273,9 +253,9 @@ function ChangePasswordForm({ onCancel }: { onCancel: () => void }) {
               value={otp}
               onChange={(e) => setOtp(e.target.value)}
               required
-              maxLength={6}
-              className="w-full px-4 py-3 rounded-xl border border-[#EAEAEA] focus:border-brand-green outline-none transition-colors font-bold text-center text-[20px] tracking-[8px]"
-              placeholder="000000"
+              maxLength={10}
+              className="w-full px-4 py-3 rounded-xl border border-[#EAEAEA] focus:border-brand-green outline-none transition-colors font-bold text-center text-[20px] tracking-[4px]"
+              placeholder="Enter Code"
             />
           </div>
 
@@ -778,6 +758,175 @@ function SavedAddressesTab({ userId }: { userId: string }) {
               </div>
             </div>
           ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Profile Details Tab ─────────────────────────────────────────────────────
+
+function ProfileTab({ user }: { user: any }) {
+  const [isEditing, setIsEditing] = useState(false);
+  const [fullName, setFullName] = useState(user.user_metadata?.full_name || '');
+  const [phone, setPhone] = useState(user.user_metadata?.phone || user.phone || '');
+  const [passwordConfirm, setPasswordConfirm] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const { setUser } = useAuthStore();
+
+  const originalPhone = user.user_metadata?.phone || user.phone || '';
+  const isPhoneChanged = phone !== originalPhone;
+  const requiresPassword = originalPhone !== '' && isPhoneChanged;
+
+  const handleSave = async () => {
+    setLoading(true);
+    setMessage(null);
+    try {
+      // 1. If phone is changed and already existed, verify password
+      if (requiresPassword) {
+        if (!passwordConfirm) {
+          throw new Error('Please enter your password to change your phone number.');
+        }
+        const { error: authError } = await supabase.auth.signInWithPassword({
+          email: user.email!,
+          password: passwordConfirm,
+        });
+        if (authError) throw new Error('Invalid password. Please try again.');
+      }
+
+      // 2. Update user info
+      const { data, error } = await supabase.auth.updateUser({
+        data: { 
+          full_name: fullName,
+          phone: phone // Syncing to metadata for easier retrieval
+        }
+      });
+
+      if (error) throw error;
+
+      // Update local store
+      setUser(data.user);
+      setIsEditing(false);
+      setPasswordConfirm('');
+      setMessage({ type: 'success', text: 'Profile updated successfully!' });
+    } catch (err: any) {
+      setMessage({ type: 'error', text: err.message || 'Failed to update profile' });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="animate-fade-in">
+      <div className="flex items-center justify-between mb-[32px]">
+        <h2 className="text-[24px] font-bold text-brand-black">Profile Details</h2>
+        {!isEditing && (
+          <button 
+            onClick={() => setIsEditing(true)}
+            className="flex items-center gap-2 text-brand-green font-bold hover:underline text-[15px]"
+          >
+            <Pencil size={16} /> Edit Details
+          </button>
+        )}
+      </div>
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-[24px] max-w-[600px]">
+        {/* Full Name */}
+        <div className="flex flex-col gap-2">
+          <label className="text-[14px] font-semibold text-[#888888]">Full Name</label>
+          {isEditing ? (
+            <input 
+              type="text" 
+              value={fullName} 
+              onChange={(e) => setFullName(e.target.value)}
+              className="px-4 py-3 rounded-xl border-2 border-brand-green bg-white font-medium text-brand-black outline-none"
+              autoFocus
+            />
+          ) : (
+            <div className="px-4 py-3 rounded-xl border border-[#EAEAEA] bg-[#FAFAFA] font-medium text-brand-black">
+              {user.user_metadata?.full_name || 'Not provided'}
+            </div>
+          )}
+        </div>
+
+        {/* Email */}
+        <div className="flex flex-col gap-2">
+          <label className="text-[14px] font-semibold text-[#888888]">Email Address</label>
+          <div className="px-4 py-3 rounded-xl border border-[#EAEAEA] bg-[#F5F5F5] font-medium text-[#777] cursor-not-allowed">
+            {user.email}
+          </div>
+          <p className="text-[11px] text-[#999] font-medium px-1">Email cannot be changed.</p>
+        </div>
+
+        {/* Phone Number */}
+        <div className="flex flex-col gap-2 md:col-span-2">
+          <label className="text-[14px] font-semibold text-[#888888]">Phone Number</label>
+          {isEditing ? (
+            <div className="space-y-3">
+              <input 
+                type="tel" 
+                value={phone} 
+                onChange={(e) => setPhone(e.target.value)}
+                placeholder="Enter 10-digit phone number"
+                className="w-full px-4 py-3 rounded-xl border-2 border-brand-green bg-white font-medium text-brand-black outline-none"
+              />
+              
+              {requiresPassword && (
+                <div className="bg-[#FFF8E1] p-4 rounded-xl border border-[#FFE082] animate-fade-in">
+                  <p className="text-[13px] text-[#795548] font-bold mb-3 flex items-center gap-2">
+                    <Lock size={14} /> Security check: Enter your password to change phone number
+                  </p>
+                  <input 
+                    type="password"
+                    value={passwordConfirm}
+                    onChange={(e) => setPasswordConfirm(e.target.value)}
+                    placeholder="Enter your current password"
+                    className="w-full px-4 py-2.5 rounded-lg border border-[#FFE082] outline-none focus:border-amber-500 text-sm"
+                    required
+                  />
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="px-4 py-3 rounded-xl border border-[#EAEAEA] bg-[#FAFAFA] font-medium text-brand-black">
+              {originalPhone || 'Not provided'}
+            </div>
+          )}
+        </div>
+      </div>
+      
+      {message && (
+        <div className={`mt-6 p-4 rounded-xl text-sm font-bold flex items-center gap-3 ${
+          message.type === 'success' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'
+        }`}>
+          {message.type === 'success' ? <Check size={18} /> : <X size={18} />}
+          {message.text}
+        </div>
+      )}
+
+      {isEditing && (
+        <div className="flex gap-4 mt-[40px]">
+          <button 
+            onClick={handleSave}
+            disabled={loading}
+            className="bg-brand-black hover:bg-[#1A1A1A] text-white px-[32px] py-[12px] rounded-full font-bold text-[15px] transition-colors flex items-center gap-2 disabled:opacity-50"
+          >
+            {loading ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />}
+            Save Changes
+          </button>
+          <button 
+            onClick={() => { 
+              setIsEditing(false); 
+              setFullName(user.user_metadata?.full_name || ''); 
+              setPhone(originalPhone);
+              setPasswordConfirm('');
+            }}
+            disabled={loading}
+            className="border border-[#EAEAEA] hover:bg-[#F9F9F9] text-brand-black px-[32px] py-[12px] rounded-full font-bold text-[15px] transition-colors"
+          >
+            Cancel
+          </button>
         </div>
       )}
     </div>

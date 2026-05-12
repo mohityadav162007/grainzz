@@ -72,7 +72,7 @@ serve(async (req: Request) => {
     }
 
     if (event === 'checkout.order.completed' && paymentState === 'COMPLETED') {
-      await supabase
+      const { data: orderData } = await supabase
         .from('orders')
         .update({ 
           payment_status: 'paid', 
@@ -80,7 +80,14 @@ serve(async (req: Request) => {
           transaction_id: transactionId,
           updated_at: new Date().toISOString()
         })
-        .eq('merchant_transaction_id', merchantOrderId);
+        .eq('merchant_transaction_id', merchantOrderId)
+        .select('coupon_code')
+        .single();
+
+      // If a coupon was used, increment its usage count
+      if (orderData?.coupon_code) {
+        await supabase.rpc('increment_coupon_usage', { coupon_code: orderData.coupon_code });
+      }
     } else if (event === 'checkout.order.failed' || paymentState === 'FAILED') {
       await supabase
         .from('orders')

@@ -20,32 +20,39 @@ const corsHeaders = {
 
 let cachedToken: { token: string; expires_at: number } | null = null;
 
-async function getShiprocketToken(supabase: any): Promise<string> {
+async function getShiprocketToken(supabase: any, forceRefresh = false): Promise<string> {
   const now = Date.now();
 
-  // 1. Check in-memory cache
-  if (cachedToken && cachedToken.expires_at > now + 5 * 60 * 1000) {
-    return cachedToken.token;
+  // 1. Handle Forced Refresh
+  if (forceRefresh) {
+    console.log('Forcing Shiprocket token refresh...');
+    cachedToken = null;
+    await supabase.from('store_settings').delete().eq('key', 'shiprocket_auth_token');
+  } else {
+    // 2. Check in-memory cache
+    if (cachedToken && cachedToken.expires_at > now + 5 * 60 * 1000) {
+      return cachedToken.token;
+    }
+
+    // 3. Check DB cache
+    try {
+      const { data: cached } = await supabase
+        .from('store_settings')
+        .select('value')
+        .eq('key', 'shiprocket_auth_token')
+        .single();
+
+      if (cached?.value) {
+        const parsed = JSON.parse(cached.value);
+        if (parsed.expires_at && parsed.expires_at > now + 5 * 60 * 1000) {
+          cachedToken = parsed;
+          return parsed.token;
+        }
+      }
+    } catch { /* Cache miss or parse error — continue to fetch */ }
   }
 
-  // 2. Check DB cache
-  try {
-    const { data: cached } = await supabase
-      .from('store_settings')
-      .select('value')
-      .eq('key', 'shiprocket_auth_token')
-      .single();
-
-    if (cached?.value) {
-      const parsed = JSON.parse(cached.value);
-      if (parsed.expires_at && parsed.expires_at > now + 5 * 60 * 1000) {
-        cachedToken = parsed;
-        return parsed.token;
-      }
-    }
-  } catch { /* Cache miss or parse error — continue to fetch */ }
-
-  // 3. Fetch new token from Shiprocket
+  // 4. Fetch new token from Shiprocket
   if (!SHIPROCKET_EMAIL || !SHIPROCKET_PASSWORD) {
     throw new Error('Shiprocket credentials (SHIPROCKET_EMAIL/PASSWORD) not configured in Edge Function secrets.');
   }
@@ -161,6 +168,7 @@ serve(async (req: Request) => {
       const fallbackSingle = Number(cfg.fallback_shipping_charge_single) || 50;
       const fallbackCombo = Number(cfg.fallback_shipping_charge_combo) || 99;
       const fallbackCharge = has_combo ? fallbackCombo : fallbackSingle;
+      const pickupLocation = cfg.shiprocket_pickup_location || 'Primary';
 
       // Check free shipping first
       const cartSubtotal = Number(subtotal) || 0;
@@ -278,6 +286,15 @@ serve(async (req: Request) => {
       }
 
       const token = await getShiprocketToken(supabase);
+      
+      // Fetch pickup location from settings
+      const { data: pickupSetting } = await supabase
+        .from('store_settings')
+        .select('value')
+        .eq('key', 'shiprocket_pickup_location')
+        .single();
+      const pickupLocation = pickupSetting?.value || 'Primary';
+
       const results: any[] = [];
       const errors: any[] = [];
 
@@ -320,7 +337,7 @@ serve(async (req: Request) => {
           const shiprocketPayload = {
             order_id: srShortId,
             order_date: formatDate(order.created_at),
-            pickup_location: 'warehouse',
+            pickup_location: pickupLocation,
             billing_customer_name: firstName,
             billing_last_name: lastName,
             billing_address: order.user_address,
@@ -341,20 +358,33 @@ serve(async (req: Request) => {
             weight: 0.5,
           };
 
-          const shiprocketResponse = await fetch(
-            `${SHIPROCKET_BASE_URL}/v1/external/orders/create/adhoc`,
-            {
+          let shiprocketResponse = await fetch(`${SHIPROCKET_BASE_URL}/v1/external/orders/create/adhoc`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`,
+            },
+            body: JSON.stringify(shiprocketPayload),
+            signal: AbortSignal.timeout(10000),
+          });
+
+          let shiprocketData = await shiprocketResponse.json();
+
+          // RETRY LOGIC: If token expired, refresh once and retry
+          if (shiprocketData.message?.toLowerCase().includes('token') && shiprocketData.message?.toLowerCase().includes('expire')) {
+            console.log('Token expired during creation, refreshing...');
+            const freshToken = await getShiprocketToken(supabase, true);
+            shiprocketResponse = await fetch(`${SHIPROCKET_BASE_URL}/v1/external/orders/create/adhoc`, {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`,
+                'Authorization': `Bearer ${freshToken}`,
               },
               body: JSON.stringify(shiprocketPayload),
               signal: AbortSignal.timeout(10000),
-            }
-          );
-
-          const shiprocketData = await shiprocketResponse.json();
+            });
+            shiprocketData = await shiprocketResponse.json();
+          }
 
           await logEvent(supabase, 'shiprocket_create_order', {
             orderId,
@@ -364,6 +394,7 @@ serve(async (req: Request) => {
 
           if (!shiprocketResponse.ok || shiprocketData.status_code !== 1) {
             const errorMsg = shiprocketData.message || shiprocketData.errors || `Shiprocket API error`;
+            console.error(`Shiprocket Creation Failed for Order ${orderId}:`, JSON.stringify(shiprocketData));
             errors.push({ orderId, error: typeof errorMsg === 'object' ? JSON.stringify(errorMsg) : errorMsg });
             continue;
           }
@@ -399,7 +430,14 @@ serve(async (req: Request) => {
       }
 
       return new Response(
-        JSON.stringify({ success: true, results, errors, total: orderIds.length }),
+        JSON.stringify({ 
+          success: true, 
+          results, 
+          errors, 
+          total: orderIds.length,
+          shipped: results.length,
+          failed: errors.length
+        }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }

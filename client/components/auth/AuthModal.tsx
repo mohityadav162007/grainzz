@@ -42,14 +42,25 @@ export default function AuthModal() {
 
     try {
       if (mode === 'signup') {
-        const { data, error } = await supabase.auth.signUp({
-          email,
-          password,
-          options: { data: { full_name: fullName } },
+        const response = await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/admin-signup`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY}`,
+          },
+          body: JSON.stringify({ email, password, full_name: fullName }),
         });
-        if (error) throw error;
-        setSuccess('Account created! Please check your email for verification.');
-        if (data.user) setUser(data.user);
+
+        const signupData = await response.json();
+        if (!response.ok) throw new Error(signupData.error || 'Signup failed');
+
+        // Automatically sign in the user after creation
+        const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({ email, password });
+        if (signInError) throw signInError;
+
+        setSuccess('Account created and verified successfully!');
+        if (signInData.user) setUser(signInData.user);
+        setTimeout(() => handleClose(), 1200);
       } else {
         const { data, error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;

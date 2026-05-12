@@ -234,7 +234,10 @@ export default function AdminOrdersPage() {
                       </td>
                       <td className="px-4 py-4">
                         <div className="font-medium">{order.user_name}</div>
-                        <div className="text-xs text-gray-400">{order.user_phone}</div>
+                        <div className="flex flex-col text-xs text-gray-400">
+                          <span>{order.user_phone}</span>
+                          <span className="truncate max-w-[150px]">{order.user_email}</span>
+                        </div>
                       </td>
                       <td className="px-4 py-4 font-bold">₹{order.total_amount}</td>
                       <td className="px-4 py-4">

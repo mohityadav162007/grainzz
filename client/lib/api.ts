@@ -1,12 +1,7 @@
 import { supabase } from './supabase';
  
  export const sendOTP = async (email: string) => {
-   const { error } = await supabase.auth.signInWithOtp({ 
-     email,
-     options: {
-       shouldCreateUser: false,
-     }
-   });
+   const { error } = await supabase.auth.resetPasswordForEmail(email);
    if (error) throw new Error(error.message);
    return { success: true };
  };
@@ -16,7 +11,7 @@ import { supabase } from './supabase';
    const { error: verifyError } = await supabase.auth.verifyOtp({
      email,
      token,
-     type: 'email',
+     type: 'recovery',
    });
    if (verifyError) throw new Error('Invalid or expired verification code');
  
@@ -414,6 +409,16 @@ export const createOrder = async (body: {
   // Generate UUID v4 for the order to bypass needing .select() and running into RLS errors for guests
   const orderId = crypto.randomUUID();
 
+  let finalEmail = userDetails.email || '';
+  
+  // If user is logged in, always use their official account email
+  if (userId) {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user?.email) {
+      finalEmail = user.email;
+    }
+  }
+
   // Create order
   const { error: orderError } = await supabase
     .from('orders')
@@ -421,7 +426,7 @@ export const createOrder = async (body: {
       id: orderId,
       user_name: userDetails.name,
       user_phone: userDetails.phone,
-      user_email: userDetails.email || '',
+      user_email: finalEmail,
       user_address: userDetails.address,
       user_city: userDetails.city || '',
       user_state: userDetails.state || '',

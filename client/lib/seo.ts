@@ -20,7 +20,7 @@ export function constructMetadata({
   title = siteConfig.name,
   description = siteConfig.description,
   image = siteConfig.ogImage,
-  icons = '/image-2@2x.png',
+  icons = '/favicon-image.png',
   noIndex = false,
   path = '',
 }: {
@@ -88,7 +88,7 @@ export function generateOrganizationSchema() {
     '@type': 'Organization',
     name: siteConfig.name,
     url: siteConfig.url,
-    logo: `${siteConfig.url}/image-2@2x.png`,
+    logo: `${siteConfig.url}/favicon-image.png`,
     sameAs: Object.values(siteConfig.links),
   };
 }

@@ -213,9 +213,25 @@ export default function AdminOrdersPage() {
             </thead>
             <tbody>
               {loading ? (
-                <tr><td colSpan={10} className="px-6 py-8 text-center text-gray-500">Loading orders...</td></tr>
+                [1, 2, 3, 4, 5].map((i) => (
+                  <tr key={i} className="border-b">
+                    <td className="px-4 py-4"><div className="h-4 w-4 bg-gray-100 animate-pulse rounded" /></td>
+                    <td className="px-4 py-4"><div className="h-4 w-16 bg-gray-100 animate-pulse rounded" /></td>
+                    <td className="px-4 py-4">
+                      <div className="h-4 w-32 bg-gray-100 animate-pulse rounded mb-2" />
+                      <div className="h-3 w-24 bg-gray-100 animate-pulse rounded" />
+                    </td>
+                    <td className="px-4 py-4"><div className="h-4 w-12 bg-gray-100 animate-pulse rounded" /></td>
+                    <td className="px-4 py-4"><div className="h-6 w-16 bg-gray-100 animate-pulse rounded-full" /></td>
+                    <td className="px-4 py-4"><div className="h-6 w-20 bg-gray-100 animate-pulse rounded-lg" /></td>
+                    <td className="px-4 py-4"><div className="h-6 w-16 bg-gray-100 animate-pulse rounded-full" /></td>
+                    <td className="px-4 py-4"><div className="h-6 w-24 bg-gray-100 animate-pulse rounded-full" /></td>
+                    <td className="px-4 py-4"><div className="h-4 w-20 bg-gray-100 animate-pulse rounded" /></td>
+                    <td className="px-4 py-4"><div className="h-4 w-4 bg-gray-100 animate-pulse rounded" /></td>
+                  </tr>
+                ))
               ) : orders.length === 0 ? (
-                <tr><td colSpan={10} className="px-6 py-8 text-center text-gray-500">No orders found.</td></tr>
+                <tr><td colSpan={10} className="px-6 py-12 text-center text-gray-500">No orders found.</td></tr>
               ) : (
                 orders.map((order) => (
                   <>

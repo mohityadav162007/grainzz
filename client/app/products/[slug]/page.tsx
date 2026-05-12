@@ -7,6 +7,7 @@ import { ChevronRight, ChevronLeft, Plus, Minus, Star, Check, X, Upload, Loader2
 import { getProductBySlug, getProductReviews, submitProductReview, uploadReviewImage, getRelatedProductsSection, submitStockNotification } from '@/lib/api';
 import { useCartStore } from '@/store/cartStore';
 import ProductCard from '@/components/products/ProductCard';
+import ProductCardSkeleton from '@/components/products/ProductCardSkeleton';
 import ProductTestimonialsSection from '@/components/about/CustomerTestimonials';
 import { supabase } from '@/lib/supabase';
 
@@ -14,6 +15,7 @@ export default function ProductDetailPage() {
   const { slug } = useParams<{ slug: string }>();
   const [product, setProduct] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [relatedLoading, setRelatedLoading] = useState(true);
   const [qty, setQty] = useState(1);
   const [selectedImage, setSelectedImage] = useState(0);
   const [openSection, setOpenSection] = useState<string | null>('Description');
@@ -45,35 +47,37 @@ export default function ProductDetailPage() {
     if (!slug) return;
     let subscription: any;
 
-    Promise.all([
-      getProductBySlug(slug as string).catch(err => { console.error('getProductBySlug failed:', err); return { data: null }; }),
-      getRelatedProductsSection().catch(err => { console.error('getRelatedProductsSection failed:', err); return []; })
-    ]).then(([productRes, relatedRes]) => {
+    setLoading(true);
+    setRelatedLoading(true);
+
+    // Fetch main product data
+    getProductBySlug(slug as string).then(productRes => {
       setProduct(productRes.data);
       if (productRes.data) {
         // Fetch initial reviews
         getProductReviews(productRes.data.id).then(revs => {
-          console.log(`[FRONTEND] Fetched reviews count: ${revs.length}`);
-          console.log(`[FRONTEND] is_visible values:`, revs.map((r: any) => r.is_visible));
           setReviews(revs);
         }).catch(() => {});
 
-        // Set up realtime subscription for instant moderation syncing
+        // Set up realtime subscription
         const channelName = `public:reviews:${productRes.data.id}:${Math.random().toString(36).substring(7)}`;
         const channel: any = supabase.channel(channelName);
         subscription = channel
-          .on('postgres_changes', { event: '*', schema: 'public', table: 'reviews', filter: `product_id=eq.${productRes.data.id}` }, (payload: any) => {
-            console.log('[FRONTEND] Realtime update received:', payload);
-            // Refetch all reviews to ensure accurate state and RLS
-            getProductReviews(productRes.data.id).then(revs => {
-              console.log(`[FRONTEND-REALTIME] Refetched reviews count: ${revs.length}`);
-              setReviews(revs);
-            }).catch(() => {});
+          .on('postgres_changes', { event: '*', schema: 'public', table: 'reviews', filter: `product_id=eq.${productRes.data.id}` }, () => {
+            getProductReviews(productRes.data.id).then(revs => setReviews(revs)).catch(() => {});
           })
           .subscribe();
       }
-      setRelatedProducts(relatedRes);
+    }).catch(err => {
+      console.error('getProductBySlug failed:', err);
     }).finally(() => setLoading(false));
+
+    // Fetch related products separately for skeleton support
+    getRelatedProductsSection().then(relatedRes => {
+      setRelatedProducts(relatedRes);
+    }).catch(err => {
+      console.error('getRelatedProductsSection failed:', err);
+    }).finally(() => setRelatedLoading(false));
 
     return () => {
       if (subscription) {
@@ -215,30 +219,13 @@ export default function ProductDetailPage() {
   const ratingCounts = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
   reviews.forEach(r => { if (ratingCounts[r.rating as keyof typeof ratingCounts] !== undefined) ratingCounts[r.rating as keyof typeof ratingCounts]++; });
 
-  if (loading) {
-    return (
-      <div className="max-w-[1440px] mx-auto px-4 lg:px-[120px] py-[60px]">
-        <div className="grid md:grid-cols-2 gap-[48px]">
-          <div className="aspect-square bg-[#EEEEEE] rounded-[20px] animate-pulse" />
-          <div className="space-y-[24px]">
-            <div className="h-[40px] bg-[#EEEEEE] rounded-[8px] animate-pulse w-3/4" />
-            <div className="h-[24px] bg-[#EEEEEE] rounded-[8px] animate-pulse w-1/2" />
-            <div className="h-[64px] bg-[#EEEEEE] rounded-[8px] animate-pulse" />
-          </div>
-        </div>
-      </div>
-    );
-  }
+  const discount = product?.mrp > product?.price ? Math.round(((product.mrp - product.price) / product.mrp) * 100) : 0;
 
-  if (!product) return <div className="py-[100px] text-center text-[#707070] font-sans">Product not found.</div>;
+  const isComboProduct = ['2-Jar Combo', '3-Jar Combo', '4-Jar Combo', '6-Jar Combo', 'Puffed Rice Mixed 6-Pack'].includes(product?.category);
+  const hasComboNutrition = isComboProduct && product?.combo_nutrition?.length > 0;
+  const hasNormalNutrition = product?.nutrition_table?.length > 0;
 
-  const discount = product.mrp > product.price ? Math.round(((product.mrp - product.price) / product.mrp) * 100) : 0;
-
-  const isComboProduct = ['2-Jar Combo', '3-Jar Combo', '4-Jar Combo', '6-Jar Combo', 'Puffed Rice Mixed 6-Pack'].includes(product.category);
-  const hasComboNutrition = isComboProduct && product.combo_nutrition?.length > 0;
-  const hasNormalNutrition = product.nutrition_table?.length > 0;
-
-  const accordionItems = [
+  const accordionItems = product ? [
     { label: 'Description', content: product.description },
     ...(hasComboNutrition
       ? [{ label: 'Nutrition breakdown', isComboNutrition: true, content: product.combo_nutrition }]
@@ -246,7 +233,9 @@ export default function ProductDetailPage() {
         ? [{ label: 'Nutrition breakdown', isTable: true, content: product.nutrition_table }]
         : []),
     ...(product.ingredients ? [{ label: 'Ingredients', content: product.ingredients }] : []),
-  ];
+  ] : [];
+
+  if (!loading && !product) return <div className="py-[100px] text-center text-[#707070] font-sans">Product not found.</div>;
 
   return (
     <div className="bg-[#FCF9F2] min-h-screen pb-[60px] md:pb-[100px] font-sans">
@@ -255,7 +244,11 @@ export default function ProductDetailPage() {
         <nav className="hidden lg:flex items-center gap-[6px] text-[13px] font-medium text-black mb-[32px] tracking-tight">
           <Link href="/products" className="hover:text-brand-green transition-colors opacity-80">Shop All</Link>
           <ChevronRight size={13} strokeWidth={1.5} className="opacity-60" />
-          <span className="opacity-100">{product.name}</span>
+          {loading ? (
+            <div className="h-4 w-24 bg-gray-200 animate-pulse rounded" />
+          ) : (
+            <span className="opacity-100">{product?.name}</span>
+          )}
         </nav>
 
         {/* ============================== */}
@@ -270,42 +263,56 @@ export default function ProductDetailPage() {
               <ChevronRight size={14} />
               <Link href="/products" className="hover:text-brand-green">Shop All</Link>
             </nav>
-            {product.tags?.length > 0 && (
+            {loading ? (
+              <div className="h-4 w-24 bg-gray-200 animate-pulse rounded mb-3" />
+            ) : product?.tags?.length > 0 && (
               <div className="flex flex-wrap gap-[8px] mb-[12px]">
                 {product.tags.map((tag: string) => (
                   <span key={tag} className="bg-[#FDF7E7] text-[#D89F43] text-[11px] font-bold px-[10px] py-[4px] rounded-[4px] uppercase tracking-wider shadow-sm">{tag}</span>
                 ))}
               </div>
             )}
-            <h1 className="text-[28px] font-bold text-brand-black mb-[4px] leading-[1.2]">
-              {product.name}
-            </h1>
-            <p className="text-[#657B67] text-[14px] font-medium mb-[16px]">{product.category === 'Healthy Chips' ? 'Enjoy our healthy snack packed with nutrition.' : 'Delicious and wholesome everyday snacking.'}</p>
+            
+            {loading ? (
+              <div className="h-9 w-3/4 bg-gray-200 animate-pulse rounded mb-4" />
+            ) : (
+              <h1 className="text-[28px] font-bold text-brand-black mb-[4px] leading-[1.2]">
+                {product?.name}
+              </h1>
+            )}
+
+            {loading ? (
+              <div className="h-5 w-1/2 bg-gray-200 animate-pulse rounded mb-4" />
+            ) : (
+              <p className="text-[#657B67] text-[14px] font-medium mb-[16px]">{product?.category === 'Healthy Chips' ? 'Enjoy our healthy snack packed with nutrition.' : 'Delicious and wholesome everyday snacking.'}</p>
+            )}
           </div>
 
           {/* LEFT: Image Gallery */}
           <div className="w-full lg:w-[46%] xl:w-[46%] flex-shrink-0 order-2 lg:order-1 flex flex-col gap-[16px]">
             {/* Main Image */}
             <div 
-              className="relative w-full rounded-[24px] overflow-hidden bg-[#F5F0E8] shadow-sm border border-[#EAEAEA]"
+              className={`relative w-full rounded-[24px] overflow-hidden bg-[#F5F0E8] shadow-sm border border-[#EAEAEA] ${loading ? 'animate-pulse' : ''}`}
               style={{ aspectRatio: '1 / 1' }}
             >
-              {product.images?.length > 0 ? (
+              {!loading && product?.images?.length > 0 ? (
                 <Image src={product.images[selectedImage % product.images.length]} alt={product.name} fill className="object-cover transition-transform duration-700 hover:scale-[1.03]" priority />
-              ) : (
+              ) : !loading && (
                 <Image src="/Rectangle-10@2x.png" alt={product.name} fill className="object-cover" />
               )}
-              {discount > 0 && (
+              {discount > 0 && !loading && (
                 <div className="absolute top-[20px] left-[20px] bg-[#9A0000] text-white text-[13px] font-medium px-[14px] py-[6px] rounded-full tracking-wide shadow-sm z-10">
                   -{discount}%
                 </div>
               )}
               {/* Veg Icon */}
-              <div className="absolute top-[20px] right-[20px] w-[22px] h-[22px] border-[1.5px] border-[#1E8A38] rounded-[3px] flex items-center justify-center bg-white z-10">
-                <div className="w-[10px] h-[10px] bg-[#1E8A38] rounded-full" />
-              </div>
+              {!loading && (
+                <div className="absolute top-[20px] right-[20px] w-[22px] h-[22px] border-[1.5px] border-[#1E8A38] rounded-[3px] flex items-center justify-center bg-white z-10">
+                  <div className="w-[10px] h-[10px] bg-[#1E8A38] rounded-full" />
+                </div>
+              )}
               {/* Out of Stock Overlay */}
-              {product.stock === 0 && (
+              {product?.stock === 0 && !loading && (
                 <div className="absolute inset-0 bg-white/20 backdrop-blur-[2px] flex items-center justify-center z-20">
                   <div className="w-[130px] h-[130px] rounded-full bg-white/95 flex items-center justify-center shadow-[0_4px_24px_rgba(0,0,0,0.08)]">
                     <span className="text-[15px] font-medium text-[#4A4A4A] tracking-wide text-center">Out of Stock</span>
@@ -316,7 +323,9 @@ export default function ProductDetailPage() {
 
             {/* Desktop Thumbnails (Hidden on mobile) */}
             <div className="hidden lg:flex gap-[12px] overflow-x-auto pb-2 scrollbar-none">
-              {product.images?.slice(0, 10).map((img: string, i: number) => (
+              {loading ? (
+                [1, 2, 3].map(i => <div key={i} className="w-[82px] h-[82px] rounded-[12px] bg-gray-200 animate-pulse" />)
+              ) : product?.images?.slice(0, 10).map((img: string, i: number) => (
                 <button
                   key={i}
                   onClick={() => setSelectedImage(i)}
@@ -329,7 +338,7 @@ export default function ProductDetailPage() {
             </div>
 
             {/* Mobile Image Gallery Controls (Dots & Arrows) */}
-            {product.images?.length > 1 && (
+            {!loading && product?.images?.length > 1 && (
               <div className="flex lg:hidden items-center justify-center gap-6 mt-[8px]">
                 <button 
                   onClick={() => setSelectedImage(prev => prev === 0 ? product.images.length - 1 : prev - 1)}
@@ -360,27 +369,37 @@ export default function ProductDetailPage() {
           <div className="flex-1 flex flex-col items-start order-3 lg:order-2 w-full">
             {/* Desktop Tags & Title */}
             <div className="hidden lg:flex flex-col items-start w-full order-0">
-              {product.tags?.length > 0 && (
-                <div className="flex gap-[8px] mb-[12px]">
-                  {product.tags.map((tag: string) => (
-                    <span key={tag} className="bg-[#FDF0CC] text-[#4A4A4A] text-[13px] font-medium px-[14px] py-[4px] rounded-[6px] tracking-wide shadow-sm">{tag}</span>
-                  ))}
-                </div>
+              {loading ? (
+                <>
+                  <div className="h-6 w-32 bg-gray-200 animate-pulse rounded mb-4" />
+                  <div className="h-12 w-3/4 bg-gray-200 animate-pulse rounded mb-4" />
+                  <div className="h-6 w-1/2 bg-gray-200 animate-pulse rounded mb-8" />
+                </>
+              ) : (
+                <>
+                  {product?.tags?.length > 0 && (
+                    <div className="flex gap-[8px] mb-[12px]">
+                      {product.tags.map((tag: string) => (
+                        <span key={tag} className="bg-[#FDF0CC] text-[#4A4A4A] text-[13px] font-medium px-[14px] py-[4px] rounded-[6px] tracking-wide shadow-sm">{tag}</span>
+                      ))}
+                    </div>
+                  )}
+                  <h1 className="text-[36px] lg:text-[40px] font-bold text-[#1D5E2E] mb-[6px] leading-[1.1] tracking-tight">
+                    {product?.name}
+                  </h1>
+                  <p className="text-[#7A7A7A] text-[16px] font-medium mb-[24px]">
+                    {product?.subtitle || 'High-Fibre | No Palm Oil | Baked Crunch'}
+                  </p>
+                </>
               )}
-              <h1 className="text-[36px] lg:text-[40px] font-bold text-[#1D5E2E] mb-[6px] leading-[1.1] tracking-tight">
-                {product.name}
-              </h1>
-              <p className="text-[#7A7A7A] text-[16px] font-medium mb-[24px]">
-                {product.subtitle || 'High-Fibre | No Palm Oil | Baked Crunch'}
-              </p>
             </div>
 
-            {/* Notification Box (Out of Stock) */}
-            {product.stock === 0 && (
-              <div className="w-full mb-[32px] lg:mb-[32px] border border-[#EAEAEA] rounded-[16px] p-[24px] bg-white shadow-sm order-1 lg:order-2">
-                <p className="text-[15px] text-[#4A4A4A] mb-[20px] leading-[1.5]">
-                  Register to receive a notification when this item comes back in stock.
-                </p>
+          {/* Notification Box (Out of Stock) */}
+          {!loading && product?.stock === 0 && (
+            <div className="w-full mb-[32px] lg:mb-[32px] border border-[#EAEAEA] rounded-[16px] p-[24px] bg-white shadow-sm order-1 lg:order-2">
+              <p className="text-[15px] text-[#4A4A4A] mb-[20px] leading-[1.5]">
+                Register to receive a notification when this item comes back in stock.
+              </p>
                 {notificationSuccess ? (
                   <div className="bg-[#F2F9ED] text-[#1D5E2E] p-4 rounded-[8px] text-[14px] font-medium text-center border border-[#A6C98F]">
                     You're on the list! We'll notify you when it's back.
@@ -410,40 +429,56 @@ export default function ProductDetailPage() {
             )}
 
             {/* Price */}
-            <div className={`flex items-center gap-[12px] w-full order-2 lg:order-1 ${product.stock === 0 ? 'pt-[32px] border-t border-[#EAEAEA] lg:border-0 lg:pt-0' : ''} mb-[32px]`}>
-              <span className="text-[32px] lg:text-[38px] font-bold text-[#1A1A1A] leading-[1]">₹{product.price}</span>
-              {product.mrp > product.price && (
-                <span className="text-[18px] text-[#999999] font-medium line-through">MRP ₹{product.mrp}</span>
+            <div className={`flex items-center gap-[12px] w-full order-2 lg:order-1 ${!loading && product?.stock === 0 ? 'pt-[32px] border-t border-[#EAEAEA] lg:border-0 lg:pt-0' : ''} mb-[32px]`}>
+              {loading ? (
+                <div className="h-10 w-32 bg-gray-200 animate-pulse rounded" />
+              ) : (
+                <>
+                  <span className="text-[32px] lg:text-[38px] font-bold text-[#1A1A1A] leading-[1]">₹{product?.price}</span>
+                  {product?.mrp > product?.price && (
+                    <span className="text-[18px] text-[#999999] font-medium line-through">MRP ₹{product?.mrp}</span>
+                  )}
+                </>
               )}
             </div>
 
             {/* Purchase Controls */}
             <div className="w-full flex flex-col lg:flex-row gap-[16px] lg:gap-[20px] order-3 lg:order-4 mb-[32px] lg:mb-0">
-              <div className={`flex items-center gap-[16px] h-[64px] lg:h-[64px] w-fit ${product.stock === 0 ? 'opacity-40 pointer-events-none' : ''}`}>
-                <button onClick={() => setQty(Math.max(1, qty - 1))} className="w-[60px] h-[60px] lg:w-[60px] lg:h-[60px] rounded-full border border-[#D9D9D9] flex items-center justify-center text-[#4A4A4A] hover:bg-white transition-colors"><Minus size={22} strokeWidth={1.5} /></button>
-                <span className="text-[22px] lg:text-[24px] font-bold text-brand-black w-[24px] text-center select-none">{qty}</span>
-                <button onClick={() => setQty(qty + 1)} className="w-[60px] h-[60px] lg:w-[60px] lg:h-[60px] rounded-full border border-[#D9D9D9] flex items-center justify-center text-[#4A4A4A] hover:bg-white transition-colors"><Plus size={22} strokeWidth={1.5} /></button>
-              </div>
-              <button 
-                onClick={handleAddToCart}
-                disabled={product.stock === 0}
-                className={`w-full lg:flex-1 h-[64px] lg:h-[64px] rounded-full border-[1.5px] font-bold text-[18px] lg:text-[18px] transition-all
-                  ${product.stock === 0 
-                    ? 'border-[#b5d4a6] text-[#b5d4a6] cursor-not-allowed bg-transparent' 
-                    : 'border-[#8cb369] text-[#4d7a2f] hover:bg-[#F2F9ED]'}`}
-              >
-                {added ? 'Added ✓' : 'Add to Cart'}
-              </button>
-              <button 
-                onClick={handleQuickBuy}
-                disabled={product.stock === 0}
-                className={`w-full lg:flex-1 h-[64px] lg:h-[64px] rounded-full font-bold text-[18px] lg:text-[18px] transition-all shadow-sm
-                  ${product.stock === 0 
-                    ? 'bg-[#999999] text-white cursor-not-allowed' 
-                    : 'bg-[#1D5E2E] text-white hover:bg-[#154617]'}`}
-              >
-                Quick Buy
-              </button>
+              {loading ? (
+                <>
+                  <div className="h-[64px] w-40 bg-gray-200 animate-pulse rounded-full" />
+                  <div className="h-[64px] flex-1 bg-gray-200 animate-pulse rounded-full" />
+                  <div className="h-[64px] flex-1 bg-gray-200 animate-pulse rounded-full" />
+                </>
+              ) : (
+                <>
+                  <div className={`flex items-center gap-[16px] h-[64px] lg:h-[64px] w-fit ${product?.stock === 0 ? 'opacity-40 pointer-events-none' : ''}`}>
+                    <button onClick={() => setQty(Math.max(1, qty - 1))} className="w-[60px] h-[60px] lg:w-[60px] lg:h-[60px] rounded-full border border-[#D9D9D9] flex items-center justify-center text-[#4A4A4A] hover:bg-white transition-colors"><Minus size={22} strokeWidth={1.5} /></button>
+                    <span className="text-[22px] lg:text-[24px] font-bold text-brand-black w-[24px] text-center select-none">{qty}</span>
+                    <button onClick={() => setQty(qty + 1)} className="w-[60px] h-[60px] lg:w-[60px] lg:h-[60px] rounded-full border border-[#D9D9D9] flex items-center justify-center text-[#4A4A4A] hover:bg-white transition-colors"><Plus size={22} strokeWidth={1.5} /></button>
+                  </div>
+                  <button 
+                    onClick={handleAddToCart}
+                    disabled={product?.stock === 0}
+                    className={`w-full lg:flex-1 h-[64px] lg:h-[64px] rounded-full border-[1.5px] font-bold text-[18px] lg:text-[18px] transition-all
+                      ${product?.stock === 0 
+                        ? 'border-[#b5d4a6] text-[#b5d4a6] cursor-not-allowed bg-transparent' 
+                        : 'border-[#8cb369] text-[#4d7a2f] hover:bg-[#F2F9ED]'}`}
+                  >
+                    {added ? 'Added ✓' : 'Add to Cart'}
+                  </button>
+                  <button 
+                    onClick={handleQuickBuy}
+                    disabled={product?.stock === 0}
+                    className={`w-full lg:flex-1 h-[64px] lg:h-[64px] rounded-full font-bold text-[18px] lg:text-[18px] transition-all shadow-sm
+                      ${product?.stock === 0 
+                        ? 'bg-[#999999] text-white cursor-not-allowed' 
+                        : 'bg-[#1D5E2E] text-white hover:bg-[#154617]'}`}
+                  >
+                    Quick Buy
+                  </button>
+                </>
+              )}
             </div>
 
             {/* Accordions — Exclusive: only one open at a time */}
@@ -739,7 +774,7 @@ export default function ProductDetailPage() {
         {/* ============================== */}
         {/* YOU MAY ALSO LIKE SECTION      */}
         {/* ============================== */}
-        {relatedProducts.length > 0 && (
+        {(relatedLoading || relatedProducts.length > 0) && (
           <section className="mb-[100px] border-t border-[#EAEAEA] pt-[60px]">
             <h2 className="text-[28px] md:text-[36px] font-bold mb-[40px] text-brand-black tracking-tight font-sans lg:text-left text-center">
               You may also like
@@ -747,9 +782,13 @@ export default function ProductDetailPage() {
             
             {/* Desktop Grid */}
             <div className="hidden md:grid grid-cols-2 md:grid-cols-4 gap-[16px] md:gap-[32px]">
-              {relatedProducts.map((p: any) => (
-                <ProductCard key={p.id} product={p} />
-              ))}
+              {relatedLoading ? (
+                [1, 2, 3, 4].map((i) => <ProductCardSkeleton key={i} />)
+              ) : (
+                relatedProducts.map((p: any) => (
+                  <ProductCard key={p.id} product={p} />
+                ))
+              )}
             </div>
 
             {/* Mobile Carousel */}
@@ -759,11 +798,19 @@ export default function ProductDetailPage() {
                 onScroll={handleRelatedScroll}
                 className="flex w-full overflow-x-auto snap-x snap-mandatory scrollbar-none gap-[16px] pb-[24px]"
               >
-                {relatedProducts.map((p: any) => (
-                  <div key={p.id} className="snap-center shrink-0 w-[85%] max-w-[300px]">
-                    <ProductCard product={p} />
-                  </div>
-                ))}
+                {relatedLoading ? (
+                  [1, 2].map((i) => (
+                    <div key={i} className="snap-center shrink-0 w-[85%] max-w-[300px]">
+                      <ProductCardSkeleton />
+                    </div>
+                  ))
+                ) : (
+                  relatedProducts.map((p: any) => (
+                    <div key={p.id} className="snap-center shrink-0 w-[85%] max-w-[300px]">
+                      <ProductCard product={p} />
+                    </div>
+                  ))
+                )}
               </div>
               
               {/* Controls */}

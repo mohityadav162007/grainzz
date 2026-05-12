@@ -120,12 +120,23 @@ export default function AdminProductsPage() {
             </thead>
             <tbody>
               {loading ? (
-                <tr>
-                  <td colSpan={7} className="px-6 py-8 text-center text-gray-500">Loading products...</td>
-                </tr>
+                [1, 2, 3, 4, 5, 6].map((i) => (
+                  <tr key={i} className="border-b last:border-0">
+                    <td className="px-6 py-4 flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-lg bg-gray-100 animate-pulse" />
+                      <div className="h-4 w-32 bg-gray-100 animate-pulse rounded" />
+                    </td>
+                    <td className="px-6 py-4"><div className="h-4 w-24 bg-gray-100 animate-pulse rounded" /></td>
+                    <td className="px-6 py-4"><div className="h-4 w-16 bg-gray-100 animate-pulse rounded" /></td>
+                    <td className="px-6 py-4"><div className="h-6 w-20 bg-gray-100 animate-pulse rounded-full" /></td>
+                    <td className="px-6 py-4"><div className="h-4 w-12 bg-gray-100 animate-pulse rounded" /></td>
+                    <td className="px-6 py-4"><div className="h-6 w-16 bg-gray-100 animate-pulse rounded-md" /></td>
+                    <td className="px-6 py-4 text-right"><div className="h-8 w-16 bg-gray-100 animate-pulse rounded-lg ml-auto" /></td>
+                  </tr>
+                ))
               ) : filteredProducts.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-6 py-8 text-center text-gray-500">No products found.</td>
+                  <td colSpan={7} className="px-6 py-12 text-center text-gray-500">No products found.</td>
                 </tr>
               ) : (
                 filteredProducts.map((product) => (

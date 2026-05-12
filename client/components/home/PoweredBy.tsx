@@ -51,8 +51,8 @@ export default function PoweredBy() {
               productData = await getProductById(card.product_id).catch(() => null);
             }
 
-            // custom_image_url overrides product image — NEVER mutates product.images
-            const image = card.custom_image_url || card.image_url || productData?.images?.[0] || '/Rectangle-10@2x.png';
+            // Favor product images from the database over legacy image_url fields
+            const image = card.custom_image_url || productData?.images?.[0] || card.image_url || '/Rectangle-10@2x.png';
             const title = productData?.name || card.title || 'Product';
             const link = productData ? `/products/${productData.slug}` : card.link || '#';
 

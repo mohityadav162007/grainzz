@@ -3,14 +3,17 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
 import ProductCard from '@/components/products/ProductCard';
+import ProductCardSkeleton from '@/components/products/ProductCardSkeleton';
 import { getSiteContent, getProducts } from '@/lib/api';
 import { supabase } from '@/lib/supabase';
 
 export default function TeamFavourites() {
   const [products, setProducts] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     (async () => {
+      setLoading(true);
       try {
         // Fetch from store_settings (key: team_favourites)
         const config = await getSiteContent('team_favourites');
@@ -40,6 +43,7 @@ export default function TeamFavourites() {
                 return prod;
               });
               setProducts(sanitized);
+              setLoading(false);
               return;
             }
           }
@@ -50,11 +54,13 @@ export default function TeamFavourites() {
         if (fbData) setProducts(fbData);
       } catch (err) {
         console.error('Error loading team favourites:', err);
+      } finally {
+        setLoading(false);
       }
     })();
   }, []);
 
-  if (products.length === 0) return null;
+  if (!loading && products.length === 0) return null;
 
   return (
     <section className="py-[64px] md:py-[96px] bg-[#F9F7F3] w-full">
@@ -64,9 +70,13 @@ export default function TeamFavourites() {
         </h2>
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-[16px] md:gap-[20px]">
-          {products.map((product) => (
-            <ProductCard key={product.id} product={product} />
-          ))}
+          {loading ? (
+            [1, 2, 3, 4].map((i) => <ProductCardSkeleton key={i} />)
+          ) : (
+            products.map((product) => (
+              <ProductCard key={product.id} product={product} />
+            ))
+          )}
         </div>
 
         {/* View All Products CTA */}

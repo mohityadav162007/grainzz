@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import ProductCard from '@/components/products/ProductCard';
+import ProductCardSkeleton from '@/components/products/ProductCardSkeleton';
 import { supabase } from '@/lib/supabase';
 import { getHomepageProductTabs, getSiteContent } from '@/lib/api';
 import { ChevronRight, ArrowRight } from 'lucide-react';
@@ -142,7 +143,13 @@ export default function ProductSegments() {
 
         {/* Products grid / slider */}
         {loading ? (
-          <div className="h-[300px] flex items-center justify-center text-[#999999] text-[16px] animate-pulse">Gathering products...</div>
+          <div className="flex items-stretch md:grid md:grid-cols-3 lg:grid-cols-4 gap-[12px] md:gap-[32px] overflow-x-auto pb-4 md:pb-0 -mx-4 px-4 md:mx-0 md:px-0">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="min-w-[45vw] w-[45vw] md:w-auto md:min-w-0 h-auto">
+                <ProductCardSkeleton />
+              </div>
+            ))}
+          </div>
         ) : products.length === 0 ? (
           <div className="h-[200px] flex items-center justify-center text-[#999999] text-[16px]">No snacks found in this category.</div>
         ) : (

@@ -17,8 +17,8 @@ export default function DashboardPage() {
   }, []);
 
   const statCards = [
-    { label: 'Total Orders', value: stats?.totalOrders ?? '—', icon: ShoppingBag, color: 'bg-blue-500' },
-    { label: 'Total Revenue', value: stats ? `₹${Number(stats.revenue).toLocaleString()}` : '—', icon: DollarSign, color: 'bg-primary' },
+    { label: 'Total Orders', value: stats?.totalOrders ?? 0, icon: ShoppingBag, color: 'bg-blue-500' },
+    { label: 'Total Revenue', value: stats?.revenue ? `₹${Number(stats.revenue).toLocaleString()}` : '₹0', icon: DollarSign, color: 'bg-primary' },
     { label: 'Total Products', value: totalProducts, icon: Package, color: 'bg-purple-500' },
   ];
 
@@ -36,11 +36,13 @@ export default function DashboardPage() {
             <div className={`w-12 h-12 ${color} rounded-xl flex items-center justify-center`}>
               <Icon size={22} className="text-white" />
             </div>
-            <div>
+            <div className="flex-1">
               <p className="text-sm text-gray-500">{label}</p>
-              <p className="text-xl font-black text-gray-900">
-                {loading ? <span className="block w-12 h-6 bg-gray-100 rounded animate-pulse" /> : value}
-              </p>
+              {loading ? (
+                <div className="w-20 h-7 bg-gray-100 rounded animate-pulse mt-1" />
+              ) : (
+                <p className="text-xl font-black text-gray-900">{value}</p>
+              )}
             </div>
           </div>
         ))}
@@ -52,22 +54,35 @@ export default function DashboardPage() {
           <h2 className="font-bold text-gray-900">Recent Orders</h2>
           <Link href="/dashboard/orders" className="text-sm text-primary font-medium hover:underline">View All</Link>
         </div>
-        {loading ? (
-          <div className="px-6 py-8 text-center text-gray-400 text-sm">Loading...</div>
-        ) : !stats?.recentOrders?.length ? (
-          <div className="px-6 py-8 text-center text-gray-400 text-sm">No orders yet. Orders will appear here once customers start placing them.</div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-gray-50">
+        
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead className="bg-gray-50">
+              <tr>
+                {['Order ID', 'Customer', 'Amount', 'Status', 'Date'].map((h) => (
+                  <th key={h} className="text-left text-xs font-semibold text-gray-500 px-6 py-3">{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-50">
+              {loading ? (
+                [1, 2, 3, 4, 5].map((i) => (
+                  <tr key={i}>
+                    <td className="px-6 py-4"><div className="h-4 w-20 bg-gray-100 animate-pulse rounded" /></td>
+                    <td className="px-6 py-4"><div className="h-4 w-32 bg-gray-100 animate-pulse rounded" /></td>
+                    <td className="px-6 py-4"><div className="h-4 w-16 bg-gray-100 animate-pulse rounded" /></td>
+                    <td className="px-6 py-4"><div className="h-6 w-20 bg-gray-100 animate-pulse rounded-full" /></td>
+                    <td className="px-6 py-4"><div className="h-4 w-24 bg-gray-100 animate-pulse rounded" /></td>
+                  </tr>
+                ))
+              ) : !stats?.recentOrders?.length ? (
                 <tr>
-                  {['Order ID', 'Customer', 'Amount', 'Status', 'Date'].map((h) => (
-                    <th key={h} className="text-left text-xs font-semibold text-gray-500 px-6 py-3">{h}</th>
-                  ))}
+                  <td colSpan={5} className="px-6 py-12 text-center text-gray-400 text-sm">
+                    No orders yet. Orders will appear here once customers start placing them.
+                  </td>
                 </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-50">
-                {stats.recentOrders.map((order: any) => (
+              ) : (
+                stats.recentOrders.map((order: any) => (
                   <tr key={order.id} className="hover:bg-gray-50 transition-colors">
                     <td className="px-6 py-4 text-sm font-mono text-gray-500">{order.id?.slice(0, 8)}</td>
                     <td className="px-6 py-4 text-sm font-medium">{order.user_name || 'N/A'}</td>
@@ -85,11 +100,11 @@ export default function DashboardPage() {
                       {new Date(order.created_at).toLocaleDateString('en-IN')}
                     </td>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );

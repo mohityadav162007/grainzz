@@ -170,6 +170,12 @@ export const createProduct = async (formData: FormData) => {
   const ingredients = (formData.get('ingredients') as string) || '';
   const weight = (formData.get('weight') as string) || '';
 
+  // Package dimensions for Shiprocket
+  const package_length = Number(formData.get('package_length')) || 15;
+  const package_breadth = Number(formData.get('package_breadth')) || 15;
+  const package_height = Number(formData.get('package_height')) || 10;
+  const package_weight = Number(formData.get('package_weight')) || 0.5;
+
   // Generate slug
   const slug = name
     .toLowerCase()
@@ -217,6 +223,10 @@ export const createProduct = async (formData: FormData) => {
       combo_nutrition: comboNutrition,
       ingredients,
       subtitle: (formData.get('subtitle') as string) || '',
+      package_length,
+      package_breadth,
+      package_height,
+      package_weight,
     })
     .select()
     .single();
@@ -287,6 +297,16 @@ export const updateProduct = async (id: string, formData: FormData) => {
 
   const subtitle = formData.get('subtitle');
   if (subtitle !== null) updates.subtitle = subtitle;
+
+  // Package dimensions for Shiprocket
+  const pkgLength = formData.get('package_length');
+  if (pkgLength !== null) updates.package_length = Number(pkgLength) || 15;
+  const pkgBreadth = formData.get('package_breadth');
+  if (pkgBreadth !== null) updates.package_breadth = Number(pkgBreadth) || 15;
+  const pkgHeight = formData.get('package_height');
+  if (pkgHeight !== null) updates.package_height = Number(pkgHeight) || 10;
+  const pkgWeight = formData.get('package_weight');
+  if (pkgWeight !== null) updates.package_weight = Number(pkgWeight) || 0.5;
 
   // Upload new images to Cloudinary
   const files = formData.getAll('images') as File[];

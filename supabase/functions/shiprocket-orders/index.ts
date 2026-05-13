@@ -328,6 +328,43 @@ serve(async (req: Request) => {
             selling_price: Number(item.price),
           }));
 
+          // ── Fetch per-product package dimensions ──
+          const productIds = order.order_items
+            .map((item: any) => item.product_id)
+            .filter(Boolean);
+
+          let pkgLength = 15, pkgBreadth = 15, pkgHeight = 10, pkgWeight = 0.5;
+
+          if (productIds.length > 0) {
+            const { data: products } = await supabase
+              .from('products')
+              .select('id, package_length, package_breadth, package_height, package_weight')
+              .in('id', productIds);
+
+            if (products && products.length > 0) {
+              // For multi-item orders: use the largest dimension for L/B/H, sum the weights
+              pkgLength = 0; pkgBreadth = 0; pkgHeight = 0; pkgWeight = 0;
+              const qtyMap: Record<string, number> = {};
+              order.order_items.forEach((item: any) => {
+                if (item.product_id) qtyMap[item.product_id] = (qtyMap[item.product_id] || 0) + item.quantity;
+              });
+
+              for (const p of products) {
+                const qty = qtyMap[p.id] || 1;
+                pkgLength = Math.max(pkgLength, Number(p.package_length) || 15);
+                pkgBreadth = Math.max(pkgBreadth, Number(p.package_breadth) || 15);
+                pkgHeight = Math.max(pkgHeight, Number(p.package_height) || 10);
+                pkgWeight += (Number(p.package_weight) || 0.5) * qty;
+              }
+
+              // Ensure minimums
+              pkgLength = Math.max(pkgLength, 1);
+              pkgBreadth = Math.max(pkgBreadth, 1);
+              pkgHeight = Math.max(pkgHeight, 1);
+              pkgWeight = Math.max(pkgWeight, 0.1);
+            }
+          }
+
           const nameParts = order.user_name.trim().split(' ');
           const firstName = nameParts[0] || '';
           const lastName = nameParts.slice(1).join(' ') || firstName;
@@ -352,10 +389,10 @@ serve(async (req: Request) => {
             order_items: orderItems,
             payment_method: 'Prepaid',
             sub_total: Number(order.total_amount),
-            length: 15,
-            breadth: 15,
-            height: 10,
-            weight: 0.5,
+            length: pkgLength,
+            breadth: pkgBreadth,
+            height: pkgHeight,
+            weight: pkgWeight,
           };
 
           let shiprocketResponse = await fetch(`${SHIPROCKET_BASE_URL}/v1/external/orders/create/adhoc`, {

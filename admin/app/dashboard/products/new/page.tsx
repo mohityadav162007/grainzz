@@ -386,6 +386,32 @@ export default function NewProductPage() {
           </div>
         </div>
 
+        {/* ─── Package Dimensions for Shiprocket ─── */}
+        <div className="admin-card p-6 space-y-4">
+          <div>
+            <h2 className="font-bold text-gray-900 text-lg">📦 Shipping Package Dimensions</h2>
+            <p className="text-xs text-gray-500 mt-1">Used by Shiprocket for shipping rate calculation. Leave defaults if unsure.</p>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-1">Length (cm)</label>
+              <input name="package_length" type="number" step="0.1" min="1" className="admin-input" defaultValue={15} placeholder="15" />
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-1">Breadth (cm)</label>
+              <input name="package_breadth" type="number" step="0.1" min="1" className="admin-input" defaultValue={15} placeholder="15" />
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-1">Height (cm)</label>
+              <input name="package_height" type="number" step="0.1" min="1" className="admin-input" defaultValue={10} placeholder="10" />
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-1">Weight (kg)</label>
+              <input name="package_weight" type="number" step="0.01" min="0.01" className="admin-input" defaultValue={0.5} placeholder="0.5" />
+            </div>
+          </div>
+        </div>
+
         <div className="admin-card p-6 space-y-4">
           <h2 className="font-bold text-gray-900 text-lg">Product Images</h2>
           <div className="border-2 border-dashed border-gray-200 rounded-xl p-8 text-center">

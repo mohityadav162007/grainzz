@@ -10,6 +10,7 @@ import ProductCard from '@/components/products/ProductCard';
 import ProductCardSkeleton from '@/components/products/ProductCardSkeleton';
 import ProductTestimonialsSection from '@/components/about/CustomerTestimonials';
 import { supabase } from '@/lib/supabase';
+import { useAuthStore } from '@/store/authStore';
 
 export default function ProductDetailPage() {
   const { slug } = useParams<{ slug: string }>();
@@ -25,6 +26,7 @@ export default function ProductDetailPage() {
   const [mobileRelatedIndex, setMobileRelatedIndex] = useState(0);
   const [reviews, setReviews] = useState<any[]>([]);
   const { addItem, setQuickBuy } = useCartStore();
+  const { user, setAuthModalOpen } = useAuthStore();
   const router = useRouter();
 
   // Notification State
@@ -33,7 +35,7 @@ export default function ProductDetailPage() {
   const [notificationSuccess, setNotificationSuccess] = useState(false);
 
   // Review Form State
-  const [reviewForm, setReviewForm] = useState({ rating: 0, title: '', text: '', name: '', email: '' });
+  const [reviewForm, setReviewForm] = useState({ rating: 0, title: '', text: '' });
   const [reviewImage, setReviewImage] = useState<File | null>(null);
   const [reviewImagePreview, setReviewImagePreview] = useState<string>('');
   const [submittingReview, setSubmittingReview] = useState(false);
@@ -170,7 +172,12 @@ export default function ProductDetailPage() {
   const handleReviewSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (reviewForm.rating === 0) return alert('Please select a rating');
-    if (!reviewForm.title || !reviewForm.text || !reviewForm.name || !reviewForm.email) return alert('Please fill in all required fields');
+    if (!reviewForm.title || !reviewForm.text) return alert('Please fill in all required fields');
+    
+    if (!user) {
+      setAuthModalOpen(true);
+      return;
+    }
     
     setSubmittingReview(true);
     try {
@@ -178,11 +185,18 @@ export default function ProductDetailPage() {
       if (reviewImage) {
         imageUrl = await uploadReviewImage(reviewImage);
       }
+
+      // Resolve reviewer details
+      const reviewerEmail = user.email || '';
+      const reviewerName = user.user_metadata?.full_name || 
+                           user.user_metadata?.name || 
+                           user.email?.split('@')[0] || 
+                           'Anonymous';
       
       await submitProductReview({
         product_id: product.id,
-        reviewer_name: reviewForm.name,
-        reviewer_email: reviewForm.email,
+        reviewer_name: reviewerName,
+        reviewer_email: reviewerEmail,
         review_title: reviewForm.title,
         review_text: reviewForm.text,
         rating: reviewForm.rating,
@@ -190,7 +204,7 @@ export default function ProductDetailPage() {
       });
       
       setReviewSuccess(true);
-      setReviewForm({ rating: 0, title: '', text: '', name: '', email: '' });
+      setReviewForm({ rating: 0, title: '', text: '' });
       setReviewImage(null);
       setReviewImagePreview('');
       setTimeout(() => setReviewSuccess(false), 5000);
@@ -717,26 +731,6 @@ export default function ProductDetailPage() {
                     </div>
 
                     <div>
-                      <label className="text-[13px] font-bold text-brand-black mb-[8px] block">Name<span className="text-red-500">*</span></label>
-                      <input 
-                        type="text" 
-                        value={reviewForm.name} onChange={e => setReviewForm(p => ({...p, name: e.target.value}))}
-                        className="w-full h-[48px] border border-[#EAEAEA] rounded-[8px] px-[16px] outline-none focus:border-[#1D5E2E] text-[14px]"
-                        required
-                      />
-                    </div>
-
-                    <div>
-                      <label className="text-[13px] font-bold text-brand-black mb-[8px] block">Email<span className="text-red-500">*</span></label>
-                      <input 
-                        type="email" 
-                        value={reviewForm.email} onChange={e => setReviewForm(p => ({...p, email: e.target.value}))}
-                        className="w-full h-[48px] border border-[#EAEAEA] rounded-[8px] px-[16px] outline-none focus:border-[#1D5E2E] text-[14px]"
-                        required
-                      />
-                    </div>
-
-                    <div>
                       <label className="text-[13px] font-bold text-brand-black mb-[8px] block">Do you have photos to share?</label>
                       {reviewImagePreview ? (
                         <div className="relative w-full h-[120px] rounded-[8px] overflow-hidden border border-[#EAEAEA]">
@@ -756,14 +750,24 @@ export default function ProductDetailPage() {
                       <input type="file" ref={fileInputRef} onChange={handleImageChange} accept="image/*" className="hidden" />
                     </div>
 
-                    <button 
-                      type="submit" 
-                      disabled={submittingReview}
-                      className="mt-[12px] h-[54px] bg-[#1D5E2E] text-white rounded-full font-bold text-[16px] hover:bg-[#154617] transition-all flex justify-center items-center gap-[12px] shadow-md disabled:opacity-50"
-                    >
-                      {submittingReview ? <Loader2 size={20} className="animate-spin" /> : 'Submit'}
-                      {!submittingReview && <div className="w-[32px] h-[32px] bg-white rounded-full flex items-center justify-center text-[#1D5E2E]"><ChevronRight size={18} strokeWidth={3}/></div>}
-                    </button>
+                    {!user ? (
+                      <button 
+                        type="button" 
+                        onClick={() => setAuthModalOpen(true)}
+                        className="mt-[12px] h-[54px] bg-white border border-brand-green text-brand-green rounded-full font-bold text-[16px] hover:bg-[#F2F9ED] transition-all flex justify-center items-center gap-[12px] shadow-sm"
+                      >
+                        Sign in to write a review
+                      </button>
+                    ) : (
+                      <button 
+                        type="submit" 
+                        disabled={submittingReview}
+                        className="mt-[12px] h-[54px] bg-[#1D5E2E] text-white rounded-full font-bold text-[16px] hover:bg-[#154617] transition-all flex justify-center items-center gap-[12px] shadow-md disabled:opacity-50"
+                      >
+                        {submittingReview ? <Loader2 size={20} className="animate-spin" /> : 'Submit'}
+                        {!submittingReview && <div className="w-[32px] h-[32px] bg-white rounded-full flex items-center justify-center text-[#1D5E2E]"><ChevronRight size={18} strokeWidth={3}/></div>}
+                      </button>
+                    )}
                   </form>
                 )}
               </div>

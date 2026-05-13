@@ -35,100 +35,206 @@ export default function AccountPage() {
 
   return (
     <div className="bg-[#FCF9F2] min-h-screen pb-[100px]">
-      <div className="max-w-[1440px] mx-auto px-4 md:px-[60px] lg:px-[120px] pt-[32px]">
-        {/* Breadcrumb */}
-        <div className="flex items-center gap-[8px] text-[13px] md:text-[14px] font-semibold text-[#8E8E8E] mb-[24px] tracking-wide">
-          <Link href="/" className="hover:text-brand-green transition-colors">Home</Link>
-          <ChevronRight size={14} />
-          <span className="text-brand-black">My Account</span>
-        </div>
-
-        <h1 className="text-[32px] md:text-[45px] font-bold text-brand-black font-brand tracking-tight mb-[40px]">
-          My <span className="text-brand-red">Account</span>
-        </h1>
-
-        <div className="flex flex-col lg:flex-row gap-[32px]">
-          {/* Sidebar */}
-          <div className="w-full lg:w-[280px] flex-shrink-0 bg-white rounded-[20px] border border-[#EAEAEA] shadow-sm p-6 flex flex-col gap-2 h-fit">
-            <div className="flex items-center gap-4 mb-6 pb-6 border-b border-[#EAEAEA]">
-               <div className="w-[50px] h-[50px] bg-brand-green text-white rounded-full flex items-center justify-center font-bold text-[20px]">
-                 {user.user_metadata?.full_name?.[0] || user.email?.[0]?.toUpperCase() || 'U'}
-               </div>
-               <div className="overflow-hidden">
-                  <h3 className="font-bold text-brand-black text-[18px] truncate">{user.user_metadata?.full_name || 'User'}</h3>
-                  <p className="text-[13px] font-medium text-[#7A7A7A] truncate">{user.email}</p>
-               </div>
-            </div>
-            
-            <button 
-              onClick={() => setActiveTab('profile')}
-              className={`flex items-center gap-3 w-full text-left px-4 py-3 rounded-xl font-bold transition-colors ${activeTab === 'profile' ? 'bg-brand-light text-brand-green' : 'hover:bg-[#F2F2F2] text-brand-black'}`}
-            >
-               <User size={20} strokeWidth={2.5}/>
-               <span>Profile Details</span>
-            </button>
-            <button 
-              onClick={() => setActiveTab('orders')}
-              className={`flex items-center gap-3 w-full text-left px-4 py-3 rounded-xl font-bold transition-colors ${activeTab === 'orders' ? 'bg-brand-light text-brand-green' : 'hover:bg-[#F2F2F2] text-brand-black'}`}
-            >
-               <Package size={20} strokeWidth={2.5}/>
-               <span>My Orders</span>
-            </button>
-            <button 
-              onClick={() => setActiveTab('addresses')}
-              className={`flex items-center gap-3 w-full text-left px-4 py-3 rounded-xl font-bold transition-colors ${activeTab === 'addresses' ? 'bg-brand-light text-brand-green' : 'hover:bg-[#F2F2F2] text-brand-black'}`}
-            >
-               <MapPin size={20} strokeWidth={2.5}/>
-               <span>Saved Addresses</span>
-            </button>
-            <button 
-              onClick={() => setActiveTab('settings')}
-              className={`flex items-center gap-3 w-full text-left px-4 py-3 rounded-xl font-bold transition-colors ${activeTab === 'settings' ? 'bg-brand-light text-brand-green' : 'hover:bg-[#F2F2F2] text-brand-black'}`}
-            >
-               <Settings size={20} strokeWidth={2.5}/>
-               <span>Account Settings</span>
-            </button>
-            <div className="mt-4 pt-4 border-t border-[#EAEAEA]">
-              <button 
-                onClick={() => { signOut(); router.push('/'); }}
-                className="flex items-center gap-3 w-full text-left px-4 py-3 rounded-xl hover:bg-[#FFF0F0] text-brand-red font-bold transition-colors"
-              >
-                 <LogOut size={20} strokeWidth={2.5}/>
-                 <span>Sign Out</span>
-              </button>
-            </div>
+      <div className="max-w-[1440px] mx-auto px-4 md:px-[60px] lg:px-[120px] pt-[24px] md:pt-[32px]">
+        {/* DESKTOP LAYOUT (>= 768px) */}
+        <div className="hidden md:block">
+          {/* Breadcrumb */}
+          <div className="flex items-center gap-[8px] text-[13px] md:text-[14px] font-semibold text-[#8E8E8E] mb-[24px] tracking-wide">
+            <Link href="/" className="hover:text-brand-green transition-colors">Home</Link>
+            <ChevronRight size={14} />
+            <span className="text-brand-black">My Account</span>
           </div>
 
-          {/* Main Content Pane */}
-          <div className="flex-1 bg-white rounded-[20px] border border-[#EAEAEA] shadow-sm p-[32px] md:p-[48px] min-h-[400px]">
-            {activeTab === 'profile' && (
-              <ProfileTab user={user} />
-            )}
+          <h1 className="text-[32px] md:text-[45px] font-bold text-brand-black font-brand tracking-tight mb-[40px]">
+            My <span className="text-brand-red">Account</span>
+          </h1>
 
-            {activeTab === 'orders' && (
-              <OrdersTab userEmail={user.email || ''} />
-            )}
+          <div className="flex flex-col lg:flex-row gap-[32px]">
+            {/* Sidebar */}
+            <div className="w-full lg:w-[280px] flex-shrink-0 bg-white rounded-[20px] border border-[#EAEAEA] shadow-sm p-6 flex flex-col gap-2 h-fit">
+              <div className="flex items-center gap-4 mb-6 pb-6 border-b border-[#EAEAEA]">
+                 <div className="w-[50px] h-[50px] bg-brand-green text-white rounded-full flex items-center justify-center font-bold text-[20px]">
+                   {user.user_metadata?.full_name?.[0] || user.email?.[0]?.toUpperCase() || 'U'}
+                 </div>
+                 <div className="overflow-hidden">
+                    <h3 className="font-bold text-brand-black text-[18px] truncate">{user.user_metadata?.full_name || 'User'}</h3>
+                    <p className="text-[13px] font-medium text-[#7A7A7A] truncate">{user.email}</p>
+                 </div>
+              </div>
+              
+              <button 
+                onClick={() => setActiveTab('profile')}
+                className={`flex items-center gap-3 w-full text-left px-4 py-3 rounded-xl font-bold transition-colors ${activeTab === 'profile' ? 'bg-brand-light text-brand-green' : 'hover:bg-[#F2F2F2] text-brand-black'}`}
+              >
+                 <User size={20} strokeWidth={2.5}/>
+                 <span>Profile Details</span>
+              </button>
+              <button 
+                onClick={() => setActiveTab('orders')}
+                className={`flex items-center gap-3 w-full text-left px-4 py-3 rounded-xl font-bold transition-colors ${activeTab === 'orders' ? 'bg-brand-light text-brand-green' : 'hover:bg-[#F2F2F2] text-brand-black'}`}
+              >
+                 <Package size={20} strokeWidth={2.5}/>
+                 <span>My Orders</span>
+              </button>
+              <button 
+                onClick={() => setActiveTab('addresses')}
+                className={`flex items-center gap-3 w-full text-left px-4 py-3 rounded-xl font-bold transition-colors ${activeTab === 'addresses' ? 'bg-brand-light text-brand-green' : 'hover:bg-[#F2F2F2] text-brand-black'}`}
+              >
+                 <MapPin size={20} strokeWidth={2.5}/>
+                 <span>Saved Addresses</span>
+              </button>
+              <button 
+                onClick={() => setActiveTab('settings')}
+                className={`flex items-center gap-3 w-full text-left px-4 py-3 rounded-xl font-bold transition-colors ${activeTab === 'settings' ? 'bg-brand-light text-brand-green' : 'hover:bg-[#F2F2F2] text-brand-black'}`}
+              >
+                 <Settings size={20} strokeWidth={2.5}/>
+                 <span>Account Settings</span>
+              </button>
+              <div className="mt-4 pt-4 border-t border-[#EAEAEA]">
+                <button 
+                  onClick={() => { signOut(); router.push('/'); }}
+                  className="flex items-center gap-3 w-full text-left px-4 py-3 rounded-xl hover:bg-[#FFF0F0] text-brand-red font-bold transition-colors"
+                >
+                   <LogOut size={20} strokeWidth={2.5}/>
+                   <span>Sign Out</span>
+                </button>
+              </div>
+            </div>
 
-            {activeTab === 'addresses' && (
-              <SavedAddressesTab userId={user.id} />
-            )}
+            {/* Main Content Pane */}
+            <div className="flex-1 bg-white rounded-[20px] border border-[#EAEAEA] shadow-sm p-[32px] md:p-[48px] min-h-[400px]">
+              {activeTab === 'profile' && (
+                <ProfileTab user={user} />
+              )}
 
+              {activeTab === 'orders' && (
+                <OrdersTab userEmail={user.email || ''} />
+              )}
+
+              {activeTab === 'addresses' && (
+                <SavedAddressesTab userId={user.id} />
+              )}
+
+              {activeTab === 'settings' && (
+                <div className="animate-fade-in">
+                  <div className="flex items-center gap-3 mb-[32px]">
+                    {isChangingPassword && (
+                      <button onClick={() => setIsChangingPassword(false)} className="p-2 hover:bg-[#F2F2F2] rounded-full transition-colors text-[#888888] hover:text-brand-black">
+                        <ChevronRight size={20} className="rotate-180" />
+                      </button>
+                    )}
+                    <h2 className="text-[24px] font-bold text-brand-black">{isChangingPassword ? 'Change Password' : 'Account Settings'}</h2>
+                  </div>
+
+                  {!isChangingPassword ? (
+                    <div className="space-y-6 max-w-[500px]">
+                      <div 
+                        onClick={() => setIsChangingPassword(true)}
+                        className="flex items-center justify-between p-4 rounded-xl border border-[#EAEAEA] hover:border-[#D0D0D0] transition-colors cursor-pointer group"
+                      >
+                        <div className="flex items-center gap-4">
+                          <div className="w-10 h-10 bg-brand-light rounded-full flex items-center justify-center text-brand-green">
+                            <Lock size={20} />
+                          </div>
+                          <div>
+                            <h4 className="font-bold text-brand-black text-[15px]">Change Password</h4>
+                            <p className="text-[13px] text-[#888888] font-medium pt-0.5">Update your login credentials securely.</p>
+                          </div>
+                        </div>
+                        <ChevronRight size={18} className="text-[#888888] group-hover:text-brand-black transition-colors" />
+                      </div>
+                      <div className="flex items-center justify-between p-4 rounded-xl border border-[#EAEAEA] hover:border-[#D0D0D0] transition-colors cursor-pointer group opacity-60">
+                        <div className="flex items-center gap-4">
+                          <div className="w-10 h-10 bg-[#F5F5F5] rounded-full flex items-center justify-center text-[#888888]">
+                            <Settings size={20} />
+                          </div>
+                          <div>
+                            <h4 className="font-bold text-brand-black text-[15px]">Notification Preferences</h4>
+                            <p className="text-[13px] text-[#888888] font-medium pt-0.5">Manage your email alerts and SMS.</p>
+                          </div>
+                        </div>
+                        <ChevronRight size={18} className="text-[#888888]" />
+                      </div>
+                    </div>
+                  ) : (
+                    <ChangePasswordForm onCancel={() => setIsChangingPassword(false)} />
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* MOBILE LAYOUT (< 768px) */}
+        <div className="md:hidden">
+          <h1 className="text-[28px] font-bold text-brand-black font-brand tracking-tight mb-[24px]">
+            My <span className="text-brand-red">Account</span>
+          </h1>
+
+          {/* User Header Card */}
+          <div className="bg-white rounded-[20px] p-5 shadow-sm border border-[#EAEAEA] mb-6">
+            <div className="flex items-center gap-4">
+              <div className="w-[60px] h-[60px] bg-brand-green text-white rounded-full flex items-center justify-center font-bold text-[24px] flex-shrink-0">
+                {user.user_metadata?.full_name?.[0] || user.email?.[0]?.toUpperCase() || 'U'}
+              </div>
+              <div className="overflow-hidden">
+                <h3 className="font-bold text-brand-black text-[18px] truncate">{user.user_metadata?.full_name || 'User'}</h3>
+                <p className="text-[13px] font-medium text-[#7A7A7A] truncate">{user.email}</p>
+                {(user.user_metadata?.phone || user.phone) && (
+                  <p className="text-[13px] font-medium text-[#7A7A7A] mt-0.5">{user.user_metadata?.phone || user.phone}</p>
+                )}
+              </div>
+            </div>
+          </div>
+          {/* 2x2 Grid Tab Navigation */}
+          <div className="grid grid-cols-2 gap-3 mb-6">
+            <button
+              onClick={() => { setActiveTab('profile'); setIsChangingPassword(false); }}
+              className={`flex items-center justify-center gap-2 h-[50px] rounded-[16px] font-bold text-[14px] border transition-all ${activeTab === 'profile' ? 'bg-brand-green text-white border-brand-green shadow-sm' : 'bg-white text-[#7A7A7A] border-[#EAEAEA]'}`}
+            >
+              <User size={18} /> Profile
+            </button>
+            <button
+              onClick={() => { setActiveTab('orders'); setIsChangingPassword(false); }}
+              className={`flex items-center justify-center gap-2 h-[50px] rounded-[16px] font-bold text-[14px] border transition-all ${activeTab === 'orders' ? 'bg-brand-green text-white border-brand-green shadow-sm' : 'bg-white text-[#7A7A7A] border-[#EAEAEA]'}`}
+            >
+              <Package size={18} /> Orders
+            </button>
+            <button
+              onClick={() => { setActiveTab('addresses'); setIsChangingPassword(false); }}
+              className={`flex items-center justify-center gap-2 h-[50px] rounded-[16px] font-bold text-[14px] border transition-all ${activeTab === 'addresses' ? 'bg-brand-green text-white border-brand-green shadow-sm' : 'bg-white text-[#7A7A7A] border-[#EAEAEA]'}`}
+            >
+              <MapPin size={18} /> Addresses
+            </button>
+            <button
+              onClick={() => { setActiveTab('settings'); setIsChangingPassword(false); }}
+              className={`flex items-center justify-center gap-2 h-[50px] rounded-[16px] font-bold text-[14px] border transition-all ${activeTab === 'settings' ? 'bg-brand-green text-white border-brand-green shadow-sm' : 'bg-white text-[#7A7A7A] border-[#EAEAEA]'}`}
+            >
+              <Settings size={18} /> Settings
+            </button>
+          </div>
+
+          {/* Dynamic Content Container */}
+          <div className="bg-white rounded-[20px] p-5 shadow-sm border border-[#EAEAEA] mt-4 min-h-[300px]">
+            {activeTab === 'profile' && <ProfileTab user={user} />}
+            {activeTab === 'orders' && <OrdersTab userEmail={user.email || ''} />}
+            {activeTab === 'addresses' && <SavedAddressesTab userId={user.id} />}
             {activeTab === 'settings' && (
-              <div className="animate-fade-in">
-                <div className="flex items-center gap-3 mb-[32px]">
+              <div className="animate-fade-in flex flex-col h-full">
+                <div className="flex items-center gap-3 mb-6">
                   {isChangingPassword && (
                     <button onClick={() => setIsChangingPassword(false)} className="p-2 hover:bg-[#F2F2F2] rounded-full transition-colors text-[#888888] hover:text-brand-black">
                       <ChevronRight size={20} className="rotate-180" />
                     </button>
                   )}
-                  <h2 className="text-[24px] font-bold text-brand-black">{isChangingPassword ? 'Change Password' : 'Account Settings'}</h2>
+                  <h2 className="text-[20px] font-bold text-brand-black">{isChangingPassword ? 'Change Password' : 'Account Settings'}</h2>
                 </div>
 
                 {!isChangingPassword ? (
-                  <div className="space-y-6 max-w-[500px]">
+                  <div className="space-y-4 flex-1">
                     <div 
                       onClick={() => setIsChangingPassword(true)}
-                      className="flex items-center justify-between p-4 rounded-xl border border-[#EAEAEA] hover:border-[#D0D0D0] transition-colors cursor-pointer group"
+                      className="flex items-center justify-between p-4 rounded-xl border border-[#EAEAEA] active:bg-[#F9F9F9] transition-colors cursor-pointer"
                     >
                       <div className="flex items-center gap-4">
                         <div className="w-10 h-10 bg-brand-light rounded-full flex items-center justify-center text-brand-green">
@@ -136,22 +242,44 @@ export default function AccountPage() {
                         </div>
                         <div>
                           <h4 className="font-bold text-brand-black text-[15px]">Change Password</h4>
-                          <p className="text-[13px] text-[#888888] font-medium pt-0.5">Update your login credentials securely.</p>
+                          <p className="text-[12px] text-[#888888] font-medium pt-0.5">Update your security credentials.</p>
                         </div>
                       </div>
-                      <ChevronRight size={18} className="text-[#888888] group-hover:text-brand-black transition-colors" />
+                      <ChevronRight size={18} className="text-[#888888]" />
                     </div>
-                    <div className="flex items-center justify-between p-4 rounded-xl border border-[#EAEAEA] hover:border-[#D0D0D0] transition-colors cursor-pointer group opacity-60">
+                    
+                    <div className="flex items-center justify-between p-4 rounded-xl border border-[#EAEAEA] opacity-60">
                       <div className="flex items-center gap-4">
                         <div className="w-10 h-10 bg-[#F5F5F5] rounded-full flex items-center justify-center text-[#888888]">
                           <Settings size={20} />
                         </div>
                         <div>
-                          <h4 className="font-bold text-brand-black text-[15px]">Notification Preferences</h4>
-                          <p className="text-[13px] text-[#888888] font-medium pt-0.5">Manage your email alerts and SMS.</p>
+                          <h4 className="font-bold text-brand-black text-[15px]">Privacy Policy</h4>
                         </div>
                       </div>
                       <ChevronRight size={18} className="text-[#888888]" />
+                    </div>
+
+                    <div className="flex items-center justify-between p-4 rounded-xl border border-[#EAEAEA] opacity-60">
+                      <div className="flex items-center gap-4">
+                        <div className="w-10 h-10 bg-[#F5F5F5] rounded-full flex items-center justify-center text-[#888888]">
+                          <ExternalLink size={20} />
+                        </div>
+                        <div>
+                          <h4 className="font-bold text-brand-black text-[15px]">Terms & Conditions</h4>
+                        </div>
+                      </div>
+                      <ChevronRight size={18} className="text-[#888888]" />
+                    </div>
+
+                    <div className="mt-8 pt-8 border-t border-[#EAEAEA]">
+                      <button 
+                        onClick={() => { signOut(); router.push('/'); }}
+                        className="flex items-center justify-center gap-3 w-full h-[48px] rounded-[14px] border border-brand-red bg-white text-brand-red font-bold transition-colors active:bg-[#FFF0F0]"
+                      >
+                         <LogOut size={20} strokeWidth={2.5}/>
+                         <span>Sign Out</span>
+                      </button>
                     </div>
                   </div>
                 ) : (
@@ -403,9 +531,9 @@ function OrdersTab({ userEmail }: { userEmail: string }) {
         const stepIdx = getStepIndex(order.delivery_status || (order.status === 'delivered' ? 'Delivered' : order.status === 'shipped' ? 'Shipped' : ''));
 
         return (
-          <div key={order.id} className="border border-[#D5D9D9] rounded-xl overflow-hidden bg-white shadow-sm mb-6">
-            {/* Header */}
-            <div className="bg-[#F0F2F2] border-b border-[#D5D9D9] p-4 flex flex-wrap md:flex-nowrap items-start md:items-center justify-between gap-4 text-sm text-[#565959]">
+          <div key={order.id} className="border border-[#D5D9D9] rounded-xl md:overflow-hidden bg-white shadow-sm mb-6">
+            {/* DESKTOP HEADER (>= 768px) */}
+            <div className="hidden md:flex bg-[#F0F2F2] border-b border-[#D5D9D9] p-4 flex-wrap md:flex-nowrap items-start md:items-center justify-between gap-4 text-sm text-[#565959]">
               <div className="flex gap-8 flex-wrap">
                 <div className="flex flex-col">
                   <span className="text-[12px] uppercase">Order Placed</span>
@@ -430,8 +558,40 @@ function OrdersTab({ userEmail }: { userEmail: string }) {
               </div>
             </div>
 
-            {/* Body */}
-            <div className="p-5 md:p-6">
+            {/* MOBILE HEADER (< 768px) */}
+            <div className="md:hidden p-4 border-b border-[#F0F2F2]">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-[12px] font-bold text-[#7A7A7A] uppercase tracking-wider">Order #{order.id?.slice(0, 8).toUpperCase()}</span>
+                <span className="text-[12px] font-medium text-[#7A7A7A]">{new Date(order.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 bg-[#F5F0E8] rounded-lg overflow-hidden flex-shrink-0 border border-[#EAEAEA]">
+                  {order.order_items?.[0]?.image ? (
+                    <img src={order.order_items[0].image} alt="" className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-[#CCC]"><Package size={20} /></div>
+                  )}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between">
+                    <h4 className="font-bold text-brand-black text-[15px] truncate">{order.order_items?.[0]?.name || 'Order Items'}</h4>
+                    <ChevronRight size={18} className="text-[#CCC]" />
+                  </div>
+                  <div className="flex items-center gap-2 mt-1">
+                    <span className="text-[13px] font-bold text-brand-green">
+                      {order.delivery_status || (order.is_sent_to_shiprocket ? 'Shipped' : order.status === 'delivered' ? 'Delivered' : 'Processing')}
+                    </span>
+                    <span className="text-[#DDD]">|</span>
+                    <span className="text-[13px] text-[#7A7A7A]">{order.order_items?.length} {order.order_items?.length === 1 ? 'item' : 'items'}</span>
+                    <span className="text-[#DDD]">|</span>
+                    <span className="text-[13px] font-bold text-brand-black">₹{order.total_amount}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Body (Common but responsive) */}
+            <div className="p-5 md:p-6 hidden md:block">
               {/* Status Section */}
               <div className="mb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div className="flex items-center gap-3">

@@ -18,7 +18,7 @@
     @apply font-sans text-text-main bg-white;
     -webkit-font-smoothing: antialiased;
     scroll-behavior: smooth;
-    overflow-x: hidden;
+    overflow-x: clip;
     position: relative;
     width: 100%;
     max-width: 100%;

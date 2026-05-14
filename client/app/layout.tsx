@@ -51,7 +51,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <AuthInitializer />
         <AnnouncementBar />
         <Navbar />
-        <main className="min-h-screen overflow-x-hidden">{children}</main>
+        <main className="min-h-screen overflow-x-clip">{children}</main>
         <Footer />
         <CartDrawer />
         <AuthModal />

@@ -1447,3 +1447,118 @@ export const updateOrderShipmentFields = async (id: string, fields: Record<strin
   if (error) throw new Error(error.message);
   return { success: true, data };
 };
+
+// ─── Blogs ───────────────────────────────────────────────────────────────────
+
+export const getBlogs = async () => {
+  const { data, error } = await supabase
+    .from('blogs')
+    .select('*')
+    .order('created_at', { ascending: false });
+
+  if (error) throw new Error(error.message);
+  return { success: true, data: data || [] };
+};
+
+export const getBlogById = async (id: string) => {
+  const { data, error } = await supabase
+    .from('blogs')
+    .select('*')
+    .eq('id', id)
+    .single();
+
+  if (error) throw new Error(error.message);
+  return { success: true, data };
+};
+
+export const createBlog = async (formData: FormData) => {
+  const title = formData.get('title') as string;
+  const excerpt = formData.get('excerpt') as string;
+  const content = formData.get('content') as string;
+  const sort_order = Number(formData.get('sort_order')) || 0;
+  const is_active = formData.get('is_active') === 'true';
+
+  let slug = (formData.get('slug') as string) || title
+    .toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-')
+    .trim();
+
+  let featured_image_url = '';
+  const file = formData.get('featured_image') as File;
+  if (file && file.size > 0) {
+    const { uploadBlogImageCloudinary } = await import('./cloudinary');
+    featured_image_url = await uploadBlogImageCloudinary(file);
+  }
+
+  const { data, error } = await supabase
+    .from('blogs')
+    .insert({
+      title,
+      slug,
+      excerpt,
+      content,
+      featured_image_url,
+      sort_order,
+      is_active,
+    })
+    .select()
+    .single();
+
+  if (error) throw new Error(error.message);
+  return { success: true, data };
+};
+
+export const updateBlog = async (id: string, formData: FormData) => {
+  const updates: Record<string, any> = {};
+
+  const title = formData.get('title') as string;
+  if (title) updates.title = title;
+
+  const slug = formData.get('slug') as string;
+  if (slug) updates.slug = slug;
+
+  const excerpt = formData.get('excerpt');
+  if (excerpt !== null) updates.excerpt = excerpt as string;
+
+  const content = formData.get('content');
+  if (content !== null) updates.content = content as string;
+
+  const sort_order = formData.get('sort_order');
+  if (sort_order !== null) updates.sort_order = Number(sort_order);
+
+  const is_active = formData.get('is_active');
+  if (is_active !== null) updates.is_active = is_active === 'true';
+
+  const file = formData.get('featured_image') as File;
+  if (file && file.size > 0) {
+    const { uploadBlogImageCloudinary } = await import('./cloudinary');
+    updates.featured_image_url = await uploadBlogImageCloudinary(file);
+  } else {
+    const existingImage = formData.get('existing_image') as string;
+    if (existingImage) updates.featured_image_url = existingImage;
+  }
+
+  const { data, error } = await supabase
+    .from('blogs')
+    .update(updates)
+    .eq('id', id)
+    .select()
+    .single();
+
+  if (error) throw new Error(error.message);
+  return { success: true, data };
+};
+
+export const deleteBlog = async (id: string) => {
+  const { error } = await supabase.from('blogs').delete().eq('id', id);
+  if (error) throw new Error(error.message);
+  return { success: true, message: 'Blog deleted' };
+};
+
+export const setBlogVisibility = async (id: string, is_active: boolean) => {
+  const { error } = await supabase.from('blogs').update({ is_active }).eq('id', id);
+  if (error) throw new Error(error.message);
+  return { success: true };
+};

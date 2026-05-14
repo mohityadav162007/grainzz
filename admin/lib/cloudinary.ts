@@ -52,3 +52,10 @@ export const uploadInstagramImageCloudinary = async (file: File): Promise<string
 export const uploadProductImageCloudinary = async (file: File): Promise<string> => {
   return uploadToCloudinary(file, 'grainzz/products');
 };
+
+/**
+ * Upload a blog featured image to Cloudinary.
+ */
+export const uploadBlogImageCloudinary = async (file: File): Promise<string> => {
+  return uploadToCloudinary(file, 'grainzz/blogs');
+};

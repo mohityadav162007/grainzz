@@ -17,6 +17,7 @@ const navItems = [
   { label: 'Inquiries', href: '/dashboard/inquiries', icon: Inbox },
   { label: 'Offers', href: '/dashboard/offers', icon: Star },
   { label: 'Related Products', href: '/dashboard/related-products', icon: Package },
+  { label: 'Blogs', href: '/dashboard/blogs', icon: BarChart3 },
   { label: 'Homepage', href: '/dashboard/homepage', icon: Home },
   { label: 'Analytics', href: '/dashboard/export', icon: BarChart3 },
   { label: 'Users', href: '/dashboard/users', icon: User },

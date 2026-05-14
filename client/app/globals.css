@@ -117,3 +117,20 @@
   from { opacity: 0; transform: translateY(10px); }
   to { opacity: 1; transform: translateY(0); }
 }
+
+.blog-content {
+    @apply text-gray-800 leading-[1.8] text-base lg:text-lg;
+}
+
+.blog-content h1 { @apply text-3xl lg:text-4xl font-black mt-10 mb-6 text-gray-900; }
+.blog-content h2 { @apply text-2xl lg:text-3xl font-black mt-8 mb-4 text-gray-900; }
+.blog-content h3 { @apply text-xl lg:text-2xl font-black mt-6 mb-3 text-gray-900; }
+.blog-content p { @apply mb-6; }
+.blog-content b, .blog-content strong { @apply font-black text-gray-900; }
+.blog-content ul { @apply list-disc list-inside mb-6 space-y-2 ml-2; }
+.blog-content ol { @apply list-decimal list-inside mb-6 space-y-2 ml-2; }
+.blog-content li { @apply pl-2; }
+.blog-content a { @apply text-[#1D5E20] font-bold underline decoration-2 underline-offset-4 hover:text-[#164618] transition-colors; }
+.blog-content img { @apply rounded-2xl my-8 w-full shadow-lg; }
+.blog-content blockquote { @apply border-l-4 border-[#1D5E20] pl-6 py-2 italic bg-[#1D5E20]/5 rounded-r-xl my-8 text-gray-700; }
+

@@ -31,6 +31,7 @@ export default function Footer() {
     'Quick Links': [
       { name: 'Home', href: '/' },
       { name: 'About Us', href: '/about' },
+      { name: 'Blogs', href: '/blogs' },
       { name: 'FAQs', href: '/faqs' },
       { name: 'Contact Us', href: '/contact' },
       { name: 'My Account', href: '/account' },

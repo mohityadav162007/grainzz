@@ -743,3 +743,29 @@ export const getProductSlugById = async (productId: string): Promise<string | nu
   if (error || !data) return null;
   return data.slug;
 };
+
+// ─── Blogs ───────────────────────────────────────────────────────────────────
+
+export const getPublicBlogs = async () => {
+  const { data, error } = await supabase
+    .from('blogs')
+    .select('*')
+    .eq('is_active', true)
+    .order('sort_order', { ascending: true })
+    .order('created_at', { ascending: false });
+
+  if (error) throw new Error(error.message);
+  return { success: true, data: data || [] };
+};
+
+export const getBlogBySlug = async (slug: string) => {
+  const { data, error } = await supabase
+    .from('blogs')
+    .select('*')
+    .eq('slug', slug)
+    .eq('is_active', true)
+    .single();
+
+  if (error) throw new Error(error.message);
+  return { success: true, data };
+};

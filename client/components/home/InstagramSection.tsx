@@ -69,10 +69,13 @@ export default function InstagramSection() {
           </a>
         </div>
 
-        {/* Reels Container — DB data ONLY */}
-        <div className="w-full flex justify-center">
-          <div className="flex w-full gap-[16px] md:gap-[24px] overflow-x-auto pb-8 snap-x snap-mandatory scrollbar-hide">
-            {posts.map((item, idx) => {
+        {/* Reels Marquee — DB data ONLY */}
+        <div className="w-full marquee-container group">
+          <div 
+            className="marquee-content flex gap-[16px] md:gap-[24px] py-4"
+            style={{ animationDuration: '60s' }}
+          >
+            {[...posts, ...posts].map((item, idx) => {
                const imageUrl = item.image_url;
                const postHref = item.post_url || `https://instagram.com/${handle.replace('@', '')}`;
                
@@ -80,18 +83,18 @@ export default function InstagramSection() {
 
                return (
                   <a
-                    key={item.id || idx}
+                    key={`${item.id || idx}-${idx}`}
                     href={postHref}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex-shrink-0 w-[240px] md:w-1/5 aspect-[9/16] rounded-[16px] md:rounded-[20px] overflow-hidden relative block group shadow-sm hover:shadow-[0_12px_32px_rgba(0,0,0,0.12)] transition-all duration-500 snap-center"
+                    className="flex-shrink-0 w-[240px] md:w-[280px] aspect-[9/16] rounded-[16px] md:rounded-[20px] overflow-hidden relative block group/card shadow-sm hover:shadow-[0_12px_32px_rgba(0,0,0,0.12)] transition-all duration-500"
                   >
                     <Image
                       src={imageUrl}
                       alt="Grainzz Instagram Reel"
                       fill
-                      className="object-cover group-hover:scale-105 transition-transform duration-700"
-                      sizes="(max-width: 768px) 70vw, 20vw"
+                      className="object-cover group-hover/card:scale-105 transition-transform duration-700"
+                      sizes="(max-width: 768px) 240px, 280px"
                     />
                   </a>
                );

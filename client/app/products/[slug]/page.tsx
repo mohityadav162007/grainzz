@@ -4,7 +4,7 @@ import { useParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 import { ChevronRight, ChevronLeft, Plus, Minus, Star, Check, X, Upload, Loader2 } from 'lucide-react';
-import { getProductBySlug, getProductReviews, submitProductReview, uploadReviewImage, getRelatedProductsSection, submitStockNotification } from '@/lib/api';
+import { getProductBySlug, getProductReviews, submitProductReview, uploadReviewImage, getRelatedProductsSection, submitStockNotification, getSeedReviewsByProductId } from '@/lib/api';
 import { useCartStore } from '@/store/cartStore';
 import ProductCard from '@/components/products/ProductCard';
 import ProductCardSkeleton from '@/components/products/ProductCardSkeleton';
@@ -25,6 +25,7 @@ export default function ProductDetailPage() {
   const [relatedProducts, setRelatedProducts] = useState<any[]>([]);
   const [mobileRelatedIndex, setMobileRelatedIndex] = useState(0);
   const [reviews, setReviews] = useState<any[]>([]);
+  const [seedReviews, setSeedReviews] = useState<any[]>([]);
   const { addItem, setQuickBuy } = useCartStore();
   const { user, setAuthModalOpen } = useAuthStore();
   const router = useRouter();
@@ -59,6 +60,11 @@ export default function ProductDetailPage() {
         // Fetch initial reviews
         getProductReviews(productRes.data.id).then(revs => {
           setReviews(revs);
+        }).catch(() => {});
+
+        // Fetch seed reviews
+        getSeedReviewsByProductId(productRes.data.id).then(seedRevs => {
+          setSeedReviews(seedRevs);
         }).catch(() => {});
 
         // Set up realtime subscription
@@ -225,13 +231,32 @@ export default function ProductDetailPage() {
     }
   };
 
-  const filteredReviews = reviewFilter ? reviews.filter(r => r.rating === reviewFilter) : reviews;
+  const mergedReviews = [
+    ...seedReviews.map(r => ({ ...r, is_seed: true })),
+    ...reviews.map(r => ({ ...r, is_seed: false }))
+  ];
 
-  // Review Stats Calculation
-  const totalReviews = reviews.length;
-  const avgRating = totalReviews > 0 ? (reviews.reduce((acc, r) => acc + r.rating, 0) / totalReviews).toFixed(1) : '5.0';
+  const filteredReviews = reviewFilter ? mergedReviews.filter(r => r.rating === reviewFilter) : mergedReviews;
+
+  // Review Stats Calculation (Weighted)
+  const realReviewCount = reviews.length;
+  const seedReviewCount = product?.seed_review_count || 0;
+  const totalReviewCount = realReviewCount + seedReviewCount;
+  
+  const sumRealRatings = reviews.reduce((acc, r) => acc + r.rating, 0);
+  const sumSeedRatings = Number(product?.seed_rating || 5) * seedReviewCount;
+  
+  const avgRating = totalReviewCount > 0 
+    ? ((sumRealRatings + sumSeedRatings) / totalReviewCount).toFixed(1) 
+    : (product?.seed_rating || '5.0');
+
   const ratingCounts = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
-  reviews.forEach(r => { if (ratingCounts[r.rating as keyof typeof ratingCounts] !== undefined) ratingCounts[r.rating as keyof typeof ratingCounts]++; });
+  // Approximation for seed rating counts if we don't have individual row data affecting it
+  // But wait, the prompt says "displayed rating = formula".
+  // For the rating bar distribution, I'll combine the seed_reviews rows and real reviews.
+  mergedReviews.forEach(r => { if (ratingCounts[r.rating as keyof typeof ratingCounts] !== undefined) ratingCounts[r.rating as keyof typeof ratingCounts]++; });
+  
+  const totalReviewsForBar = mergedReviews.length;
 
   const discount = product?.mrp > product?.price ? Math.round(((product.mrp - product.price) / product.mrp) * 100) : 0;
 
@@ -442,6 +467,18 @@ export default function ProductDetailPage() {
               </div>
             )}
 
+            {/* Delivery Count */}
+            {!loading && product?.delivery_count > 0 && (
+              <div className="flex items-center gap-[6px] mb-[12px] order-1 lg:order-0">
+                <div className="flex items-center justify-center w-[20px] h-[20px] bg-[#E8F1E9] rounded-full">
+                  <Check size={12} className="text-[#1D5E2E]" />
+                </div>
+                <span className="text-[14px] font-bold text-[#1D5E2E] tracking-tight">
+                  {product.delivery_count.toLocaleString()}+ smiles delivered
+                </span>
+              </div>
+            )}
+
             {/* Price */}
             <div className={`flex items-center gap-[12px] w-full order-2 lg:order-1 ${!loading && product?.stock === 0 ? 'pt-[32px] border-t border-[#EAEAEA] lg:border-0 lg:pt-0' : ''} mb-[32px]`}>
               {loading ? (
@@ -455,6 +492,25 @@ export default function ProductDetailPage() {
                 </>
               )}
             </div>
+
+            {/* Rating Summary */}
+            {!loading && (
+              <div className="flex items-center gap-[8px] mt-[-16px] mb-[32px] order-2 lg:order-2">
+                <div className="flex gap-[1px]">
+                  {[1, 2, 3, 4, 5].map((s) => (
+                    <Star
+                      key={s}
+                      size={16}
+                      fill={s <= Math.round(Number(avgRating)) ? '#D89F43' : 'transparent'}
+                      className={s <= Math.round(Number(avgRating)) ? 'text-[#D89F43]' : 'text-[#D1D1D1]'}
+                    />
+                  ))}
+                </div>
+                <span className="text-[14px] font-bold text-[#4A4A4A] tracking-tight">
+                  {avgRating} ({totalReviewCount} Reviews)
+                </span>
+              </div>
+            )}
 
             {/* Purchase Controls */}
             <div className="w-full flex flex-col lg:flex-row gap-[16px] lg:gap-[20px] order-3 lg:order-4 mb-[32px] lg:mb-0">
@@ -623,7 +679,7 @@ export default function ProductDetailPage() {
                 <div className="flex-1 flex flex-col gap-[8px] justify-center">
                   {[5, 4, 3, 2, 1].map(stars => {
                     const count = ratingCounts[stars as keyof typeof ratingCounts];
-                    const percent = totalReviews > 0 ? (count / totalReviews) * 100 : 0;
+                    const percent = totalReviewsForBar > 0 ? (count / totalReviewsForBar) * 100 : 0;
                     return (
                       <div key={stars} className="flex items-center gap-[12px] text-[13px] font-bold text-[#1D5E2E] cursor-pointer group" onClick={() => setReviewFilter(stars)}>
                         <div className="flex items-center gap-1 w-[32px]"><span>{stars}</span><Star size={12} className="fill-[#1D5E2E]"/></div>
@@ -637,46 +693,53 @@ export default function ProductDetailPage() {
               </div>
 
               {/* Filters */}
-              {(reviewFilter !== null || totalReviews > 0) && (
+              {reviewFilter !== null && (
                 <div className="flex flex-col gap-3 mb-[40px]">
                   <span className="text-[12px] font-bold text-[#888888] uppercase tracking-wider">Active Filters</span>
                   <div className="flex gap-[12px]">
-                    {reviewFilter && (
-                      <div className="flex items-center gap-2 px-[16px] py-[6px] bg-[#1D5E2E] text-white rounded-full text-[13px] font-bold">
-                        {reviewFilter} stars <X size={14} className="cursor-pointer" onClick={() => setReviewFilter(null)} />
-                      </div>
-                    )}
-                    {reviewFilter && (
-                      <div className="flex items-center gap-2 px-[16px] py-[6px] bg-[#EEFBDC] text-[#1D5E2E] rounded-full text-[13px] font-bold cursor-pointer" onClick={() => setReviewFilter(null)}>
-                        Clear all <X size={14} />
-                      </div>
-                    )}
+                    <div className="flex items-center gap-2 px-[16px] py-[6px] bg-[#1D5E2E] text-white rounded-full text-[13px] font-bold">
+                      {reviewFilter} stars <X size={14} className="cursor-pointer" onClick={() => setReviewFilter(null)} />
+                    </div>
+                    <div className="flex items-center gap-2 px-[16px] py-[6px] bg-[#EEFBDC] text-[#1D5E2E] rounded-full text-[13px] font-bold cursor-pointer" onClick={() => setReviewFilter(null)}>
+                      Clear all <X size={14} />
+                    </div>
                   </div>
                 </div>
               )}
 
               {/* Review List */}
               <div className="flex flex-col gap-[32px]">
-                {filteredReviews.length > 0 ? filteredReviews.map(review => (
-                  <div key={review.id} className="pb-[32px] border-b border-[#EAEAEA] last:border-0">
-                    <div className="flex gap-[4px] mb-[12px]">
-                      {[1,2,3,4,5].map(i => <Star key={i} size={16} className={i <= review.rating ? "fill-[#1D5E2E] text-[#1D5E2E]" : "text-[#D9D9D9]"} />)}
-                    </div>
-                    <h4 className="font-bold text-[18px] text-brand-black mb-[8px]">{review.review_title}</h4>
-                    <p className="text-[14px] text-[#666666] leading-[1.6] mb-[16px]">{review.review_text}</p>
-                    
-                    {review.review_image_url && (
-                      <div className="relative w-[120px] h-[120px] rounded-[12px] overflow-hidden mb-[16px] border border-[#EAEAEA]">
-                        <Image src={review.review_image_url} alt="Review attachment" fill className="object-cover" />
+                {filteredReviews.length > 0 ? filteredReviews.map((review, ridx) => {
+                  const isSeed = review.is_seed;
+                  const name = isSeed ? review.customer_name : review.reviewer_name;
+                  const title = isSeed ? review.review_title : review.review_title;
+                  const text = isSeed ? review.review_message : review.review_text;
+                  const date = isSeed ? review.review_date : new Date(review.created_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+                  const isVerified = isSeed ? review.verified_purchase : true;
+
+                  return (
+                    <div key={isSeed ? `seed-${ridx}` : review.id} className="pb-[32px] border-b border-[#EAEAEA] last:border-0">
+                      <div className="mb-[12px]">
+                        <div className="flex gap-[4px]">
+                          {[1,2,3,4,5].map(i => <Star key={i} size={16} className={i <= review.rating ? "fill-[#1D5E2E] text-[#1D5E2E]" : "text-[#D9D9D9]"} />)}
+                        </div>
                       </div>
-                    )}
-                    
-                    <div className="flex justify-between items-center text-[12px] text-[#888888]">
-                      <span className="font-medium">-{review.reviewer_name}</span>
-                      <span>{new Date(review.created_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</span>
+                      <h4 className="font-bold text-[18px] text-brand-black mb-[4px]">{title}</h4>
+                      <p className="text-[14px] text-[#666666] leading-[1.6] mb-[16px]">{text}</p>
+                      
+                      {!isSeed && review.review_image_url && (
+                        <div className="relative w-[120px] h-[120px] rounded-[12px] overflow-hidden mb-[16px] border border-[#EAEAEA]">
+                          <Image src={review.review_image_url} alt="Review attachment" fill className="object-cover" />
+                        </div>
+                      )}
+                      
+                      <div className="flex justify-between items-center text-[12px] text-[#888888]">
+                        <span className="font-medium">-{name}</span>
+                        <span>{date}</span>
+                      </div>
                     </div>
-                  </div>
-                )) : (
+                  );
+                }) : (
                   <p className="py-[40px] text-center text-[#888] italic">No reviews found.</p>
                 )}
               </div>

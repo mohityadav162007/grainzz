@@ -17,6 +17,16 @@ interface ComboNutritionGroup {
   rows: NutritionRow[];
 }
 
+interface SeedReview {
+  customer_name: string;
+  rating: number;
+  review_title: string;
+  review_message: string;
+  verified_purchase: boolean;
+  review_date: string;
+  display_order: number;
+}
+
 const COMBO_CATEGORIES = ['2-Jar Combo', '3-Jar Combo', '4-Jar Combo', '6-Jar Combo', 'Puffed Rice Mixed 6-Pack'];
 
 export default function NewProductPage() {
@@ -31,6 +41,9 @@ export default function NewProductPage() {
   // Combo nutrition
   const [comboNutrition, setComboNutrition] = useState<ComboNutritionGroup[]>([]);
   const [expandedGroup, setExpandedGroup] = useState<number | null>(null);
+
+  // Seed Reviews
+  const [seedReviews, setSeedReviews] = useState<SeedReview[]>([]);
 
   const isCombo = COMBO_CATEGORIES.includes(selectedCategory);
 
@@ -104,6 +117,37 @@ export default function NewProductPage() {
     setExpandedGroup(target);
   };
 
+  // ─── Seed Review Helpers ─────────────────────────────
+  const addSeedReview = () => {
+    setSeedReviews([...seedReviews, { 
+      customer_name: '', 
+      rating: 5, 
+      review_title: '', 
+      review_message: '', 
+      verified_purchase: true, 
+      review_date: new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
+      display_order: seedReviews.length 
+    }]);
+  };
+
+  const removeSeedReview = (index: number) => {
+    setSeedReviews(seedReviews.filter((_, i) => i !== index));
+  };
+
+  const handleSeedReviewChange = (index: number, field: string, value: any) => {
+    const newReviews = [...seedReviews];
+    (newReviews[index] as any)[field] = value;
+    setSeedReviews(newReviews);
+  };
+
+  const moveSeedReview = (index: number, direction: 'up' | 'down') => {
+    const target = direction === 'up' ? index - 1 : index + 1;
+    if (target < 0 || target >= seedReviews.length) return;
+    const newReviews = [...seedReviews];
+    [newReviews[index], newReviews[target]] = [newReviews[target], newReviews[index]];
+    setSeedReviews(newReviews.map((r, i) => ({ ...r, display_order: i })));
+  };
+
   // ─── Submit ──────────────────────────────────────────
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -122,6 +166,11 @@ export default function NewProductPage() {
           rows: g.rows.filter(r => r.nutrient.trim())
         }));
       form.append('comboNutrition', JSON.stringify(cleanedCombo));
+
+      const cleanedSeedReviews = seedReviews
+        .filter(r => r.customer_name.trim() && r.review_message.trim())
+        .map((r, i) => ({ ...r, display_order: i }));
+      form.append('seedReviews', JSON.stringify(cleanedSeedReviews));
 
       await createProduct(form);
       router.push('/dashboard/products');
@@ -383,6 +432,116 @@ export default function NewProductPage() {
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-1">Ingredients</label>
             <input name="ingredients" className="admin-input" placeholder="Oats, Peri Peri Seasoning, Rice Flour, Salt" />
+          </div>
+        </div>
+
+        {/* ─── Social Proof Section ─── */}
+        <div className="admin-card p-6 space-y-6">
+          <div>
+            <h2 className="font-bold text-gray-900 text-lg">✨ Social Proof & Ratings</h2>
+            <p className="text-xs text-gray-500 mt-1">Configure seed stats and customer testimonials for immediate trust.</p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-1">Delivery Count (Smiles)</label>
+              <input name="delivery_count" type="number" className="admin-input" placeholder="e.g. 146000" />
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-1">Seed Rating (0.0–5.0)</label>
+              <input name="seed_rating" type="number" step="0.1" min="0" max="5" className="admin-input" defaultValue={5.0} placeholder="5.0" />
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-1">Seed Review Count</label>
+              <input name="seed_review_count" type="number" className="admin-input" defaultValue={0} placeholder="654" />
+            </div>
+          </div>
+
+          <div className="space-y-4 border-t pt-5">
+            <div className="flex items-center justify-between">
+              <div>
+                <label className="block text-sm font-bold text-gray-900">Seed Reviews (Testimonials)</label>
+                <p className="text-xs text-gray-500 mt-0.5">These appear immediately on the product page. They do NOT affect the rating calculation above.</p>
+              </div>
+              <button type="button" onClick={addSeedReview} className="text-xs font-bold text-primary flex items-center gap-1 hover:underline bg-primary/5 px-3 py-1.5 rounded-lg">
+                <Plus size={14} /> Add Review
+              </button>
+            </div>
+
+            {seedReviews.length === 0 && (
+              <div className="text-center py-8 bg-gray-50 rounded-xl border border-dashed border-gray-200 text-gray-400 text-sm">
+                No seed reviews added. Click "Add Review" to add testimonials.
+              </div>
+            )}
+
+            <div className="space-y-4">
+              {seedReviews.map((review, ri) => (
+                <div key={ri} className="border border-gray-200 rounded-xl p-4 bg-white space-y-4 shadow-sm relative group">
+                  <div className="flex items-center justify-between border-b pb-2 mb-2">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-bold text-gray-400">Review #{ri + 1}</span>
+                      <div className="flex gap-1">
+                        <button type="button" onClick={() => moveSeedReview(ri, 'up')} disabled={ri === 0} className="p-1 text-gray-400 hover:text-gray-700 disabled:opacity-20"><ChevronUp size={14}/></button>
+                        <button type="button" onClick={() => moveSeedReview(ri, 'down')} disabled={ri === seedReviews.length - 1} className="p-1 text-gray-400 hover:text-gray-700 disabled:opacity-20"><ChevronDown size={14}/></button>
+                      </div>
+                    </div>
+                    <button type="button" onClick={() => removeSeedReview(ri)} className="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors">
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-[11px] font-bold uppercase text-gray-400 mb-1">Customer Name *</label>
+                      <input 
+                        value={review.customer_name} 
+                        onChange={e => handleSeedReviewChange(ri, 'customer_name', e.target.value)}
+                        className="admin-input text-sm" 
+                        placeholder="e.g. Rahul S." 
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-bold uppercase text-gray-400 mb-1">Rating (1-5) *</label>
+                      <select 
+                        value={review.rating} 
+                        onChange={e => handleSeedReviewChange(ri, 'rating', Number(e.target.value))}
+                        className="admin-input text-sm"
+                      >
+                        {[5,4,3,2,1].map(v => <option key={v} value={v}>{v} Stars</option>)}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-bold uppercase text-gray-400 mb-1">Review Title</label>
+                      <input 
+                        value={review.review_title} 
+                        onChange={e => handleSeedReviewChange(ri, 'review_title', e.target.value)}
+                        className="admin-input text-sm" 
+                        placeholder="e.g. Delicious & Healthy!" 
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-bold uppercase text-gray-400 mb-1">Review Date</label>
+                      <input 
+                        value={review.review_date} 
+                        onChange={e => handleSeedReviewChange(ri, 'review_date', e.target.value)}
+                        className="admin-input text-sm" 
+                        placeholder="e.g. October 24, 2025" 
+                      />
+                    </div>
+                    <div className="md:col-span-2">
+                      <label className="block text-[11px] font-bold uppercase text-gray-400 mb-1">Review Message *</label>
+                      <textarea 
+                        value={review.review_message} 
+                        onChange={e => handleSeedReviewChange(ri, 'review_message', e.target.value)}
+                        className="admin-input text-sm h-20 resize-none" 
+                        placeholder="Review content..." 
+                      />
+                    </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
 

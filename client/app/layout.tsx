@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { Plus_Jakarta_Sans } from 'next/font/google';
 import './globals.css';
 import AnnouncementBar from '@/components/layout/AnnouncementBar';
@@ -26,6 +26,15 @@ export const metadata: Metadata = {
   },
 };
 
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  minimumScale: 1,
+  userScalable: false,
+  viewportFit: 'cover',
+};
+
 import Script from 'next/script';
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -42,7 +51,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <AuthInitializer />
         <AnnouncementBar />
         <Navbar />
-        <main className="min-h-screen">{children}</main>
+        <main className="min-h-screen overflow-x-hidden">{children}</main>
         <Footer />
         <CartDrawer />
         <AuthModal />

@@ -170,6 +170,13 @@ export const createProduct = async (formData: FormData) => {
   const ingredients = (formData.get('ingredients') as string) || '';
   const weight = (formData.get('weight') as string) || '';
 
+  // Social Proof
+  const delivery_count = Number(formData.get('delivery_count')) || 0;
+  const seed_rating = Number(formData.get('seed_rating')) || 5.0;
+  const seed_review_count = Number(formData.get('seed_review_count')) || 0;
+  const seedReviewsStr = formData.get('seedReviews') as string;
+  const seedReviews = seedReviewsStr ? JSON.parse(seedReviewsStr) : [];
+
   // Package dimensions for Shiprocket
   const package_length = Number(formData.get('package_length')) || 15;
   const package_breadth = Number(formData.get('package_breadth')) || 15;
@@ -227,11 +234,24 @@ export const createProduct = async (formData: FormData) => {
       package_breadth,
       package_height,
       package_weight,
+      delivery_count,
+      seed_rating,
+      seed_review_count,
     })
     .select()
     .single();
 
   if (error) throw new Error(error.message);
+
+  // Persist seed reviews
+  if (seedReviews && seedReviews.length > 0) {
+    const reviewsWithProductId = seedReviews.map((r: any) => {
+      const { id: rid, created_at, updated_at, ...rest } = r;
+      return { ...rest, product_id: data.id };
+    });
+    await supabase.from('seed_reviews').insert(reviewsWithProductId);
+  }
+
   if (isActive) {
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.grainzz.com';
     submitToIndexNow([`${siteUrl}/products/${slug}`]);
@@ -308,7 +328,15 @@ export const updateProduct = async (id: string, formData: FormData) => {
   const pkgWeight = formData.get('package_weight');
   if (pkgWeight !== null) updates.package_weight = Number(pkgWeight) || 0.5;
 
-  // Upload new images to Cloudinary
+  // Social Proof
+  const deliveryCount = formData.get('delivery_count');
+  if (deliveryCount !== null) updates.delivery_count = Number(deliveryCount) || 0;
+  const seedRating = formData.get('seed_rating');
+  if (seedRating !== null) updates.seed_rating = Number(seedRating) || 5.0;
+  const seedReviewCount = formData.get('seed_review_count');
+  if (seedReviewCount !== null) updates.seed_review_count = Number(seedReviewCount) || 0;
+
+  const seedReviewsStr = formData.get('seedReviews') as string;
   const files = formData.getAll('images') as File[];
   const newImageUrls: string[] = [];
   for (const file of files) {
@@ -337,6 +365,20 @@ export const updateProduct = async (id: string, formData: FormData) => {
     .single();
 
   if (error) throw new Error(error.message);
+
+  // Sync seed reviews
+  if (seedReviewsStr !== null) {
+    const seedReviews = JSON.parse(seedReviewsStr);
+    await supabase.from('seed_reviews').delete().eq('product_id', id);
+    if (seedReviews.length > 0) {
+      const reviewsWithProductId = seedReviews.map((r: any) => {
+        const { id: rid, created_at, updated_at, ...rest } = r;
+        return { ...rest, product_id: id };
+      });
+      await supabase.from('seed_reviews').insert(reviewsWithProductId);
+    }
+  }
+
   if (data?.slug && data?.is_active) {
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.grainzz.com';
     submitToIndexNow([`${siteUrl}/products/${data.slug}`]);
@@ -431,6 +473,16 @@ export const setProductVisibility = async (id: string, isActive: boolean) => {
   const { error } = await supabase.from('products').update({ is_active: isActive }).eq('id', id);
   if (error) throw new Error(error.message);
   return { success: true };
+};
+
+export const getSeedReviewsByProductId = async (productId: string) => {
+  const { data, error } = await supabase
+    .from('seed_reviews')
+    .select('*')
+    .eq('product_id', productId)
+    .order('display_order', { ascending: true });
+  if (error) throw new Error(error.message);
+  return { success: true, data: data || [] };
 };
 
 // ─── Categories ──────────────────────────────────────────────────────────────

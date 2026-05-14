@@ -286,9 +286,9 @@ export default function CheckoutPage() {
   ];
 
   return (
-    <div className="max-w-6xl mx-auto px-4 lg:px-8 py-10">
+    <div className="w-full max-w-6xl mx-auto px-4 lg:px-8 py-10">
       {/* Breadcrumb */}
-      <nav className="flex items-center gap-2 text-sm text-text-muted mb-8">
+      <nav className="flex flex-wrap items-center gap-y-2 gap-x-2 text-sm text-text-muted mb-8">
         <Link href="/products" className="hover:text-primary">Shop</Link>
         <ChevronRight size={14} />
         <Link href="/cart" className="hover:text-primary">Cart</Link>
@@ -299,7 +299,7 @@ export default function CheckoutPage() {
       <h1 className="text-2xl md:text-3xl font-black mb-8">Checkout</h1>
 
       {/* Step Indicator */}
-      <div className="flex items-center justify-center mb-10">
+      <div className="flex items-center justify-center mb-10 overflow-x-auto pb-2 sm:pb-0 no-scrollbar">
         {steps.map((step, i) => (
           <div key={step.num} className="flex items-center">
             <button
@@ -324,7 +324,7 @@ export default function CheckoutPage() {
               <span className="sm:hidden">{step.num}</span>
             </button>
             {i < steps.length - 1 && (
-              <div className={`w-8 md:w-16 h-[2px] mx-1 ${
+              <div className={`flex-1 h-[2px] mx-1 min-w-[10px] sm:min-w-[20px] ${
                 currentStep > step.num ? 'bg-green-400' : 'bg-gray-200'
               }`} />
             )}
@@ -334,9 +334,9 @@ export default function CheckoutPage() {
 
       {/* ─── STEP 1: ADDRESS ─────────────────────────────────────────── */}
       {currentStep === 1 && (
-        <div className="grid md:grid-cols-3 gap-8">
+        <div className="grid md:grid-cols-3 gap-8 w-full">
           <div className="md:col-span-2 space-y-4">
-            <div className="bg-white border border-gray-100 rounded-2xl p-6">
+            <div className="bg-white border border-gray-100 rounded-2xl p-4 sm:p-6">
               <h2 className="font-bold mb-4">Contact Information</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
@@ -357,7 +357,7 @@ export default function CheckoutPage() {
               </div>
             </div>
 
-            <div className="bg-white border border-gray-100 rounded-2xl p-6">
+            <div className="bg-white border border-gray-100 rounded-2xl p-4 sm:p-6">
               <h2 className="font-bold mb-4">Delivery Address</h2>
               <div className="space-y-4">
                 <div>
@@ -387,7 +387,7 @@ export default function CheckoutPage() {
 
             {/* Saved Addresses */}
             {user && savedAddresses.length > 0 && (
-              <div className="bg-white border border-gray-100 rounded-2xl p-6">
+              <div className="bg-white border border-gray-100 rounded-2xl p-4 sm:p-6">
                 <h2 className="font-bold mb-4 flex items-center gap-2">
                   <MapPin size={18} /> Saved Addresses
                 </h2>
@@ -433,7 +433,7 @@ export default function CheckoutPage() {
 
           {/* Right – Quick Summary */}
           <div className="md:col-span-1">
-            <div className="bg-white border border-gray-100 rounded-2xl p-6 sticky top-24">
+            <div className="bg-white border border-gray-100 rounded-2xl p-4 sm:p-6 md:sticky md:top-24">
               <h2 className="font-bold mb-4">Your Cart</h2>
               {quickBuyItem && <div className="text-xs bg-brand-light/50 text-brand-dark px-3 py-1.5 rounded-md mb-3 font-medium">Quick Buy Checkout</div>}
               <div className="space-y-3 mb-4 max-h-64 overflow-y-auto">
@@ -474,29 +474,29 @@ export default function CheckoutPage() {
 
       {/* ─── STEP 2: ORDER SUMMARY ──────────────────────────────────── */}
       {currentStep === 2 && (
-        <div className="grid md:grid-cols-3 gap-8">
-          <div className="md:col-span-2 space-y-4">
+        <div className="grid md:grid-cols-3 gap-8 w-full">
+          <div className="md:col-span-2 space-y-4 w-full min-w-0">
             {/* Shipping Address Card */}
-            <div className="bg-white border border-gray-100 rounded-2xl p-6">
+            <div className="bg-white border border-gray-100 rounded-2xl p-4 sm:p-6 w-full overflow-hidden">
               <div className="flex items-center justify-between mb-3">
-                <h2 className="font-bold flex items-center gap-2"><MapPin size={18} /> Shipping Address</h2>
+                <h2 className="font-bold flex items-center gap-2 min-w-0"><MapPin size={18} className="shrink-0" /> <span className="truncate">Shipping Address</span></h2>
                 <button onClick={() => setCurrentStep(1)} className="text-xs text-primary font-bold hover:underline">Edit</button>
               </div>
-              <div className="text-sm text-text-muted leading-relaxed">
+              <div className="text-sm text-text-muted leading-relaxed break-words">
                 <p className="font-semibold text-text-main">{form.name}</p>
-                <p>{form.address}</p>
+                <p className="break-words">{form.address}</p>
                 <p>{form.city}, {form.state} - {form.pincode}</p>
                 <p>Phone: {form.phone}</p>
-                {form.email && <p>Email: {form.email}</p>}
+                {form.email && <p className="break-all">Email: {form.email}</p>}
               </div>
             </div>
 
             {/* Ordered Products */}
-            <div className="bg-white border border-gray-100 rounded-2xl p-6">
+            <div className="bg-white border border-gray-100 rounded-2xl p-4 sm:p-6 w-full overflow-hidden">
               <h2 className="font-bold mb-4 flex items-center gap-2"><Package size={18} /> Order Items</h2>
               <div className="space-y-4">
                 {displayItems.map((item) => (
-                  <div key={item.id} className="flex gap-4 pb-4 border-b border-gray-50 last:border-0 last:pb-0">
+                  <div key={item.id} className="flex gap-4 pb-4 border-b border-gray-50 last:border-0 last:pb-0 w-full min-w-0">
                     <div className="w-16 h-16 rounded-lg overflow-hidden bg-gray-50 flex-shrink-0 border border-gray-100">
                       {item.image ? (
                         <Image src={item.image} alt={item.name} width={64} height={64} className="w-full h-full object-cover" />
@@ -516,9 +516,9 @@ export default function CheckoutPage() {
 
             {/* Delivery Info */}
             {estimatedDelivery && (
-              <div className="bg-green-50 border border-green-200 rounded-2xl p-4 flex items-center gap-3">
+              <div className="bg-green-50 border border-green-200 rounded-2xl p-4 flex items-center gap-3 w-full overflow-hidden">
                 <Clock size={20} className="text-green-600 flex-shrink-0" />
-                <div>
+                <div className="min-w-0">
                   <p className="text-sm font-bold text-green-800">Estimated Delivery</p>
                   <p className="text-xs text-green-600">{estimatedDelivery}</p>
                 </div>
@@ -529,16 +529,16 @@ export default function CheckoutPage() {
               <div className="bg-red-50 border border-red-200 text-red-600 text-sm p-4 rounded-xl">{error}</div>
             )}
 
-            <div className="flex gap-3">
+            <div className="flex flex-col sm:flex-row gap-3 w-full">
               <button
                 onClick={() => setCurrentStep(1)}
-                className="flex items-center gap-2 px-6 py-3 rounded-xl border border-gray-200 text-sm font-bold text-text-muted hover:bg-gray-50 transition-colors"
+                className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3 rounded-xl border border-gray-200 text-sm font-bold text-text-muted hover:bg-gray-50 transition-colors"
               >
                 <ChevronLeft size={16} /> Back
               </button>
               <button
                 onClick={() => setCurrentStep(3)}
-                className="flex-1 btn-primary justify-center py-4 rounded-xl text-base"
+                className="w-full btn-primary justify-center py-4 rounded-xl text-base"
               >
                 Proceed to Payment →
               </button>
@@ -546,8 +546,8 @@ export default function CheckoutPage() {
           </div>
 
           {/* Right – Price Summary */}
-          <div className="md:col-span-1">
-            <div className="bg-white border border-gray-100 rounded-2xl p-6 sticky top-24">
+          <div className="md:col-span-1 w-full min-w-0">
+            <div className="bg-white border border-gray-100 rounded-2xl p-4 sm:p-6 md:sticky md:top-24 w-full overflow-hidden">
               <h2 className="font-bold mb-4">Price Details</h2>
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
@@ -561,7 +561,7 @@ export default function CheckoutPage() {
                   </div>
                 )}
                 <div className="flex justify-between">
-                  <span className="text-text-muted flex items-center gap-1"><Truck size={14} /> Shipping</span>
+                  <span className="text-text-muted flex items-center gap-1 min-w-0"><Truck size={14} className="shrink-0" /> <span className="truncate">Shipping</span></span>
                   <span className={freeShipping ? 'text-green-600 font-bold' : ''}>
                     {freeShipping ? 'FREE' : `₹${shippingCharge || 0}`}
                   </span>

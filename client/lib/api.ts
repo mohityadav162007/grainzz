@@ -235,6 +235,20 @@ export const getAvailabilityLogos = async () => {
     return data || [];
   };
 
+  export const getSeedReviewsByProductId = async (productId: string) => {
+    const { data, error } = await supabase
+      .from('seed_reviews')
+      .select('*')
+      .eq('product_id', productId)
+      .order('display_order', { ascending: true });
+  
+    if (error) {
+      console.error('getSeedReviewsByProductId error:', error);
+      return [];
+    }
+    return data || [];
+  };
+
   export const submitProductReview = async (review: {
     product_id: string;
     reviewer_name: string;

@@ -537,7 +537,6 @@ export default function NewProductPage() {
                         placeholder="Review content..." 
                       />
                     </div>
-                    </div>
                   </div>
                 </div>
               ))}

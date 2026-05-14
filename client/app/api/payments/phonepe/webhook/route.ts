@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseAdmin, mapPhonePeStatus, PHONEPE_WEBHOOK_SECRET, logPaymentEvent } from '@/lib/phonepe';
+import { sendOwnerNotification } from '@/lib/email';
 import crypto from 'crypto';
 
 export const runtime = 'nodejs';
@@ -168,6 +169,13 @@ export async function POST(req: NextRequest) {
       .from('orders')
       .update(updateData)
       .eq('merchant_transaction_id', merchantOrderId);
+
+    // If order was just marked as COMPLETED and wasn't paid before, trigger owner notification
+    if (paymentState === 'COMPLETED' && currentOrder.payment_status !== 'paid') {
+      sendOwnerNotification(currentOrder.id).catch((err) => {
+        console.error('Failed to trigger owner notification:', err);
+      });
+    }
 
     // ─── Record Webhook (Audit Trail) ─────────────────────────────────
     

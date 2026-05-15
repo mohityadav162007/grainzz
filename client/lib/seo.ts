@@ -2,14 +2,14 @@ import { Metadata } from 'next';
 
 export const siteConfig = {
   name: 'Grainzz',
-  description: 'Grainzz is a healthy Indian snacks brand crafting guilt-free, roasted, grain-based snacks.',
-  url: process.env.NEXT_PUBLIC_SITE_URL || 'https://www.grainzz.com',
+  description: 'GRAINZZ – Healthy Millet Snacks Made with Real Grains.',
+  url: process.env.NEXT_PUBLIC_SITE_URL || 'https://www.grainzzindia.com',
   ogImage: '/og-image.jpg',
   links: {
-    instagram: 'https://instagram.com/grainzz',
-    facebook: 'https://facebook.com/grainzz',
+    instagram: 'https://www.instagram.com/grainzbyvitalicious/',
+    facebook: 'https://www.facebook.com/grainzzbyvitalicious',
     amazon: 'https://www.amazon.in/stores/GRAINZZ/page/D592ACFC-CB1C-4ED5-9636-89B17E7C955C',
-    blinkit: 'https://blinkit.com/dc/?collection_uuid=',
+    blinkit: 'https://blinkit.com/prn/x/prid/766665',
   },
 };
 

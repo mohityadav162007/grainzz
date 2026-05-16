@@ -55,5 +55,26 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     console.error('Error fetching categories for sitemap:', error);
   }
 
-  return [...staticPages, ...productsMap, ...categoriesMap];
+  // Fetch blogs
+  let blogsMap: any[] = [];
+  try {
+    const { getPublicBlogs } = await import('@/lib/api');
+    const res = await getPublicBlogs();
+    if (res.success && res.data) {
+      blogsMap = res.data.map((blog) => {
+        // Handle slug with leading slash
+        const cleanSlug = blog.slug.startsWith('/') ? blog.slug.substring(1) : blog.slug;
+        return {
+          url: `${siteUrl}/blogs/${cleanSlug}`,
+          lastModified: new Date(blog.updated_at || blog.created_at || Date.now()).toISOString(),
+          changeFrequency: 'monthly' as const,
+          priority: 0.6,
+        };
+      });
+    }
+  } catch (error) {
+    console.error('Error fetching blogs for sitemap:', error);
+  }
+
+  return [...staticPages, ...productsMap, ...categoriesMap, ...blogsMap];
 }

@@ -764,7 +764,7 @@ export const getBlogBySlug = async (slug: string) => {
     .select('*')
     .eq('slug', slug)
     .eq('is_active', true)
-    .single();
+    .maybeSingle();
 
   if (error) throw new Error(error.message);
   return { success: true, data };

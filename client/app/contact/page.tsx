@@ -10,6 +10,14 @@ const helpCards = [
   { icon: Truck, title: 'Shipping', desc: 'Need an idea on how long delivery may take, see our policy?', cta: 'Shipping Policy', href: '/shipping' },
 ];
 
+import { constructMetadata } from '@/lib/seo';
+
+export const metadata = constructMetadata({
+  title: 'Contact Us | Grainzz',
+  description: 'Get in touch with Grainzz for questions, support, or business inquiries. We would love to hear from you!',
+  path: '/contact',
+});
+
 export default function ContactPage() {
   const [form, setForm] = useState({ firstName: '', lastName: '', email: '', phone: '', subject: '', orderId: '', message: '' });
   const [loading, setLoading] = useState(false);

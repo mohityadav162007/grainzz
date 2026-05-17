@@ -4,6 +4,13 @@ import { getPublicBlogs } from '@/lib/api';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Calendar, ChevronRight, Loader2 } from 'lucide-react';
+import { constructMetadata } from '@/lib/seo';
+
+export const metadata = constructMetadata({
+  title: 'Blog | Grainzz',
+  description: 'Discover tips, recipes, and insights into healthy living and wholesome grains with Grainzz.',
+  path: '/blogs',
+});
 
 export default function BlogsPage() {
   const [blogs, setBlogs] = useState<any[]>([]);

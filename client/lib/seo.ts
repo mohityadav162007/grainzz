@@ -23,6 +23,7 @@ export function constructMetadata({
   icons = '/favicon-image.png',
   noIndex = false,
   path = '',
+  keywords,
 }: {
   title?: string;
   description?: string;
@@ -30,13 +31,14 @@ export function constructMetadata({
   icons?: string;
   noIndex?: boolean;
   path?: string;
+  keywords?: string[];
 } = {}): Metadata {
   const canonicalUrl = `${siteConfig.url}${path}`;
   
   return {
     title,
     description,
-    keywords: ['healthy snacks', 'grainzz', 'roasted snacks', 'guilt-free snacks', 'indian snacks'],
+    keywords: keywords || ['healthy snacks', 'grainzz', 'roasted snacks', 'guilt-free snacks', 'indian snacks'],
     alternates: {
       canonical: canonicalUrl,
     },
@@ -90,6 +92,23 @@ export function generateOrganizationSchema() {
     url: siteConfig.url,
     logo: `${siteConfig.url}/favicon-image.png`,
     sameAs: Object.values(siteConfig.links),
+  };
+}
+
+export function generateWebSiteSchema() {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'WebSite',
+    name: siteConfig.name,
+    url: siteConfig.url,
+    potentialAction: {
+      '@type': 'SearchAction',
+      target: {
+        '@type': 'EntryPoint',
+        urlTemplate: `${siteConfig.url}/products?search={search_term_string}`
+      },
+      'query-input': 'required name=search_term_string'
+    }
   };
 }
 
@@ -170,5 +189,33 @@ export function generateFAQSchema(faqs: { question: string; answer: string }[]) 
         text: faq.answer,
       },
     })),
+  };
+}
+
+export function generateBlogSchema(blog: any, url: string) {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'BlogPosting',
+    headline: blog.seo_title || blog.title,
+    description: blog.meta_description || blog.excerpt,
+    image: blog.og_image_url || blog.featured_image_url || siteConfig.ogImage,
+    datePublished: new Date(blog.created_at).toISOString(),
+    dateModified: new Date(blog.updated_at || blog.created_at).toISOString(),
+    author: {
+      '@type': 'Organization',
+      name: siteConfig.name,
+    },
+    publisher: {
+      '@type': 'Organization',
+      name: siteConfig.name,
+      logo: {
+        '@type': 'ImageObject',
+        url: `${siteConfig.url}/favicon-image.png`,
+      },
+    },
+    mainEntityOfPage: {
+      '@type': 'WebPage',
+      '@id': url,
+    },
   };
 }

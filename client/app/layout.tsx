@@ -11,7 +11,7 @@ import AuthModal from '@/components/auth/AuthModal';
 
 const jakarta = Plus_Jakarta_Sans({ subsets: ['latin'], display: 'swap', adjustFontFallback: false });
 
-import { constructMetadata, generateOrganizationSchema } from '@/lib/seo';
+import { constructMetadata, generateOrganizationSchema, generateWebSiteSchema } from '@/lib/seo';
 
 export const metadata: Metadata = {
   ...constructMetadata({
@@ -44,7 +44,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <Script src="https://mercury.phonepe.com/web/bundle/checkout.js" strategy="lazyOnload" />
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(generateOrganizationSchema()) }}
+          dangerouslySetInnerHTML={{
+            __html: `[${JSON.stringify(generateOrganizationSchema())},${JSON.stringify(generateWebSiteSchema())}]`
+          }}
         />
       </head>
       <body className={`${jakarta.className} bg-white text-brand-black`}>

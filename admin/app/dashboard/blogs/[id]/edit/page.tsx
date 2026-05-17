@@ -181,7 +181,90 @@ export default function EditBlogPage() {
             </div>
           </div>
         </div>
+        <div className="admin-card p-6 space-y-5">
+          <details className="group">
+            <summary className="font-bold text-gray-900 text-lg border-b pb-3 mb-4 cursor-pointer flex justify-between items-center list-none">
+              <span>SEO Settings (Optional)</span>
+              <span className="transition group-open:rotate-180">
+                <svg fill="none" height="24" shapeRendering="geometricPrecision" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" viewBox="0 0 24 24" width="24"><path d="M6 9l6 6 6-6"></path></svg>
+              </span>
+            </summary>
+            
+            <div className="space-y-4 pt-2">
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">SEO Title</label>
+                <input name="seo_title" defaultValue={blog?.seo_title} className="admin-input" placeholder="Custom title for search engines (defaults to Blog Title)" />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">Meta Description</label>
+                <textarea name="meta_description" defaultValue={blog?.meta_description} rows={2} className="admin-input text-sm" placeholder="Search engine description (defaults to Excerpt)" />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">Meta Keywords</label>
+                <input name="meta_keywords" defaultValue={blog?.meta_keywords} className="admin-input" placeholder="e.g. healthy snacks, millet, diet (comma separated)" />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">Canonical URL</label>
+                <input name="canonical_url" defaultValue={blog?.canonical_url} className="admin-input font-mono text-sm" placeholder="Override canonical URL if this is republished content" />
+              </div>
 
+              <div className="border-t pt-4 mt-4">
+                <h3 className="font-semibold text-gray-800 mb-3 text-sm">Social Media (Open Graph)</h3>
+                
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1">OG Title</label>
+                    <input name="og_title" defaultValue={blog?.og_title} className="admin-input" placeholder="Title for Facebook/Twitter (defaults to SEO Title)" />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1">OG Description</label>
+                    <textarea name="og_description" defaultValue={blog?.og_description} rows={2} className="admin-input text-sm" placeholder="Description for social shares (defaults to Meta Description)" />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1">OG Image</label>
+                    <div className="mt-1 flex items-center gap-4">
+                      <div className="w-32 h-32 rounded-xl bg-gray-50 border-2 border-dashed border-gray-200 flex items-center justify-center overflow-hidden relative group">
+                        {blog?.og_image_url ? (
+                          <img src={blog.og_image_url} alt="" className="w-full h-full object-cover" />
+                        ) : (
+                          <ImageIcon className="text-gray-300" size={32} />
+                        )}
+                        <input 
+                          type="file" 
+                          name="og_image"
+                          className="absolute inset-0 opacity-0 cursor-pointer"
+                          accept="image/*"
+                        />
+                        {blog?.og_image_url && <input type="hidden" name="existing_og_image" value={blog.og_image_url} />}
+                      </div>
+                      <div className="text-xs text-gray-500">
+                        <p className="font-bold text-gray-700 mb-1">Click to upload social image</p>
+                        <p>Recommended: 1200x630px</p>
+                        <p>Defaults to Featured Image</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3 pt-4 border-t mt-4">
+                <input 
+                  name="is_indexable" 
+                  type="checkbox" 
+                  value="true" 
+                  defaultChecked={blog ? blog.is_indexable !== false : true} 
+                  className="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary" 
+                />
+                <label className="text-sm font-semibold text-gray-700">Allow search engines to index this post</label>
+              </div>
+            </div>
+          </details>
+        </div>
         {error && <div className="bg-red-50 border border-red-200 text-red-600 text-sm p-3 rounded-lg">{error}</div>}
 
         <div className="flex gap-3">

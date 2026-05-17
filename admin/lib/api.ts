@@ -1492,6 +1492,22 @@ export const createBlog = async (formData: FormData) => {
     featured_image_url = await uploadBlogImageCloudinary(file);
   }
 
+  // SEO Fields
+  const seo_title = (formData.get('seo_title') as string) || null;
+  const meta_description = (formData.get('meta_description') as string) || null;
+  const meta_keywords = (formData.get('meta_keywords') as string) || null;
+  const canonical_url = (formData.get('canonical_url') as string) || null;
+  const og_title = (formData.get('og_title') as string) || null;
+  const og_description = (formData.get('og_description') as string) || null;
+  const is_indexable = formData.get('is_indexable') !== 'false';
+
+  let og_image_url = '';
+  const ogImageFile = formData.get('og_image') as File;
+  if (ogImageFile && ogImageFile.size > 0) {
+    const { uploadBlogImageCloudinary } = await import('./cloudinary');
+    og_image_url = await uploadBlogImageCloudinary(ogImageFile);
+  }
+
   const { data, error } = await supabase
     .from('blogs')
     .insert({
@@ -1502,6 +1518,14 @@ export const createBlog = async (formData: FormData) => {
       featured_image_url,
       sort_order,
       is_active,
+      seo_title,
+      meta_description,
+      meta_keywords,
+      canonical_url,
+      og_title,
+      og_description,
+      og_image_url,
+      is_indexable
     })
     .select()
     .single();
@@ -1538,6 +1562,37 @@ export const updateBlog = async (id: string, formData: FormData) => {
   } else {
     const existingImage = formData.get('existing_image') as string;
     if (existingImage) updates.featured_image_url = existingImage;
+  }
+
+  // SEO Fields
+  const seo_title = formData.get('seo_title');
+  if (seo_title !== null) updates.seo_title = seo_title as string;
+
+  const meta_description = formData.get('meta_description');
+  if (meta_description !== null) updates.meta_description = meta_description as string;
+
+  const meta_keywords = formData.get('meta_keywords');
+  if (meta_keywords !== null) updates.meta_keywords = meta_keywords as string;
+
+  const canonical_url = formData.get('canonical_url');
+  if (canonical_url !== null) updates.canonical_url = canonical_url as string;
+
+  const og_title = formData.get('og_title');
+  if (og_title !== null) updates.og_title = og_title as string;
+
+  const og_description = formData.get('og_description');
+  if (og_description !== null) updates.og_description = og_description as string;
+
+  const is_indexable = formData.get('is_indexable');
+  if (is_indexable !== null) updates.is_indexable = is_indexable !== 'false';
+
+  const ogImageFile = formData.get('og_image') as File;
+  if (ogImageFile && ogImageFile.size > 0) {
+    const { uploadBlogImageCloudinary } = await import('./cloudinary');
+    updates.og_image_url = await uploadBlogImageCloudinary(ogImageFile);
+  } else {
+    const existingOgImage = formData.get('existing_og_image') as string;
+    if (existingOgImage) updates.og_image_url = existingOgImage;
   }
 
   const { data, error } = await supabase

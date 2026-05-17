@@ -15,13 +15,6 @@ const sortOptions = [
   { label: 'Newest', value: 'newest' },
 ];
 
-import { constructMetadata } from '@/lib/seo';
-
-export const metadata = constructMetadata({
-  title: 'All Products | Grainzz',
-  description: 'Shop our wide range of healthy, roasted millet snacks and grain-based treats. Shipping PAN India.',
-  path: '/products',
-});
 
 export default function ProductsPage() {
   return (

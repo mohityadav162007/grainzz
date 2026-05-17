@@ -1,6 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { Image, ShoppingBag, Heart, ImageIcon, Film, Package, RefreshCw } from 'lucide-react';
+import { Image, ShoppingBag, Heart, ImageIcon, Film, Package, RefreshCw, Megaphone } from 'lucide-react';
 import {
   getAllSiteContent, upsertSiteContent,
   getHeroSlides, getHomepageSections, getProducts,
@@ -14,8 +14,10 @@ import PoweredByEditor from '@/components/homepage/PoweredByEditor';
 import SnackBoxEditor from '@/components/homepage/SnackBoxEditor';
 import InstagramEditor from '@/components/homepage/InstagramEditor';
 import TeamFavouritesEditor from '@/components/homepage/TeamFavouritesEditor';
+import AnnouncementBarEditor from '@/components/homepage/AnnouncementBarEditor';
 
 const tabs = [
+  { id: 'announcement', label: 'Announcement', icon: Megaphone, desc: 'Manage top bar messages' },
   { id: 'hero', label: 'Hero Section', icon: Image, desc: 'Manage homepage banners' },
   { id: 'products', label: 'Our Products', icon: ShoppingBag, desc: 'Product tabs & selection' },
   { id: 'powered-by', label: 'Powered By', icon: ImageIcon, desc: 'Featured product cards' },
@@ -167,6 +169,15 @@ export default function HomepageEditorPage() {
 
       {/* Tab Content — key={dataVersion} forces re-mount on DB refresh */}
       <div className="admin-card p-6">
+        {activeTab === 'announcement' && (
+          <AnnouncementBarEditor
+            key={`announcement-${dataVersion}`}
+            config={siteContent.announcement_bar || { text: 'Start this year with a healthy choice: Shipping PAN India 🇮🇳' }}
+            onSave={(c: any) => handleSaveSiteContent('announcement_bar', c)}
+            saving={saving}
+          />
+        )}
+
         {activeTab === 'hero' && (
           <HeroSlidesEditor key={`hero-${dataVersion}`} slides={heroSlides} products={products} onRefresh={loadAll} />
         )}

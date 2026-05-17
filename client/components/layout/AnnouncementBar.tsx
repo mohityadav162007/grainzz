@@ -73,7 +73,7 @@ export default function AnnouncementBar() {
   const displayMessages = messages.length > 1 ? [...messages, messages[0]] : messages;
 
   return (
-    <div className="block bg-brand-green text-white h-[36px] w-full text-[15px] font-medium leading-[132%] tracking-normal overflow-hidden relative">
+    <div className="block bg-brand-green text-white h-[36px] w-full text-[12px] md:text-[15px] font-medium leading-[132%] tracking-normal overflow-hidden relative">
       <div 
         className="flex h-full w-full"
         style={{
@@ -85,7 +85,7 @@ export default function AnnouncementBar() {
           <div key={idx} className="h-full flex items-center justify-center w-full px-4 text-center shrink-0">
             <span className="flex items-center gap-2">
               <span>{msg.replace(/🇮🇳/g, '').replace(/IN$/g, '').trim()}</span>
-              {msg.includes('🇮🇳') && <span className="emoji-font text-[15px]">🇮🇳</span>}
+              {msg.includes('🇮🇳') && <span className="emoji-font text-[12px] md:text-[15px]">🇮🇳</span>}
             </span>
           </div>
         ))}

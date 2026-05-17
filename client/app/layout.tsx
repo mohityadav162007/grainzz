@@ -15,7 +15,7 @@ import { constructMetadata, generateOrganizationSchema, generateWebSiteSchema } 
 
 export const metadata: Metadata = {
   ...constructMetadata({
-    title: 'Grainzz – Power of Real Grains for Better Gainzz',
+    title: 'GRAINZZ – Healthy Millet Snacks Made with Real Grains',
     description: 'Grainzz is a healthy Indian snacks brand crafting guilt-free, roasted, grain-based snacks. Shop Oats Chips, Quinoa Puffs, Ragi Chips & more. Shipping PAN India.',
   }),
   verification: {

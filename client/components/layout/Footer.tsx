@@ -32,6 +32,7 @@ export default function Footer() {
       { name: 'Home', href: '/' },
       { name: 'About Us', href: '/about' },
       { name: 'Blogs', href: '/blogs' },
+      { name: 'B2B Partnership', href: '/b2b' },
       { name: 'FAQs', href: '/faqs' },
       { name: 'Contact Us', href: '/contact' },
       { name: 'My Account', href: '/account' },

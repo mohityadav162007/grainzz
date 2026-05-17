@@ -4,14 +4,6 @@ import { getPublicBlogs } from '@/lib/api';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Calendar, ChevronRight, Loader2 } from 'lucide-react';
-import { constructMetadata } from '@/lib/seo';
-
-export const metadata = constructMetadata({
-  title: 'Blog | Grainzz',
-  description: 'Discover tips, recipes, and insights into healthy living and wholesome grains with Grainzz.',
-  path: '/blogs',
-});
-
 export default function BlogsPage() {
   const [blogs, setBlogs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -23,8 +15,42 @@ export default function BlogsPage() {
       .finally(() => setLoading(false));
   }, []);
 
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "WebPage",
+        "@id": "https://www.grainzzindia.com/blogs",
+        "url": "https://www.grainzzindia.com/blogs",
+        "name": "Healthy Snacking Blog | Grainzz",
+        "description": "Read expert articles and tips on healthy snacking, nutrition, grains, and wellness from Grainzz.",
+        "breadcrumb": {
+          "@type": "BreadcrumbList",
+          "itemListElement": [
+            {
+              "@type": "ListItem",
+              "position": 1,
+              "name": "Home",
+              "item": "https://www.grainzzindia.com"
+            },
+            {
+              "@type": "ListItem",
+              "position": 2,
+              "name": "Blog",
+              "item": "https://www.grainzzindia.com/blogs"
+            }
+          ]
+        }
+      }
+    ]
+  };
+
   return (
     <main className="min-h-screen bg-[#FCF9F2]">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+      />
       {/* Hero Section */}
       <section className="bg-[#1D5E20] py-16 lg:py-24 text-white text-center">
         <div className="max-w-[1440px] mx-auto px-4">

@@ -10,14 +10,6 @@ const helpCards = [
   { icon: Truck, title: 'Shipping', desc: 'Need an idea on how long delivery may take, see our policy?', cta: 'Shipping Policy', href: '/shipping' },
 ];
 
-import { constructMetadata } from '@/lib/seo';
-
-export const metadata = constructMetadata({
-  title: 'Contact Us | Grainzz',
-  description: 'Get in touch with Grainzz for questions, support, or business inquiries. We would love to hear from you!',
-  path: '/contact',
-});
-
 export default function ContactPage() {
   const [form, setForm] = useState({ firstName: '', lastName: '', email: '', phone: '', subject: '', orderId: '', message: '' });
   const [loading, setLoading] = useState(false);
@@ -60,8 +52,42 @@ export default function ContactPage() {
     }
   };
 
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "WebPage",
+        "@id": "https://www.grainzzindia.com/contact",
+        "url": "https://www.grainzzindia.com/contact",
+        "name": "Contact Us | Grainzz",
+        "description": "Get in touch with Grainzz for product enquiries, orders, partnerships, and customer support.",
+        "breadcrumb": {
+          "@type": "BreadcrumbList",
+          "itemListElement": [
+            {
+              "@type": "ListItem",
+              "position": 1,
+              "name": "Home",
+              "item": "https://www.grainzzindia.com"
+            },
+            {
+              "@type": "ListItem",
+              "position": 2,
+              "name": "Contact Us",
+              "item": "https://www.grainzzindia.com/contact"
+            }
+          ]
+        }
+      }
+    ]
+  };
+
   return (
     <div className="bg-[#FBF5EB] min-h-screen">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+      />
       {/* Top Section with Cards */}
       <div className="pt-[80px] pb-[100px]">
         {/* Header */}

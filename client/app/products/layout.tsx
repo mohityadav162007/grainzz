@@ -3,8 +3,8 @@ import type { Metadata } from 'next';
 import { constructMetadata } from '@/lib/seo';
 
 export const metadata: Metadata = constructMetadata({
-  title: 'All Products – Grainzz',
-  description: 'Shop all Grainzz healthy grain snacks – Oats Chips, Quinoa Puffs, Ragi Chips and more.',
+  title: 'All Products | Grainzz',
+  description: 'Explore the complete range of healthy grain-based snacks from Grainzz, including ragi chips, puffs, and nutritious everyday snacking options.',
   path: '/products',
 });
 

@@ -10,8 +10,8 @@ import FAQSection from '@/components/home/FAQSection';
 import { constructMetadata } from '@/lib/seo';
 
 export const metadata: Metadata = constructMetadata({
-  title: 'About Us – Grainzz',
-  description: 'Learn about Grainzz — India\'s premium healthy grain snacks brand built on real supergrains.',
+  title: 'About Us | Grainzz',
+  description: 'Learn about Grainzz and our mission to create healthier snacks made with real grains and clean ingredients.',
   path: '/about',
 });
 
@@ -36,8 +36,42 @@ const story = [
 
 
 export default function AboutPage() {
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "WebPage",
+        "@id": "https://www.grainzzindia.com/about",
+        "url": "https://www.grainzzindia.com/about",
+        "name": "About Us | Grainzz",
+        "description": "Learn about Grainzz and our mission to create healthier snacks made with real grains and clean ingredients.",
+        "breadcrumb": {
+          "@type": "BreadcrumbList",
+          "itemListElement": [
+            {
+              "@type": "ListItem",
+              "position": 1,
+              "name": "Home",
+              "item": "https://www.grainzzindia.com"
+            },
+            {
+              "@type": "ListItem",
+              "position": 2,
+              "name": "About Us",
+              "item": "https://www.grainzzindia.com/about"
+            }
+          ]
+        }
+      }
+    ]
+  };
+
   return (
     <div className="bg-white min-h-screen">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+      />
       {/* Hero */}
       <section className="w-full">
         <div className="flex flex-col md:flex-row min-h-[420px] md:min-h-[560px]">

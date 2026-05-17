@@ -17,10 +17,46 @@ const sortOptions = [
 
 
 export default function ProductsPage() {
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "WebPage",
+        "@id": "https://www.grainzzindia.com/products",
+        "url": "https://www.grainzzindia.com/products",
+        "name": "All Products | Grainzz",
+        "description": "Explore the complete range of healthy grain-based snacks from Grainzz, including ragi chips, puffs, and nutritious everyday snacking options.",
+        "breadcrumb": {
+          "@type": "BreadcrumbList",
+          "itemListElement": [
+            {
+              "@type": "ListItem",
+              "position": 1,
+              "name": "Home",
+              "item": "https://www.grainzzindia.com"
+            },
+            {
+              "@type": "ListItem",
+              "position": 2,
+              "name": "All Products",
+              "item": "https://www.grainzzindia.com/products"
+            }
+          ]
+        }
+      }
+    ]
+  };
+
   return (
-    <Suspense fallback={<div className="min-h-[60vh] flex items-center justify-center"><div className="w-8 h-8 border-4 border-brand-green border-t-transparent rounded-full animate-spin" /></div>}>
-      <ProductsContent />
-    </Suspense>
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+      />
+      <Suspense fallback={<div className="min-h-[60vh] flex items-center justify-center"><div className="w-8 h-8 border-4 border-brand-green border-t-transparent rounded-full animate-spin" /></div>}>
+        <ProductsContent />
+      </Suspense>
+    </>
   );
 }
 

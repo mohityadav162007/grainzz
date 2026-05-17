@@ -180,8 +180,8 @@ ${quantityTimeline || 'No specific quantity/timeline provided.'}
         "@type": "WebPage",
         "@id": "https://www.grainzzindia.com/b2b",
         "url": "https://www.grainzzindia.com/b2b",
-        "name": "B2B Wholesale & Corporate Orders | Grainzz",
-        "description": "Partner with Grainzz for office pantry supplies, corporate gifting, event snacks, and bulk wholesale orders of healthy grain-based snacks across India.",
+        "name": "B2B & Corporate Orders | Grainzz",
+        "description": "Partner with Grainzz for office pantry supplies, corporate gifting, private labeling, and bulk snack orders across India.",
         "breadcrumb": {
           "@type": "BreadcrumbList",
           "itemListElement": [

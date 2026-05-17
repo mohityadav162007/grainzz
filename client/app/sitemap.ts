@@ -2,7 +2,7 @@ import { MetadataRoute } from 'next';
 import { getProducts, getCategories } from '@/lib/api';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.grainzz.com';
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.grainzzindia.com';
 
   const staticPages = [
     '',

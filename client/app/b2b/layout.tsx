@@ -3,8 +3,8 @@ import { constructMetadata } from '@/lib/seo';
 
 export const metadata: Metadata = {
   ...constructMetadata({
-    title: 'B2B Wholesale & Corporate Orders | Grainzz',
-    description: 'Partner with Grainzz for office pantry supplies, corporate gifting, event snacks, and bulk wholesale orders of healthy grain-based snacks across India.',
+    title: 'B2B & Corporate Orders | Grainzz',
+    description: 'Partner with Grainzz for office pantry supplies, corporate gifting, private labeling, and bulk snack orders across India.',
     path: '/b2b',
   }),
 };

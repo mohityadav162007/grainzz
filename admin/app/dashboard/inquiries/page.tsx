@@ -147,6 +147,11 @@ export default function InquiriesPage() {
                         {enq.first_name} {enq.last_name}
                       </span>
                       <span className="text-xs text-gray-400 truncate">&lt;{enq.email}&gt;</span>
+                      {(enq.order_id === 'B2B' || enq.subject === 'B2B Partnership Inquiry') && (
+                        <span className="bg-purple-100 text-purple-700 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider flex-shrink-0">
+                          B2B
+                        </span>
+                      )}
                     </div>
                     <p className={`text-sm truncate mt-0.5 ${enq.status === 'new' ? 'font-semibold text-gray-800' : 'text-gray-500'}`}>
                       {enq.subject}

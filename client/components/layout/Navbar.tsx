@@ -12,6 +12,7 @@ import MobileSearchOverlay from './MobileSearchOverlay';
 const navLinks = [
   { label: 'Shop All', href: '/products' },
   { label: 'Combos', href: '/combos' },
+  { label: 'B2B Partnership', href: '/b2b' },
   { label: 'Sale!', href: '/sale', className: 'text-brand-red font-semibold' },
   { label: 'About Us', href: '/about' },
   { label: 'FAQs', href: '/faqs' },
@@ -160,6 +161,7 @@ export default function Navbar() {
                   <Home size={22} strokeWidth={2.5} />
                 </Link>
                 <Link href="/products" className={clsx('text-[15px] font-medium transition-all relative group', pathname === '/products' ? 'text-brand-green underline decoration-2 underline-offset-8' : 'text-[#222] hover:underline decoration-2 underline-offset-8')}>Shop All</Link>
+                <Link href="/b2b" className={clsx('text-[15px] font-medium transition-all relative group', pathname === '/b2b' ? 'text-brand-green underline decoration-2 underline-offset-8' : 'text-[#222] hover:underline decoration-2 underline-offset-8')}>B2B</Link>
                 <Link href="/about" className={clsx('text-[15px] font-medium transition-all relative group', pathname === '/about' ? 'text-brand-green underline decoration-2 underline-offset-8' : 'text-[#222] hover:underline decoration-2 underline-offset-8')}>About Us</Link>
                 <Link href="/contact" className={clsx('text-[15px] font-medium transition-all relative group', pathname === '/contact' ? 'text-brand-green underline decoration-2 underline-offset-8' : 'text-[#222] hover:underline decoration-2 underline-offset-8')}>Contact Us</Link>
               </div>
@@ -254,6 +256,7 @@ export default function Navbar() {
             </Link>
             <Link href="/products" onClick={() => setMobileOpen(false)} className={clsx('py-4 text-[15px] font-medium border-b border-[#E5DFCC]', pathname === '/products' ? 'text-brand-green underline underline-offset-8 decoration-2' : 'text-[#222] hover:underline underline-offset-8 decoration-2')}>Shop All</Link>
             <Link href="/combos" onClick={() => setMobileOpen(false)} className={clsx('py-4 text-[15px] font-medium border-b border-[#E5DFCC]', pathname === '/combos' ? 'text-brand-green underline underline-offset-8 decoration-2' : 'text-[#222] hover:underline underline-offset-8 decoration-2')}>Combos</Link>
+            <Link href="/b2b" onClick={() => setMobileOpen(false)} className={clsx('py-4 text-[15px] font-medium border-b border-[#E5DFCC]', pathname === '/b2b' ? 'text-brand-green underline underline-offset-8 decoration-2' : 'text-[#222] hover:underline underline-offset-8 decoration-2')}>B2B Partnership</Link>
             {showSale && (
               <Link href="/sale" onClick={() => setMobileOpen(false)} className={clsx('py-4 text-[15px] font-semibold border-b border-[#E5DFCC]', pathname === '/sale' ? 'text-brand-green underline underline-offset-8 decoration-2' : 'text-brand-red hover:underline underline-offset-8 decoration-2')}>Sales!</Link>
             )}

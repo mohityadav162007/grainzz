@@ -14,8 +14,8 @@ export default function AnnouncementBarEditor({
   const [messages, setMessages] = useState<string[]>([]);
 
   useEffect(() => {
-    if (config?.messages && Array.isArray(config.messages) && config.messages.filter(m => m.trim() !== '').length > 0) {
-      setMessages(config.messages.filter(m => m.trim() !== ''));
+    if (config?.messages && Array.isArray(config.messages) && config.messages.filter((m: string) => m.trim() !== '').length > 0) {
+      setMessages(config.messages.filter((m: string) => m.trim() !== ''));
     } else if (config?.text && config.text.trim() !== '') {
       setMessages([config.text]);
     } else {

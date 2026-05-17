@@ -1,7 +1,7 @@
 'use client';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { LayoutDashboard, Package, ShoppingBag, Tag, Star, LogOut, Menu, X, Home, BarChart3, MessageSquare, Settings, Ticket, Inbox, Truck, Filter, User } from 'lucide-react';
+import { LayoutDashboard, Package, ShoppingBag, Tag, Star, LogOut, Menu, X, Home, BarChart3, MessageSquare, Settings, Ticket, Inbox, Truck, Filter, User, Building2 } from 'lucide-react';
 import { useState } from 'react';
 import { adminLogout } from '@/lib/api';
 
@@ -15,6 +15,7 @@ const navItems = [
   { label: 'Coupons', href: '/dashboard/coupons', icon: Ticket },
   { label: 'Product Reviews', href: '/dashboard/reviews', icon: MessageSquare },
   { label: 'Inquiries', href: '/dashboard/inquiries', icon: Inbox },
+  { label: 'B2B Settings', href: '/dashboard/b2b', icon: Building2 },
   { label: 'Offers', href: '/dashboard/offers', icon: Star },
   { label: 'Related Products', href: '/dashboard/related-products', icon: Package },
   { label: 'Blogs', href: '/dashboard/blogs', icon: BarChart3 },

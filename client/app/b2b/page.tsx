@@ -19,41 +19,90 @@ import {
   Gift 
 } from 'lucide-react';
 
-const B2B_FAQS = [
-  {
-    question: "What is the minimum order quantity (MOQ) for corporate gifting?",
-    answer: "Our minimum order quantity for standard corporate gift hampers is 50 units. For fully customized premium branding on our jars and outer boxes, the MOQ starts at 100 units to ensure premium packaging and quality control."
-  },
-  {
-    question: "Can hampers and boxes be customized with our company branding?",
-    answer: "Absolutely! We offer custom-printed sleeve wraps, corporate logos, and personalized note cards for orders above 100 boxes. You can choose from our curated collections or select individual snack jars to match your brand colors."
-  },
-  {
-    question: "Do you offer sample boxes for tasting before purchase?",
-    answer: "Yes, we do. We offer a Curated Sample Box featuring our best-selling roasted snacks for companies planning long-term pantry programs or large gifting campaigns. Drop us an inquiry, and our corporate representative will arrange it."
-  },
-  {
-    question: "What is the average lead time for wholesale orders?",
-    answer: "For standard office supplies, we deliver within 5-7 business days across India. For customized corporate hampers or bulk seasonal orders (like Diwali or New Year), the lead time is 10-14 days depending on custom requirements and order volume."
-  },
-  {
-    question: "Do you deliver PAN India?",
-    answer: "Yes! We offer reliable, secure PAN India delivery. We can handle bulk single-location warehouse drop-offs or split ship individual boxes directly to your remote employee work-from-home addresses across the country."
-  }
-];
-
 const DEFAULT_SETTINGS = {
+  // --- SECTION 1: HERO ---
   hero_title: 'Better snacks for better workplaces.',
   hero_desc: 'Office pantry, client hampers, event supply, and exclusive corporate gifting — all powered by real supergrains and roasted clean ingredients.',
   hero_card_title: 'Six jars. One snack standard for modern offices.',
   hero_card_text: 'No Palm Oil • Zero Refined Flour (Maida) • 100% Roasted',
   hero_image_url: '',
+
+  // --- SECTION 2: OFFERINGS ---
+  offerings_title: 'What we offer.',
+  offerings_desc: 'Premium, single-serving snacks custom-built for workplaces, luxury corporate gifting, VIP events, and café networks.',
+  
+  offering_1_title: 'Office Pantry Programme',
+  offering_1_desc: 'Monthly recurring supplies of pre-portioned, high-fiber roasted millet and grain snacks direct to your pantry shelves.',
+  offering_1_moq: 'MOQ: 50 Jars / Month',
+  offering_1_lead: 'Lead Time: 5-7 Days',
+
+  offering_2_title: 'Corporate Gifting & Hampers',
+  offering_2_desc: 'Tailor-made, elegant hampers for festivals, employee appreciation rewards, client onboarding, and luxury business gifting.',
+  offering_2_moq: 'MOQ: 50 Hampers',
+  offering_2_lead: 'Lead Time: 10-12 Days',
+
+  offering_3_title: 'Event & Offsite Supply',
+  offering_3_desc: 'Guilt-free snack packages for offsite meetups, executive conferences, product launches, and major corporate events.',
+  offering_3_moq: 'MOQ: 100 Units',
+  offering_3_lead: 'Lead Time: 4-6 Days',
+
+  offering_4_title: 'Coworking & Café Partnerships',
+  offering_4_desc: 'Wholesale, beautifully-packaged roasted snack counters and shelves tailored for high-end coworking cafés and corporate cafeterias.',
+  offering_4_moq: 'MOQ: 250 Units',
+  offering_4_margin: 'Margin: 15-25%',
+
+  // --- SECTION 3: FEATURED CORPORATE GIFTING ---
   gifting_title: 'A festive hamper your team will still be opening in November.',
   gifting_desc: 'Premium Grainzz hampers in 2, 4 and 6 jar formats. Custom branding, custom delivery, and custom selection of clean-label roasted millet snacks.',
   gifting_card_title: 'Move beyond sweets. Gift better snacking.',
   gifting_card_price: 'From ₹450 Onwards',
   gifting_card_badge: 'Grainzz Shell Hampers',
   gifting_image_url: '',
+  gifting_bullet_1: 'Premium jar packs (120-150g net weight per jar)',
+  gifting_bullet_2: 'Custom outer sleeves with your brand logo & greetings',
+  gifting_bullet_3: 'Individual recipient delivery direct to employee doorsteps',
+  gifting_bullet_4: 'Early-bird bookings open for festive corporate discounts',
+
+  // --- SECTION 4: WHY TEAMS CHOOSE GRAINZZ ---
+  why_title: 'Why teams choose Grainzz.',
+  why_desc: 'A modern, honest snack brand built for workplaces that care about what their employees eat.',
+  
+  why_1_title: 'Real Grains',
+  why_1_desc: 'Ragi, Oats, Jowar, Bajra, and Quinoa. We never use refined flour (maida).',
+  
+  why_2_title: 'Clean Label',
+  why_2_desc: 'No palm oil, no trans fat, zero artificial flavors, and no chemicals.',
+  
+  why_3_title: 'Custom Branding',
+  why_3_desc: 'Custom gift sleeves, greeting inserts, and tailored gift box formats.',
+  
+  why_4_title: 'Pan-India Delivery',
+  why_4_desc: 'Reliable multi-location distributions or individual work-from-home drop-offs.',
+
+  // --- SECTION 5: INQUIRY FORM HEADER & FOUNDER DIRECT CONTACTS ---
+  form_title: 'Tell us about your team\'s snacking.',
+  form_desc: 'Pantry, gifting, event or café partnership — fill this form and our founder team responds within 24 hours.',
+  founder_phone: '+918800271274',
+  founder_email: 'contact@grainzzindia.com',
+
+  // --- SECTION 6: FAQ HEADER & ITEMS ---
+  faq_title: 'Frequently asked.',
+  faq_desc: 'Common questions and custom partnership configurations.',
+  
+  faq_1_question: 'What is the minimum order quantity (MOQ) for corporate gifting?',
+  faq_1_answer: 'Our minimum order quantity for standard corporate gift hampers is 50 units. For fully customized premium branding on our jars and outer boxes, the MOQ starts at 100 units to ensure premium packaging and quality control.',
+  
+  faq_2_question: 'Can hampers and boxes be customized with our company branding?',
+  faq_2_answer: 'Absolutely! We offer custom-printed sleeve wraps, corporate logos, and personalized note cards for orders above 100 boxes. You can choose from our curated collections or select individual snack jars to match your brand colors.',
+  
+  faq_3_question: 'Do you offer sample boxes for tasting before purchase?',
+  faq_3_answer: 'Yes, we do. We offer a Curated Sample Box featuring our best-selling roasted snacks for companies planning long-term pantry programs or large gifting campaigns. Drop us an inquiry, and our corporate representative will arrange it.',
+  
+  faq_4_question: 'What is the average lead time for wholesale orders?',
+  faq_4_answer: 'For standard office supplies, we deliver within 5-7 business days across India. For customized corporate hampers or bulk seasonal orders (like Diwali or New Year), the lead time is 10-14 days depending on custom requirements and order volume.',
+  
+  faq_5_question: 'Do you deliver PAN India?',
+  faq_5_answer: 'Yes! We offer reliable, secure PAN India delivery. We can handle bulk single-location warehouse drop-offs or split ship individual boxes directly to your remote employee work-from-home addresses across the country.',
 };
 
 export default function B2BPage() {
@@ -213,6 +262,14 @@ ${quantityTimeline || 'No specific quantity/timeline provided.'}
     ]
   };
 
+  const dynamicFaqs = [
+    { question: activeConfig.faq_1_question, answer: activeConfig.faq_1_answer },
+    { question: activeConfig.faq_2_question, answer: activeConfig.faq_2_answer },
+    { question: activeConfig.faq_3_question, answer: activeConfig.faq_3_answer },
+    { question: activeConfig.faq_4_question, answer: activeConfig.faq_4_answer },
+    { question: activeConfig.faq_5_question, answer: activeConfig.faq_5_answer },
+  ].filter(faq => faq.question && faq.answer);
+
   return (
     <div className="w-full bg-[#FFFDF5] text-brand-black">
       {/* HTML SEO Script */}
@@ -247,13 +304,13 @@ ${quantityTimeline || 'No specific quantity/timeline provided.'}
               <div className="flex flex-col sm:flex-row gap-[16px] w-full sm:w-auto pt-2">
                 <button 
                   onClick={handleRequestSample}
-                  className="bg-brand-green text-white hover:bg-[#14391a] px-8 py-3.5 rounded-full font-bold text-[15px] transition-all shadow-sm flex items-center justify-center gap-2 hover:scale-[1.02]"
+                  className="bg-brand-green text-white hover:bg-[#14391a] px-8 py-3.5 rounded-full font-bold text-[15px] transition-all shadow-sm flex items-center justify-center gap-2 hover:scale-[1.02] cursor-pointer"
                 >
                   Request a Sample Box <ArrowRight size={18} />
                 </button>
                 <button 
                   onClick={handleGetQuote}
-                  className="border border-[#1D5E20] text-brand-green hover:bg-[#1D5E20]/5 px-8 py-3.5 rounded-full font-bold text-[15px] transition-all flex items-center justify-center gap-2"
+                  className="border border-[#1D5E20] text-brand-green hover:bg-[#1D5E20]/5 px-8 py-3.5 rounded-full font-bold text-[15px] transition-all flex items-center justify-center gap-2 cursor-pointer"
                 >
                   Get a Quote
                 </button>
@@ -314,10 +371,16 @@ ${quantityTimeline || 'No specific quantity/timeline provided.'}
           
           <div className="text-center mb-[48px] md:mb-[64px] flex flex-col items-center gap-4">
             <h2 className="text-[32px] md:text-[40px] font-semibold text-brand-black tracking-tight leading-[1.2]">
-              What we <span className="text-brand-green">offer.</span>
+              {activeConfig.offerings_title.includes(' offer.') ? (
+                <>
+                  What we <span className="text-brand-green">{activeConfig.offerings_title.replace('What we ', '')}</span>
+                </>
+              ) : (
+                activeConfig.offerings_title
+              )}
             </h2>
             <p className="text-[15px] md:text-[16px] text-[#6B6B6B] font-medium max-w-[620px]">
-              Premium, single-serving snacks custom-built for workplaces, luxury corporate gifting, VIP events, and caf&eacute; networks.
+              {activeConfig.offerings_desc}
             </p>
           </div>
 
@@ -332,14 +395,14 @@ ${quantityTimeline || 'No specific quantity/timeline provided.'}
                 <Coffee size={24} />
               </div>
               <div className="flex flex-col gap-2">
-                <h3 className="text-[20px] font-semibold text-brand-black">Office Pantry Programme</h3>
+                <h3 className="text-[20px] font-semibold text-brand-black">{activeConfig.offering_1_title}</h3>
                 <p className="text-[14px] md:text-[15px] text-[#6B6B6B] leading-[1.6] font-medium">
-                  Monthly recurring supplies of pre-portioned, high-fiber roasted millet and grain snacks direct to your pantry shelves.
+                  {activeConfig.offering_1_desc}
                 </p>
               </div>
               <div className="flex flex-wrap items-center gap-3 pt-2 text-[13px] font-bold border-t border-[#F2F2F2] mt-auto">
-                <span className="bg-[#EEFBDC] text-brand-green px-3 py-1 rounded-full">MOQ: 50 Jars / Month</span>
-                <span className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full">Lead Time: 5-7 Days</span>
+                <span className="bg-[#EEFBDC] text-brand-green px-3 py-1 rounded-full">{activeConfig.offering_1_moq}</span>
+                <span className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full">{activeConfig.offering_1_lead}</span>
               </div>
             </div>
 
@@ -352,14 +415,14 @@ ${quantityTimeline || 'No specific quantity/timeline provided.'}
                 <Gift size={24} />
               </div>
               <div className="flex flex-col gap-2">
-                <h3 className="text-[20px] font-semibold text-brand-black">Corporate Gifting & Hampers</h3>
+                <h3 className="text-[20px] font-semibold text-brand-black">{activeConfig.offering_2_title}</h3>
                 <p className="text-[14px] md:text-[15px] text-[#6B6B6B] leading-[1.6] font-medium">
-                  Tailor-made, elegant hampers for festivals, employee appreciation rewards, client onboarding, and luxury business gifting.
+                  {activeConfig.offering_2_desc}
                 </p>
               </div>
               <div className="flex flex-wrap items-center gap-3 pt-2 text-[13px] font-bold border-t border-[#F2F2F2] mt-auto">
-                <span className="bg-[#EEFBDC] text-brand-green px-3 py-1 rounded-full">MOQ: 50 Hampers</span>
-                <span className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full">Lead Time: 10-12 Days</span>
+                <span className="bg-[#EEFBDC] text-brand-green px-3 py-1 rounded-full">{activeConfig.offering_2_moq}</span>
+                <span className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full">{activeConfig.offering_2_lead}</span>
               </div>
             </div>
 
@@ -372,14 +435,14 @@ ${quantityTimeline || 'No specific quantity/timeline provided.'}
                 <Sparkles size={24} />
               </div>
               <div className="flex flex-col gap-2">
-                <h3 className="text-[20px] font-semibold text-brand-black">Event & Offsite Supply</h3>
+                <h3 className="text-[20px] font-semibold text-brand-black">{activeConfig.offering_3_title}</h3>
                 <p className="text-[14px] md:text-[15px] text-[#6B6B6B] leading-[1.6] font-medium">
-                  Guilt-free snack packages for offsite meetups, executive conferences, product launches, and major corporate events.
+                  {activeConfig.offering_3_desc}
                 </p>
               </div>
               <div className="flex flex-wrap items-center gap-3 pt-2 text-[13px] font-bold border-t border-[#F2F2F2] mt-auto">
-                <span className="bg-[#EEFBDC] text-brand-green px-3 py-1 rounded-full">MOQ: 100 Units</span>
-                <span className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full">Lead Time: 4-6 Days</span>
+                <span className="bg-[#EEFBDC] text-brand-green px-3 py-1 rounded-full">{activeConfig.offering_3_moq}</span>
+                <span className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full">{activeConfig.offering_3_lead}</span>
               </div>
             </div>
 
@@ -392,14 +455,14 @@ ${quantityTimeline || 'No specific quantity/timeline provided.'}
                 <Building2 size={24} />
               </div>
               <div className="flex flex-col gap-2">
-                <h3 className="text-[20px] font-semibold text-brand-black">Coworking & Café Partnerships</h3>
+                <h3 className="text-[20px] font-semibold text-brand-black">{activeConfig.offering_4_title}</h3>
                 <p className="text-[14px] md:text-[15px] text-[#6B6B6B] leading-[1.6] font-medium">
-                  Wholesale, beautifully-packaged roasted snack counters and shelves tailored for high-end coworking cafés and corporate cafeterias.
+                  {activeConfig.offering_4_desc}
                 </p>
               </div>
               <div className="flex flex-wrap items-center gap-3 pt-2 text-[13px] font-bold border-t border-[#F2F2F2] mt-auto">
-                <span className="bg-[#EEFBDC] text-brand-green px-3 py-1 rounded-full">MOQ: 250 Units</span>
-                <span className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full">Margin: 15-25%</span>
+                <span className="bg-[#EEFBDC] text-brand-green px-3 py-1 rounded-full">{activeConfig.offering_4_moq}</span>
+                <span className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full">{activeConfig.offering_4_margin}</span>
               </div>
             </div>
 
@@ -468,27 +531,35 @@ ${quantityTimeline || 'No specific quantity/timeline provided.'}
               </p>
               
               <ul className="flex flex-col gap-[12px] w-full text-[14px] md:text-[15px] font-bold text-[#4A4A4A]">
-                <li className="flex items-center gap-3">
-                  <div className="w-[8px] h-[8px] rounded-full bg-brand-green shrink-0" />
-                  Premium glass jar packs (375-475g net weight per jar)
-                </li>
-                <li className="flex items-center gap-3">
-                  <div className="w-[8px] h-[8px] rounded-full bg-brand-green shrink-0" />
-                  Custom outer sleeves with your brand logo & greetings
-                </li>
-                <li className="flex items-center gap-3">
-                  <div className="w-[8px] h-[8px] rounded-full bg-brand-green shrink-0" />
-                  Individual recipient delivery direct to employee doorsteps
-                </li>
-                <li className="flex items-center gap-3">
-                  <div className="w-[8px] h-[8px] rounded-full bg-brand-green shrink-0" />
-                  Early-bird bookings open for festive corporate discounts
-                </li>
+                {activeConfig.gifting_bullet_1 && (
+                  <li className="flex items-center gap-3">
+                    <div className="w-[8px] h-[8px] rounded-full bg-brand-green shrink-0" />
+                    {activeConfig.gifting_bullet_1}
+                  </li>
+                )}
+                {activeConfig.gifting_bullet_2 && (
+                  <li className="flex items-center gap-3">
+                    <div className="w-[8px] h-[8px] rounded-full bg-brand-green shrink-0" />
+                    {activeConfig.gifting_bullet_2}
+                  </li>
+                )}
+                {activeConfig.gifting_bullet_3 && (
+                  <li className="flex items-center gap-3">
+                    <div className="w-[8px] h-[8px] rounded-full bg-brand-green shrink-0" />
+                    {activeConfig.gifting_bullet_3}
+                  </li>
+                )}
+                {activeConfig.gifting_bullet_4 && (
+                  <li className="flex items-center gap-3">
+                    <div className="w-[8px] h-[8px] rounded-full bg-brand-green shrink-0" />
+                    {activeConfig.gifting_bullet_4}
+                  </li>
+                )}
               </ul>
 
               <button 
                 onClick={() => scrollToId('b2b-enquiry')}
-                className="bg-brand-green hover:bg-[#14391a] text-white font-bold px-8 py-3.5 rounded-full text-[15px] transition-all hover:scale-105 shadow-sm mt-2"
+                className="bg-brand-green hover:bg-[#14391a] text-white font-bold px-8 py-3.5 rounded-full text-[15px] transition-all hover:scale-105 shadow-sm mt-2 cursor-pointer"
               >
                 Reserve Shell Hampers
               </button>
@@ -504,10 +575,16 @@ ${quantityTimeline || 'No specific quantity/timeline provided.'}
           
           <div className="text-center mb-[48px] md:mb-[60px]">
             <h2 className="text-[32px] md:text-[40px] font-semibold text-brand-black tracking-tight leading-[1.2] mb-3">
-              Why teams choose <span className="text-brand-green">Grainzz.</span>
+              {activeConfig.why_title.includes(' Grainzz.') ? (
+                <>
+                  Why teams choose <span className="text-brand-green">{activeConfig.why_title.replace('Why teams choose ', '')}</span>
+                </>
+              ) : (
+                activeConfig.why_title
+              )}
             </h2>
             <p className="text-[15px] md:text-[16px] text-[#6B6B6B] font-medium max-w-[600px] mx-auto">
-              A modern, honest snack brand built for workplaces that care about what their employees eat.
+              {activeConfig.why_desc}
             </p>
           </div>
 
@@ -519,9 +596,9 @@ ${quantityTimeline || 'No specific quantity/timeline provided.'}
                 <Layers size={24} />
               </div>
               <div className="flex flex-col gap-1.5">
-                <h3 className="text-[17px] font-bold text-brand-black">Real Grains</h3>
+                <h3 className="text-[17px] font-bold text-brand-black">{activeConfig.why_1_title}</h3>
                 <p className="text-[13px] md:text-[14px] text-[#6B6B6B] font-medium leading-[1.6]">
-                  Ragi, Oats, Jowar, Bajra, and Quinoa. We never use refined flour (maida).
+                  {activeConfig.why_1_desc}
                 </p>
               </div>
             </div>
@@ -532,9 +609,9 @@ ${quantityTimeline || 'No specific quantity/timeline provided.'}
                 <Leaf size={24} />
               </div>
               <div className="flex flex-col gap-1.5">
-                <h3 className="text-[17px] font-bold text-brand-black">Clean Label</h3>
+                <h3 className="text-[17px] font-bold text-brand-black">{activeConfig.why_2_title}</h3>
                 <p className="text-[13px] md:text-[14px] text-[#6B6B6B] font-medium leading-[1.6]">
-                  No palm oil, no trans fat, zero artificial flavors, and no chemicals.
+                  {activeConfig.why_2_desc}
                 </p>
               </div>
             </div>
@@ -545,9 +622,9 @@ ${quantityTimeline || 'No specific quantity/timeline provided.'}
                 <Bookmark size={24} />
               </div>
               <div className="flex flex-col gap-1.5">
-                <h3 className="text-[17px] font-bold text-brand-black">Custom Branding</h3>
+                <h3 className="text-[17px] font-bold text-brand-black">{activeConfig.why_3_title}</h3>
                 <p className="text-[13px] md:text-[14px] text-[#6B6B6B] font-medium leading-[1.6]">
-                  Custom gift sleeves, greeting inserts, and tailored gift box formats.
+                  {activeConfig.why_3_desc}
                 </p>
               </div>
             </div>
@@ -558,9 +635,9 @@ ${quantityTimeline || 'No specific quantity/timeline provided.'}
                 <Truck size={24} />
               </div>
               <div className="flex flex-col gap-1.5">
-                <h3 className="text-[17px] font-bold text-brand-black">Pan-India Delivery</h3>
+                <h3 className="text-[17px] font-bold text-brand-black">{activeConfig.why_4_title}</h3>
                 <p className="text-[13px] md:text-[14px] text-[#6B6B6B] font-medium leading-[1.6]">
-                  Reliable multi-location distributions or individual work-from-home drop-offs.
+                  {activeConfig.why_4_desc}
                 </p>
               </div>
             </div>
@@ -574,11 +651,17 @@ ${quantityTimeline || 'No specific quantity/timeline provided.'}
         <div className="max-w-[900px] mx-auto px-4">
           
           <div className="text-center mb-[40px] md:mb-[50px] flex flex-col items-center gap-3">
-            <h2 className="text-[32px] md:text-[40px] font-semibold text-brand-black tracking-tight leading-[1.2]">
-              Tell us about your <span className="text-brand-green">team&apos;s snacking.</span>
+            <h2 className="text-[32px] md:text-[40px] font-semibold text-brand-black tracking-tight leading-[1.2] whitespace-pre-line">
+              {activeConfig.form_title.includes(' team\'s snacking.') ? (
+                <>
+                  Tell us about your <span className="text-brand-green">{activeConfig.form_title.replace('Tell us about your ', '')}</span>
+                </>
+              ) : (
+                activeConfig.form_title
+              )}
             </h2>
             <p className="text-[15px] text-[#6B6B6B] font-medium max-w-[500px]">
-              Pantry, gifting, event or café partnership — fill this form and our founder team responds within 24 hours.
+              {activeConfig.form_desc}
             </p>
           </div>
 
@@ -594,7 +677,7 @@ ${quantityTimeline || 'No specific quantity/timeline provided.'}
                 </p>
                 <button
                   onClick={() => setSubmitted(false)}
-                  className="mt-4 bg-[#EEFBDC] text-brand-green hover:bg-[#E0EFCC] px-6 py-2.5 rounded-full font-bold text-[14px] transition-all"
+                  className="mt-4 bg-[#EEFBDC] text-brand-green hover:bg-[#E0EFCC] px-6 py-2.5 rounded-full font-bold text-[14px] transition-all cursor-pointer"
                 >
                   Submit Another Inquiry
                 </button>
@@ -622,7 +705,7 @@ ${quantityTimeline || 'No specific quantity/timeline provided.'}
                         value={fullName}
                         onChange={(e) => setFullName(e.target.value)}
                         placeholder="E.g., Raveena Sharma"
-                        className="w-full border border-gray-200 rounded-xl px-4 py-3 text-[14px] text-brand-black focus:outline-none focus:ring-2 focus:ring-brand-green/35 placeholder:text-gray-400 font-medium transition-all"
+                        className="w-full border border-gray-200 rounded-xl px-4 py-3 text-[14px] text-brand-black focus:outline-none focus:ring-2 focus:ring-brand-green/35 placeholder:text-gray-400 font-medium transition-all font-sans"
                       />
                     </div>
 
@@ -636,7 +719,7 @@ ${quantityTimeline || 'No specific quantity/timeline provided.'}
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         placeholder="E.g., raveena@company.com"
-                        className="w-full border border-gray-200 rounded-xl px-4 py-3 text-[14px] text-brand-black focus:outline-none focus:ring-2 focus:ring-brand-green/35 placeholder:text-gray-400 font-medium transition-all"
+                        className="w-full border border-gray-200 rounded-xl px-4 py-3 text-[14px] text-brand-black focus:outline-none focus:ring-2 focus:ring-brand-green/35 placeholder:text-gray-400 font-medium transition-all font-sans"
                       />
                     </div>
 
@@ -650,7 +733,7 @@ ${quantityTimeline || 'No specific quantity/timeline provided.'}
                         value={city}
                         onChange={(e) => setCity(e.target.value)}
                         placeholder="E.g., Mumbai"
-                        className="w-full border border-gray-200 rounded-xl px-4 py-3 text-[14px] text-brand-black focus:outline-none focus:ring-2 focus:ring-brand-green/35 placeholder:text-gray-400 font-medium transition-all"
+                        className="w-full border border-gray-200 rounded-xl px-4 py-3 text-[14px] text-brand-black focus:outline-none focus:ring-2 focus:ring-brand-green/35 placeholder:text-gray-400 font-medium transition-all font-sans"
                       />
                     </div>
 
@@ -691,7 +774,7 @@ ${quantityTimeline || 'No specific quantity/timeline provided.'}
                         value={company}
                         onChange={(e) => setCompany(e.target.value)}
                         placeholder="E.g., Google India"
-                        className="w-full border border-gray-200 rounded-xl px-4 py-3 text-[14px] text-brand-black focus:outline-none focus:ring-2 focus:ring-brand-green/35 placeholder:text-gray-400 font-medium transition-all"
+                        className="w-full border border-gray-200 rounded-xl px-4 py-3 text-[14px] text-brand-black focus:outline-none focus:ring-2 focus:ring-brand-green/35 placeholder:text-gray-400 font-medium transition-all font-sans"
                       />
                     </div>
 
@@ -704,8 +787,8 @@ ${quantityTimeline || 'No specific quantity/timeline provided.'}
                         required
                         value={phone}
                         onChange={(e) => setPhone(e.target.value)}
-                        placeholder="E.g., +91 98765 43210"
-                        className="w-full border border-gray-200 rounded-xl px-4 py-3 text-[14px] text-brand-black focus:outline-none focus:ring-2 focus:ring-brand-green/35 placeholder:text-gray-400 font-medium transition-all"
+                        placeholder="E.g., +91 88002 71274"
+                        className="w-full border border-gray-200 rounded-xl px-4 py-3 text-[14px] text-brand-black focus:outline-none focus:ring-2 focus:ring-brand-green/35 placeholder:text-gray-400 font-medium transition-all font-sans"
                       />
                     </div>
 
@@ -768,7 +851,7 @@ ${quantityTimeline || 'No specific quantity/timeline provided.'}
                     value={quantityTimeline}
                     onChange={(e) => setQuantityTimeline(e.target.value)}
                     placeholder="E.g., 100 Diwali hampers needed by October, customized with our corporate logo sleeve wrappers."
-                    className="w-full border border-gray-200 rounded-xl px-4 py-3 text-[14px] text-brand-black focus:outline-none focus:ring-2 focus:ring-brand-green/35 placeholder:text-gray-400 font-medium transition-all resize-none"
+                    className="w-full border border-gray-200 rounded-xl px-4 py-3 text-[14px] text-brand-black focus:outline-none focus:ring-2 focus:ring-brand-green/35 placeholder:text-gray-400 font-medium transition-all resize-none font-sans"
                   />
                 </div>
 
@@ -788,7 +871,7 @@ ${quantityTimeline || 'No specific quantity/timeline provided.'}
                 </button>
 
                 <p className="text-center text-[12px] text-gray-400 font-semibold pt-1">
-                  Founder direct channels: Whatsapp/Phone: <a href="tel:+917036032328" className="text-brand-green font-bold hover:underline">+91 70360 32328</a> • Email: <a href="mailto:wellness@grainzzindia.com" className="text-brand-green font-bold hover:underline">wellness@grainzzindia.com</a>
+                  Founder direct channels: WhatsApp: <a href={`https://wa.me/${activeConfig.founder_phone.replace(/\+/g, '')}`} target="_blank" rel="noopener noreferrer" className="text-brand-green font-bold hover:underline">{activeConfig.founder_phone}</a> • Email: <a href={`mailto:${activeConfig.founder_email}`} className="text-brand-green font-bold hover:underline">{activeConfig.founder_email}</a>
                 </p>
 
               </form>
@@ -803,15 +886,21 @@ ${quantityTimeline || 'No specific quantity/timeline provided.'}
           
           <div className="text-center mb-[40px] md:mb-[60px] flex flex-col items-center gap-3">
             <h2 className="text-[32px] md:text-[40px] font-semibold text-brand-black tracking-tight leading-[1.2]">
-              Frequently <span className="text-brand-green">asked.</span>
+              {activeConfig.faq_title.includes(' asked.') ? (
+                <>
+                  Frequently <span className="text-brand-green">{activeConfig.faq_title.replace('Frequently ', '')}</span>
+                </>
+              ) : (
+                activeConfig.faq_title
+              )}
             </h2>
             <p className="text-[15px] text-[#6B6B6B] font-medium max-w-[500px]">
-              Common questions and custom partnership configurations.
+              {activeConfig.faq_desc}
             </p>
           </div>
 
           <div className="max-w-[800px] mx-auto flex flex-col gap-4">
-            {B2B_FAQS.map((faq, idx) => {
+            {dynamicFaqs.map((faq, idx) => {
               const isOpen = openIndex === idx;
               return (
                 <div 
@@ -820,7 +909,7 @@ ${quantityTimeline || 'No specific quantity/timeline provided.'}
                 >
                   <button
                     onClick={() => toggleFaq(idx)}
-                    className="w-full flex items-center justify-between p-6 text-left group transition-colors hover:bg-gray-50/20"
+                    className="w-full flex items-center justify-between p-6 text-left group transition-colors hover:bg-gray-50/20 cursor-pointer"
                   >
                     <span className="text-[16px] md:text-[17px] font-bold text-brand-black pr-8 group-hover:text-brand-green transition-colors">
                       {faq.question}
@@ -840,7 +929,7 @@ ${quantityTimeline || 'No specific quantity/timeline provided.'}
                     }`}
                   >
                     <div className="p-6 bg-gray-50/10">
-                      <p className="text-[14px] leading-[1.6] text-[#6B6B6B] font-medium">
+                      <p className="text-[14px] leading-[1.6] text-[#6B6B6B] font-medium whitespace-pre-wrap">
                         {faq.answer}
                       </p>
                     </div>

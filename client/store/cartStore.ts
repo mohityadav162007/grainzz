@@ -86,10 +86,11 @@ export const useCartStore = create<CartStore>()(
       setCouponNotification: (msg) => set({ couponNotification: msg }),
 
       revalidateCouponState: (showNotification = false) => {
-        const { coupon, items, subtotal } = get();
+        const { coupon, items, subtotal, quickBuyItem } = get();
         
+        const activeItems = quickBuyItem ? [quickBuyItem] : items;
         // Rule: Clear coupon if cart is empty
-        if (items.length === 0) {
+        if (activeItems.length === 0) {
           if (coupon) {
             set({ coupon: null });
           }
@@ -98,7 +99,7 @@ export const useCartStore = create<CartStore>()(
 
         if (!coupon) return;
 
-        const currentSubtotal = subtotal();
+        const currentSubtotal = quickBuyItem ? (quickBuyItem.price * quickBuyItem.quantity) : subtotal();
         const validation = validateCoupon(coupon, currentSubtotal);
 
         if (!validation.isValid) {
@@ -132,7 +133,6 @@ export const useCartStore = create<CartStore>()(
         } else {
           set({ items: [...items, { ...newItem, quantity: newItem.quantity || 1 }] });
         }
-        set({ isOpen: true });
         get().revalidateCouponState(true);
       },
 

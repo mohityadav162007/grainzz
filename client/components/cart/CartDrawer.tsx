@@ -11,6 +11,7 @@ export default function CartDrawer() {
   const {
     items, isOpen, closeCart, removeItem, updateQuantity,
     subtotal, discount, total, coupon, applyCoupon, removeCoupon,
+    setQuickBuy,
   } = useCartStore();
   const { user, setAuthModalOpen, setGuestPopupMode } = useAuthStore();
   const router = useRouter();
@@ -22,6 +23,7 @@ export default function CartDrawer() {
   const drawerRef = null;
 
   const handleCheckout = () => {
+    setQuickBuy(null);
     if (!user) {
       closeCart();
       if (setGuestPopupMode) setGuestPopupMode('signin');

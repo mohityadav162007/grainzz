@@ -39,7 +39,7 @@ export default function EssentialSnackBox() {
   const [added, setAdded] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
 
-  const { addItem } = useCartStore();
+  const { addItem, setQuickBuy } = useCartStore();
   const { user, setAuthModalOpen, setGuestPopupMode } = useAuthStore();
   const router = useRouter();
 
@@ -85,12 +85,7 @@ export default function EssentialSnackBox() {
 
   const handleQuickBuy = () => {
     if (!variant) return;
-    if (!user) {
-      setGuestPopupMode('signin');
-      setAuthModalOpen(true);
-      return;
-    }
-    addItem({
+    setQuickBuy({
       id: `snackbox-${variant.id}`,
       name: variant.title,
       price: variant.price,

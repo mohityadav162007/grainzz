@@ -3,10 +3,11 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
-import { ChevronRight, ChevronLeft, Loader2, Check, MapPin, Package, CreditCard, Truck, Clock } from 'lucide-react';
-import { useCartStore, validateCoupon } from '@/store/cartStore';
+import { ChevronRight, ChevronLeft, Loader2, Check, MapPin, Package, CreditCard, Truck, Clock, Tag } from 'lucide-react';
+import { useCartStore, validateCoupon, calculateDiscount, type CouponData } from '@/store/cartStore';
 import { useAuthStore } from '@/store/authStore';
-import { createOrder, initiatePayment, getShippingRates, getSavedAddresses, getProductById, type SavedAddress } from '@/lib/api';
+import { createOrder, initiatePayment, getShippingRates, getSavedAddresses, getProductById, applyCoupon as apiApplyCoupon, type SavedAddress } from '@/lib/api';
+import { supabase } from '@/lib/supabase';
 
 declare global {
   interface Window {
@@ -29,6 +30,7 @@ export default function CheckoutPage() {
     clearCart,
     setQuickBuy,
     removeCoupon,
+    applyCoupon,
     revalidateCouponState
   } = useCartStore();
   const { user } = useAuthStore();
@@ -58,11 +60,103 @@ export default function CheckoutPage() {
   const [itemWeights, setItemWeights] = useState<Record<string, number>>({});
   const [hasCombo, setHasCombo] = useState(false);
 
+  // Coupon states
+  const [couponCodeInput, setCouponCodeInput] = useState('');
+  const [couponError, setCouponError] = useState('');
+  const [couponSuccess, setCouponSuccess] = useState('');
+  const [applyingCoupon, setApplyingCoupon] = useState(false);
+  const [suggestedCoupons, setSuggestedCoupons] = useState<CouponData[]>([]);
+
+  // Silent mount revalidation for Quick Buy state
+  useEffect(() => {
+    revalidateCouponState(false);
+  }, []);
+
   const displayItems = quickBuyItem ? [quickBuyItem] : items;
   const displaySubtotal = quickBuyItem ? quickBuyItem.price * quickBuyItem.quantity : subtotal();
-  const displayDiscount = quickBuyItem ? 0 : discount();
-  const displayTotal = quickBuyItem ? displaySubtotal : total();
+  const displayDiscount = coupon ? calculateDiscount(coupon, displaySubtotal) : 0;
+  const displayTotal = Math.max(displaySubtotal - displayDiscount, 0);
   const finalTotal = displayTotal + (shippingCharge || 0);
+
+  // Fetch suggested coupons for current order subtotal
+  useEffect(() => {
+    const fetchSuggestions = async () => {
+      try {
+        const { data: couponsData, error: fetchError } = await supabase
+          .from('coupons')
+          .select('*')
+          .eq('is_active', true);
+
+        if (fetchError || !couponsData) return;
+
+        const now = new Date();
+        const filtered: CouponData[] = [];
+
+        for (const c of couponsData) {
+          if (new Date(c.expiry_date) < now) continue;
+          if (c.usage_limit !== null && c.used_count >= c.usage_limit) continue;
+          if (displaySubtotal < (c.min_order_value || 0)) continue;
+
+          try {
+            const cleanFormEmail = form.email?.trim().toLowerCase() || '';
+            const verifyRes = await fetch(`/api/coupons/verify?code=${encodeURIComponent(c.code)}&email=${encodeURIComponent(cleanFormEmail || user?.email || '')}&userId=${encodeURIComponent(user?.id || '')}`);
+            const verifyData = await verifyRes.json();
+            if (verifyData.used) continue;
+          } catch (e) {
+            console.error('Coupon verify error', e);
+          }
+
+          filtered.push({
+            code: c.code,
+            discountType: c.discount_type,
+            value: Number(c.value),
+            discountAmount: 0,
+            minOrderValue: Number(c.min_order_value || 0),
+            maxDiscount: c.max_discount !== null ? Number(c.max_discount) : null,
+            expiryDate: c.expiry_date,
+            usageLimit: c.usage_limit,
+            usedCount: c.used_count,
+            isActive: c.is_active,
+          });
+        }
+
+        setSuggestedCoupons(filtered);
+      } catch (err) {
+        console.error('Failed to fetch coupon suggestions:', err);
+      }
+    };
+
+    fetchSuggestions();
+  }, [displaySubtotal, user]);
+
+  const handleApplyCoupon = async (code: string) => {
+    const cleanCode = code.trim().toUpperCase();
+    if (!cleanCode) return;
+
+    setApplyingCoupon(true);
+    setCouponError('');
+    setCouponSuccess('');
+    setError('');
+
+    try {
+      const cleanFormEmail = form.email?.trim().toLowerCase() || '';
+      const verifyRes = await fetch(`/api/coupons/verify?code=${encodeURIComponent(cleanCode)}&email=${encodeURIComponent(cleanFormEmail || user?.email || '')}&userId=${encodeURIComponent(user?.id || '')}`);
+      const verifyData = await verifyRes.json();
+      
+      if (verifyData.used) {
+        throw new Error('You have already used this coupon.');
+      }
+
+      const res = await apiApplyCoupon(cleanCode, displaySubtotal);
+      applyCoupon(res.data);
+      setCouponSuccess(`Coupon "${cleanCode}" applied successfully!`);
+      setCouponCodeInput('');
+    } catch (err: any) {
+      setCouponError(err.message || 'Invalid coupon');
+    } finally {
+      setApplyingCoupon(false);
+    }
+  };
 
   const [pendingOrderId, setPendingOrderId] = useState<string | null>(null);
 
@@ -229,6 +323,19 @@ export default function CheckoutPage() {
 
       // Revalidate order coupon one final time before creating the order and payment
       if (coupon) {
+        // 1. Confirm user has not used it previously (lifetime check)
+        const cleanFormEmail = form.email?.trim().toLowerCase() || '';
+        const verifyRes = await fetch(`/api/coupons/verify?code=${encodeURIComponent(coupon.code)}&email=${encodeURIComponent(cleanFormEmail || user?.email || '')}&userId=${encodeURIComponent(user?.id || '')}`);
+        const verifyData = await verifyRes.json();
+
+        if (verifyData.used) {
+          removeCoupon();
+          setError('You have already used this coupon.');
+          setLoading(false);
+          return;
+        }
+
+        // 2. Confirm all threshold and expiry rules
         const currentSubtotal = displaySubtotal;
         const validation = validateCoupon(coupon, currentSubtotal);
         if (!validation.isValid) {
@@ -252,7 +359,7 @@ export default function CheckoutPage() {
           })),
           userDetails: form,
           subtotal: displaySubtotal,
-          couponCode: quickBuyItem ? '' : (coupon?.code || ''),
+          couponCode: coupon?.code || '',
           discountAmount: displayDiscount,
           totalAmount: finalTotal,
           userId: user?.id,
@@ -485,6 +592,101 @@ export default function CheckoutPage() {
                   </div>
                 ))}
               </div>
+              {/* Coupon Section */}
+              <div className="border-t pt-4 mt-4 space-y-3">
+                <h3 className="text-sm font-bold text-text-main flex items-center gap-1.5">
+                  <Tag size={16} className="text-primary" /> Apply Coupon
+                </h3>
+                
+                {coupon ? (
+                  <div className="flex items-center justify-between bg-green-50 border border-green-200 rounded-xl px-4 py-3 shadow-sm">
+                    <div className="text-xs font-bold text-green-700">
+                      "{coupon.code}" applied (−₹{displayDiscount})
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        removeCoupon();
+                        setCouponSuccess('');
+                        setCouponError('');
+                      }}
+                      className="text-red-500 hover:text-red-700 text-xs font-bold hover:underline"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      placeholder="Coupon Code"
+                      value={couponCodeInput}
+                      onChange={(e) => {
+                        setCouponCodeInput(e.target.value.toUpperCase());
+                        setCouponError('');
+                        setCouponSuccess('');
+                      }}
+                      className="flex-1 input-field py-2 text-sm uppercase placeholder-gray-400"
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          handleApplyCoupon(couponCodeInput);
+                        }
+                      }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => handleApplyCoupon(couponCodeInput)}
+                      disabled={applyingCoupon || !couponCodeInput.trim()}
+                      className="bg-brand-black text-white hover:bg-black text-xs font-bold px-4 rounded-xl disabled:opacity-50 transition-colors"
+                    >
+                      {applyingCoupon ? '...' : 'Apply'}
+                    </button>
+                  </div>
+                )}
+
+                {couponError && <p className="text-xs text-red-500 font-bold mt-1">{couponError}</p>}
+                {couponSuccess && <p className="text-xs text-green-600 font-bold mt-1">{couponSuccess}</p>}
+
+                {/* Suggestions List */}
+                {!coupon && suggestedCoupons.length > 0 && (
+                  <div className="space-y-2 mt-2">
+                    <p className="text-[11px] font-bold text-text-muted uppercase tracking-wider">Available Coupons</p>
+                    <div className="space-y-2 max-h-36 overflow-y-auto no-scrollbar">
+                      {suggestedCoupons.map((sug) => (
+                        <div
+                          key={sug.code}
+                          className="flex items-center justify-between p-2.5 bg-gray-50 border border-gray-100 rounded-xl text-xs hover:bg-gray-100 transition-colors"
+                        >
+                          <div className="min-w-0">
+                            <span className="font-black text-primary bg-primary/10 px-1.5 py-0.5 rounded text-[10px] uppercase">
+                              {sug.code}
+                            </span>
+                            <p className="font-bold text-[11px] text-text-main mt-1">
+                              {sug.discountType === 'percentage'
+                                ? `${sug.value}% OFF${sug.maxDiscount ? ` up to ₹${sug.maxDiscount}` : ''}`
+                                : `Flat ₹${sug.value} OFF`}
+                            </p>
+                            {sug.minOrderValue > 0 && (
+                              <p className="text-[10px] text-text-muted mt-0.5">
+                                Min order: ₹{sug.minOrderValue}
+                              </p>
+                            )}
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => handleApplyCoupon(sug.code)}
+                            className="text-primary hover:text-brand-dark font-black hover:underline px-2.5 py-1 bg-white border border-gray-200 rounded-lg shadow-sm text-[11px] transition-all active:scale-95"
+                          >
+                            Apply
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+
               <div className="border-t pt-4 space-y-2 text-sm">
                 <div className="flex justify-between">
                   <span className="text-text-muted">Subtotal</span>
@@ -501,7 +703,7 @@ export default function CheckoutPage() {
                   <span>Calculated in next step</span>
                 </div>
                 <div className="flex justify-between text-base font-black border-t pt-2 mt-2">
-                  <span>Subtotal</span>
+                  <span>Total</span>
                   <span>₹{displayTotal}</span>
                 </div>
               </div>

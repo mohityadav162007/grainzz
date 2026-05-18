@@ -15,7 +15,7 @@ export default function CartPage() {
   const {
     items, removeItem, updateQuantity,
     subtotal, discount, total, coupon, applyCoupon, removeCoupon,
-    clearCart,
+    clearCart, setQuickBuy,
   } = useCartStore();
   const { user, setAuthModalOpen } = useAuthStore();
   const router = useRouter();
@@ -41,6 +41,7 @@ export default function CartPage() {
   };
 
   const handleCheckout = () => {
+    setQuickBuy(null);
     if (!user) {
       setAuthModalOpen(true);
       return;

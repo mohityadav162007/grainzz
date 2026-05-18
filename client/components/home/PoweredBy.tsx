@@ -38,7 +38,7 @@ interface ResolvedCard {
 export default function PoweredBy() {
   const [cards, setCards] = useState<ResolvedCard[]>([]);
   const [loading, setLoading] = useState(true);
-  const { addItem } = useCartStore();
+  const { addItem, setQuickBuy } = useCartStore();
   const router = useRouter();
   
 
@@ -97,7 +97,15 @@ export default function PoweredBy() {
     e.preventDefault();
     e.stopPropagation();
     if (card.product) {
-      addItem(card.product);
+      setQuickBuy({
+        id: card.product.id,
+        name: card.product.name,
+        price: card.product.price,
+        mrp: card.product.mrp,
+        image: card.product.images?.[0] || '',
+        quantity: 1,
+        tags: card.product.tags,
+      });
       router.push('/checkout');
     } else {
       router.push(card.link);

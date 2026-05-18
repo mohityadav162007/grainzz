@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { Plus, ShoppingCart, Heart } from 'lucide-react';
 import { useCartStore } from '@/store/cartStore';
 import { useWishlistStore } from '@/store/wishlistStore';
+import { animateFlyToCart } from '@/lib/animationUtils';
 
 interface Product {
   id: string;
@@ -60,6 +61,7 @@ export default function ProductCard({ product, centered = false }: ProductCardPr
       quantity: 1,
       tags: product.tags,
     });
+    animateFlyToCart(e.currentTarget as HTMLElement, product.images?.[0]);
   };
 
   const handleToggleWishlist = (e: React.MouseEvent) => {

@@ -117,7 +117,7 @@ export default function Navbar() {
           <div className="flex items-center justify-end gap-5 flex-1">
             <Link href="/" className="text-[#222]"><Home size={24} strokeWidth={2} /></Link>
             <button className="text-[#222]" onClick={() => setIsSearchOpen(true)}><Search size={24} strokeWidth={2} /></button>
-            <button onClick={openCart} className="text-[#222] relative pb-1">
+            <button onClick={openCart} className="header-cart-icon-btn text-[#222] relative pb-1">
               <ShoppingCart size={24} strokeWidth={2} />
               {count > 0 && <span className="absolute -top-1.5 -right-2 bg-brand-red text-white text-[10px] rounded-full w-4 h-4 flex items-center justify-center font-bold">{count}</span>}
             </button>
@@ -147,7 +147,7 @@ export default function Navbar() {
               <div className="shrink-0 flex items-center gap-7">
                 <Link href="/wishlist" className="text-[#222] hover:text-brand-red transition-colors"><Heart size={24} strokeWidth={2} /></Link>
                 <Link href="/account" onClick={handleAccountClick} className="text-[#222] hover:text-primary transition-colors"><User size={24} strokeWidth={2} /></Link>
-                <button onClick={openCart} className="relative text-[#222] hover:text-primary transition-colors">
+                <button onClick={openCart} className="header-cart-icon-btn relative text-[#222] hover:text-primary transition-colors">
                   <ShoppingCart size={24} strokeWidth={2} />
                   {count > 0 && <span className="absolute -top-2 -right-2 bg-brand-red text-white text-[11px] rounded-full w-5 h-5 flex items-center justify-center font-bold ring-2 ring-white">{count}</span>}
                 </button>
@@ -173,7 +173,7 @@ export default function Navbar() {
               <div className="flex-1 flex items-center justify-end gap-7">
                 <button onClick={() => setIsSearchOpen(!isSearchOpen)} className="text-[#222] hover:text-primary transition-colors"><Search size={24} strokeWidth={2} /></button>
                 <Link href="/account" onClick={handleAccountClick} className="text-[#222] hover:text-primary transition-colors"><User size={24} strokeWidth={2} /></Link>
-                <button onClick={openCart} className="relative text-[#222] hover:text-primary transition-colors">
+                <button onClick={openCart} className="header-cart-icon-btn relative text-[#222] hover:text-primary transition-colors">
                   <ShoppingCart size={24} strokeWidth={2} />
                   {count > 0 && <span className="absolute -top-2 -right-2 bg-brand-red text-white text-[11px] rounded-full w-5 h-5 flex items-center justify-center font-bold ring-2 ring-white">{count}</span>}
                 </button>
@@ -244,7 +244,7 @@ export default function Navbar() {
             </Link>
             <div className="flex items-center justify-end gap-5 flex-1">
               <button className="text-[#222]" onClick={() => { setMobileOpen(false); setIsSearchOpen(true); }}><Search size={24} strokeWidth={2} /></button>
-              <button onClick={() => { setMobileOpen(false); openCart(); }} className="text-[#222] relative pb-1">
+              <button onClick={() => { setMobileOpen(false); openCart(); }} className="header-cart-icon-btn text-[#222] relative pb-1">
                 <ShoppingCart size={24} strokeWidth={2} />
                 {count > 0 && <span className="absolute -top-1.5 -right-2 bg-brand-red text-white text-[10px] rounded-full w-4 h-4 flex items-center justify-center font-bold">{count}</span>}
               </button>

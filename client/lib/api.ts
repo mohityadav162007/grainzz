@@ -498,13 +498,64 @@ export const getOrderById = async (id: string) => {
 // ─── Coupons ─────────────────────────────────────────────────────────────────
 
 export const applyCoupon = async (code: string, orderTotal: number) => {
-  const { data, error } = await supabase.rpc('apply_coupon', {
-    coupon_code: code,
-    order_total: orderTotal,
-  });
+  const { data: coupon, error: fetchError } = await supabase
+    .from('coupons')
+    .select('*')
+    .eq('code', code.toUpperCase())
+    .single();
 
-  if (error) throw new Error(error.message);
-  return data;
+  if (fetchError || !coupon) {
+    throw new Error('Invalid coupon code');
+  }
+
+  if (!coupon.is_active) {
+    throw new Error('Coupon is no longer active');
+  }
+
+  if (new Date(coupon.expiry_date) < new Date()) {
+    throw new Error('Coupon has expired');
+  }
+
+  if (coupon.usage_limit !== null && coupon.used_count >= coupon.usage_limit) {
+    throw new Error('Coupon usage limit reached');
+  }
+
+  if (orderTotal < (coupon.min_order_value || 0)) {
+    throw new Error(`Minimum order value of ₹${coupon.min_order_value} required`);
+  }
+
+  const discountType = coupon.discount_type;
+  const value = Number(coupon.value);
+  const minOrderValue = Number(coupon.min_order_value || 0);
+  const maxDiscount = coupon.max_discount !== null ? Number(coupon.max_discount) : null;
+
+  let discountAmount = 0;
+  if (discountType === 'percentage') {
+    discountAmount = (orderTotal * value) / 100;
+    if (maxDiscount !== null) {
+      discountAmount = Math.min(discountAmount, maxDiscount);
+    }
+  } else {
+    discountAmount = value;
+  }
+  discountAmount = Math.min(discountAmount, orderTotal);
+
+  return {
+    success: true,
+    data: {
+      code: coupon.code,
+      discountType,
+      value,
+      discountAmount: Math.round(discountAmount),
+      finalTotal: Math.round(orderTotal - discountAmount),
+      minOrderValue,
+      maxDiscount,
+      expiryDate: coupon.expiry_date,
+      usageLimit: coupon.usage_limit,
+      usedCount: coupon.used_count,
+      isActive: coupon.is_active,
+    }
+  };
 };
 
 // ─── Payment ─────────────────────────────────────────────────────────────────

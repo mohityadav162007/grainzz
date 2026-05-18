@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import { ChevronRight, ChevronLeft, Loader2, Check, MapPin, Package, CreditCard, Truck, Clock } from 'lucide-react';
-import { useCartStore } from '@/store/cartStore';
+import { useCartStore, validateCoupon } from '@/store/cartStore';
 import { useAuthStore } from '@/store/authStore';
 import { createOrder, initiatePayment, getShippingRates, getSavedAddresses, getProductById, type SavedAddress } from '@/lib/api';
 
@@ -19,7 +19,18 @@ declare global {
 const COMBO_CATEGORIES = ['Combos', 'Gift Packs', '2-Jar Combo', '3-Jar Combo', '4-Jar Combo', '6-Jar Combo', 'Puffed Rice Mixed 6-Pack'];
 
 export default function CheckoutPage() {
-  const { items, quickBuyItem, subtotal, discount, total, coupon, clearCart, setQuickBuy } = useCartStore();
+  const {
+    items,
+    quickBuyItem,
+    subtotal,
+    discount,
+    total,
+    coupon,
+    clearCart,
+    setQuickBuy,
+    removeCoupon,
+    revalidateCouponState
+  } = useCartStore();
   const { user } = useAuthStore();
   const router = useRouter();
 
@@ -87,6 +98,11 @@ export default function CheckoutPage() {
     }
   }, [user?.id]);
 
+  // Revalidate coupon on checkout page mount
+  useEffect(() => {
+    revalidateCouponState(false);
+  }, []);
+
   // Fetch product weights for shipping calculation
   useEffect(() => {
     const fetchWeights = async () => {
@@ -149,6 +165,16 @@ export default function CheckoutPage() {
 
   const handleContinueToSummary = async () => {
     if (!validateForm()) return;
+
+    // Verify coupon threshold is still met before proceeding to summary step
+    if (coupon) {
+      revalidateCouponState(false);
+      if (!useCartStore.getState().coupon) {
+        setError('Your applied coupon is no longer valid because the minimum order value is no longer met.');
+        return;
+      }
+    }
+
     setShippingLoading(true);
     setError('');
     
@@ -200,6 +226,18 @@ export default function CheckoutPage() {
     setError('');
     try {
       let orderId = pendingOrderId;
+
+      // Revalidate order coupon one final time before creating the order and payment
+      if (coupon) {
+        const currentSubtotal = displaySubtotal;
+        const validation = validateCoupon(coupon, currentSubtotal);
+        if (!validation.isValid) {
+          removeCoupon();
+          setError(validation.reason || 'Coupon is no longer valid. Please proceed without it.');
+          setLoading(false);
+          return;
+        }
+      }
 
       // Create order only if we don't have a pending one
       if (!orderId) {

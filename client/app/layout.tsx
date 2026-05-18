@@ -5,6 +5,7 @@ import AnnouncementBar from '@/components/layout/AnnouncementBar';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
 import CartDrawer from '@/components/cart/CartDrawer';
+import CouponNotificationToast from '@/components/cart/CouponNotificationToast';
 
 import AuthInitializer from '@/components/auth/AuthInitializer';
 import AuthModal from '@/components/auth/AuthModal';
@@ -51,6 +52,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body className={`${jakarta.className} bg-white text-brand-black`}>
         <AuthInitializer />
+        <CouponNotificationToast />
         <AnnouncementBar />
         <Navbar />
         <main className="min-h-screen overflow-x-clip">{children}</main>

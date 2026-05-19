@@ -579,6 +579,14 @@ export const createOrder = async (body: {
   const { error: itemsError } = await supabase.from('order_items').insert(orderItems);
   if (itemsError) throw new Error(itemsError.message);
 
+  // Trigger order notification email in the background asynchronously
+  // Wrapped in .catch() so that errors never block the checkout/payment process.
+  supabase.functions.invoke('send-order-notification', {
+    body: { orderId: order.id }
+  }).catch((err) => {
+    console.error('[ORDER NOTIFICATION TRIGGER ERROR]', err);
+  });
+
   return { success: true, data: { ...order, items: orderItems } };
 };
 

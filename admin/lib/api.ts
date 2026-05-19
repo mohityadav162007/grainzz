@@ -569,6 +569,8 @@ export const createCoupon = async (body: {
   maxDiscount?: number;
   expiryDate: string;
   usageLimit?: number;
+  isVisible?: boolean;
+  isFirstOrderOnly?: boolean;
 }) => {
   const { data, error } = await supabase
     .from('coupons')
@@ -580,6 +582,8 @@ export const createCoupon = async (body: {
       max_discount: body.maxDiscount ? Number(body.maxDiscount) : null,
       expiry_date: new Date(body.expiryDate).toISOString(),
       usage_limit: body.usageLimit ? Number(body.usageLimit) : null,
+      is_visible: body.isVisible !== undefined ? body.isVisible : true,
+      is_first_order_only: body.isFirstOrderOnly !== undefined ? body.isFirstOrderOnly : false,
     })
     .select()
     .single();
@@ -597,6 +601,8 @@ export const updateCoupon = async (id: string, body: Partial<{
   expiryDate: string;
   usageLimit?: number;
   isActive: boolean;
+  isVisible: boolean;
+  isFirstOrderOnly: boolean;
 }>) => {
   const updates: Record<string, any> = {};
   if (body.code !== undefined) updates.code = body.code.toUpperCase();
@@ -607,6 +613,8 @@ export const updateCoupon = async (id: string, body: Partial<{
   if (body.expiryDate !== undefined) updates.expiry_date = new Date(body.expiryDate).toISOString();
   if (body.usageLimit !== undefined) updates.usage_limit = body.usageLimit ? Number(body.usageLimit) : null;
   if (body.isActive !== undefined) updates.is_active = body.isActive;
+  if (body.isVisible !== undefined) updates.is_visible = body.isVisible;
+  if (body.isFirstOrderOnly !== undefined) updates.is_first_order_only = body.isFirstOrderOnly;
 
   const { data, error } = await supabase.from('coupons').update(updates).eq('id', id).select().single();
   if (error) throw new Error(error.message);

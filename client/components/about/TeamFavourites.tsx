@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
 import ProductCard from '@/components/products/ProductCard';
 import ProductCardSkeleton from '@/components/products/ProductCardSkeleton';
-import { getSiteContent, getProducts } from '@/lib/api';
+import { getSiteContent, getProducts, getActiveOffersMap, applyOffersToProduct } from '@/lib/api';
 import { supabase } from '@/lib/supabase';
 
 export default function TeamFavourites() {
@@ -33,14 +33,15 @@ export default function TeamFavourites() {
               .filter(Boolean);
             
             if (sorted.length > 0) {
-              // Sanitize image placeholder logic (similar to segments)
+              const offersMap = await getActiveOffersMap();
+              // Sanitize image placeholder logic and apply active offers pricing
               const sanitized = sorted.map((prod: any) => {
                 if (prod && Array.isArray(prod.images)) {
                   prod.images = prod.images.map((img: string) =>
                     img.includes('placeholder.jpg') ? '/image-2@2x.png' : img
                   );
                 }
-                return prod;
+                return applyOffersToProduct(prod, offersMap);
               });
               setProducts(sanitized);
               setLoading(false);

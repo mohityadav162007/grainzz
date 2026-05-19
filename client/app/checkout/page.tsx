@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
-import { ChevronRight, ChevronLeft, Loader2, Check, MapPin, Package, CreditCard, Truck, Clock, Tag } from 'lucide-react';
+import { ChevronRight, ChevronLeft, Loader2, Check, MapPin, Package, CreditCard, Truck, Clock, Tag, Minus, Plus } from 'lucide-react';
 import { useCartStore, validateCoupon, calculateDiscount, type CouponData } from '@/store/cartStore';
 import { useAuthStore } from '@/store/authStore';
 import { createOrder, initiatePayment, getShippingRates, getSavedAddresses, getProductById, applyCoupon as apiApplyCoupon, type SavedAddress } from '@/lib/api';
@@ -31,10 +31,25 @@ export default function CheckoutPage() {
     setQuickBuy,
     removeCoupon,
     applyCoupon,
-    revalidateCouponState
+    revalidateCouponState,
+    updateQuantity
   } = useCartStore();
   const { user } = useAuthStore();
   const router = useRouter();
+
+  const handleUpdateQuantity = (itemId: string, newQty: number) => {
+    if (quickBuyItem) {
+      if (newQty < 1) {
+        setQuickBuy(null);
+        router.push('/cart');
+      } else {
+        setQuickBuy({ ...quickBuyItem, quantity: newQty });
+        setTimeout(() => revalidateCouponState(false), 0);
+      }
+    } else {
+      updateQuantity(itemId, newQty);
+    }
+  };
 
   // Step management
   const [currentStep, setCurrentStep] = useState(1);
@@ -56,8 +71,8 @@ export default function CheckoutPage() {
   const [savedAddresses, setSavedAddresses] = useState<SavedAddress[]>([]);
   const [savedAddressesLoading, setSavedAddressesLoading] = useState(false);
 
-  // Product weights for shipping calculation
-  const [itemWeights, setItemWeights] = useState<Record<string, number>>({});
+  // Product metadata for shipping calculation
+  const [productMetadata, setProductMetadata] = useState<Record<string, { length: number; breadth: number; height: number; weight: number }>>({});
   const [hasCombo, setHasCombo] = useState(false);
 
   // Coupon states
@@ -85,7 +100,8 @@ export default function CheckoutPage() {
         const { data: couponsData, error: fetchError } = await supabase
           .from('coupons')
           .select('*')
-          .eq('is_active', true);
+          .eq('is_active', true)
+          .eq('is_visible', true);
 
         if (fetchError || !couponsData) return;
 
@@ -95,7 +111,6 @@ export default function CheckoutPage() {
         for (const c of couponsData) {
           if (new Date(c.expiry_date) < now) continue;
           if (c.usage_limit !== null && c.used_count >= c.usage_limit) continue;
-          if (displaySubtotal < (c.min_order_value || 0)) continue;
 
           try {
             const cleanFormEmail = form.email?.trim().toLowerCase() || '';
@@ -197,36 +212,117 @@ export default function CheckoutPage() {
     revalidateCouponState(false);
   }, []);
 
-  // Fetch product weights for shipping calculation
+  // Fetch product package dimensions & weights for shipping calculation
   useEffect(() => {
-    const fetchWeights = async () => {
-      const weights: Record<string, number> = {};
+    const fetchMetadata = async () => {
+      const meta: Record<string, { length: number; breadth: number; height: number; weight: number }> = {};
       let comboDetected = false;
       for (const item of displayItems) {
         try {
           const product = await getProductById(item.id);
           if (product) {
-            // Weight field is TEXT, try to parse number from it (e.g., "200g", "0.5 kg", "500")
-            const weightStr = product.weight || '';
-            let weightKg = 0.5; // default per item
-            const match = weightStr.match(/([\d.]+)\s*(kg|g|gm|gram)?/i);
-            if (match) {
-              const val = parseFloat(match[1]);
-              const unit = (match[2] || 'g').toLowerCase();
-              weightKg = unit === 'kg' ? val : val / 1000;
-            }
-            weights[item.id] = weightKg;
+            // Apply default fallbacks if any package field is null or zero: L=15, B=15, H=10, W=0.5
+            const length = Number(product.package_length) || 15;
+            const breadth = Number(product.package_breadth) || 15;
+            const height = Number(product.package_height) || 10;
+            const weight = Number(product.package_weight) || 0.5;
+
+            meta[item.id] = { length, breadth, height, weight };
+
             if (COMBO_CATEGORIES.includes(product.category)) {
               comboDetected = true;
             }
           }
-        } catch { }
+        } catch (err) {
+          console.error(`Failed to fetch metadata for product ${item.id}:`, err);
+        }
       }
-      setItemWeights(weights);
+      setProductMetadata(meta);
       setHasCombo(comboDetected);
     };
-    if (displayItems.length > 0) fetchWeights();
-  }, [displayItems.length]);
+    if (displayItems.length > 0) fetchMetadata();
+  }, [displayItems]);
+
+  // Aggregation of package weights and dimensions (stacking model)
+  const getAggregatedPackages = () => {
+    let totalWeight = 0;
+    let finalLength = 0;
+    let finalBreadth = 0;
+    let finalHeight = 0;
+
+    for (const item of displayItems) {
+      const meta = productMetadata[item.id] || { length: 15, breadth: 15, height: 10, weight: 0.5 };
+      const qty = item.quantity || 1;
+
+      totalWeight += meta.weight * qty;
+      finalLength = Math.max(finalLength, meta.length);
+      finalBreadth = Math.max(finalBreadth, meta.breadth);
+      finalHeight += meta.height * qty;
+    }
+
+    return {
+      weight: Math.max(totalWeight, 0.1),
+      length: Math.max(finalLength, 1),
+      breadth: Math.max(finalBreadth, 1),
+      height: Math.max(finalHeight, 1),
+    };
+  };
+
+  const recalculateShippingCharge = async (pincodeOverride?: string): Promise<boolean> => {
+    const activePincode = pincodeOverride || form.pincode;
+
+    // Rule 1: Free shipping above 499 (Shiprocket calculation is skipped)
+    if (displaySubtotal >= 499) {
+      setShippingCharge(0);
+      setFreeShipping(true);
+      setEstimatedDelivery('');
+      return true;
+    }
+
+    if (!activePincode || activePincode.length !== 6 || !/^\d{6}$/.test(activePincode)) {
+      setShippingCharge(null);
+      setFreeShipping(false);
+      return false;
+    }
+
+    setShippingLoading(true);
+    setError('');
+
+    try {
+      const pkg = getAggregatedPackages();
+      const rates = await getShippingRates({
+        delivery_pincode: activePincode,
+        weight: pkg.weight,
+        subtotal: displaySubtotal,
+        has_combo: hasCombo,
+        length: pkg.length,
+        breadth: pkg.breadth,
+        height: pkg.height,
+      });
+
+      if (rates) {
+        setShippingCharge(rates.shipping_charge || 0);
+        setEstimatedDelivery(rates.estimated_delivery || '');
+        setFreeShipping(rates.free_shipping || false);
+        return true;
+      }
+      return false;
+    } catch (err: any) {
+      console.error('Shipping calculation error:', err);
+      // Failsafe fallback: ₹99 combos, ₹50 single products
+      const fallbackCharge = hasCombo ? 99 : 50;
+      setShippingCharge(fallbackCharge);
+      setFreeShipping(false);
+      return true; // proceed using fallback
+    } finally {
+      setShippingLoading(false);
+    }
+  };
+
+  // Trigger dynamic shipping calculation reactively on changes
+  useEffect(() => {
+    recalculateShippingCharge();
+  }, [displayItems, productMetadata, displaySubtotal, displayDiscount, coupon, form.pincode, hasCombo]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -269,48 +365,11 @@ export default function CheckoutPage() {
       }
     }
 
-    setShippingLoading(true);
-    setError('');
-    
-    // Create a timeout promise to prevent infinite loading
-    const timeoutPromise = new Promise((_, reject) => 
-      setTimeout(() => reject(new Error('Shipping calculation timed out. Please try again.')), 12000)
-    );
-
-    try {
-      // Calculate total weight from product weights
-      let totalWeight = 0;
-      for (const item of displayItems) {
-        const w = itemWeights[item.id] || 0.5;
-        totalWeight += w * item.quantity;
-      }
-      // Minimum weight 0.5 kg
-      totalWeight = Math.max(totalWeight, 0.5);
-
-      const ratesPromise = getShippingRates({
-        delivery_pincode: form.pincode,
-        weight: totalWeight,
-        subtotal: displaySubtotal,
-        has_combo: hasCombo,
-      });
-
-      // Race the API call against the timeout
-      const rates = await Promise.race([ratesPromise, timeoutPromise]) as any;
-
-      if (rates.fallback && rates.error) {
-        console.warn('Using fallback shipping rates due to API error:', rates.error);
-        // We still proceed, but maybe log it
-      }
-
-      setShippingCharge(rates.shipping_charge || 0);
-      setEstimatedDelivery(rates.estimated_delivery || '');
-      setFreeShipping(rates.free_shipping || false);
+    const success = await recalculateShippingCharge(form.pincode);
+    if (success) {
       setCurrentStep(2);
-    } catch (err: any) {
-      console.error('Shipping calculation error:', err);
-      setError(err.message || 'Failed to calculate shipping. Please try again.');
-    } finally {
-      setShippingLoading(false);
+    } else {
+      setError('Failed to calculate shipping. Please enter a valid 6-digit pincode.');
     }
   };
 
@@ -581,14 +640,41 @@ export default function CheckoutPage() {
             <div className="bg-white border border-gray-100 rounded-2xl p-4 sm:p-6 md:sticky md:top-24">
               <h2 className="font-bold mb-4">Your Cart</h2>
               {quickBuyItem && <div className="text-xs bg-brand-light/50 text-brand-dark px-3 py-1.5 rounded-md mb-3 font-medium">Quick Buy Checkout</div>}
-              <div className="space-y-3 mb-4 max-h-64 overflow-y-auto">
+              <div className="space-y-4 mb-4 max-h-80 overflow-y-auto pr-1">
                 {displayItems.map((item) => (
-                  <div key={item.id} className="flex justify-between text-sm gap-3">
+                  <div key={item.id} className="flex justify-between items-center text-sm gap-3 border-b border-gray-100 pb-3 last:border-0 last:pb-0">
                     <div className="flex-1 min-w-0">
-                      <p className="font-medium truncate">{item.name}</p>
-                      <p className="text-text-muted text-xs">Qty: {item.quantity}</p>
+                      <p className="font-medium truncate text-text-main">{item.name}</p>
+                      
+                      {/* Stepper identical to the cart stepper */}
+                      <div className="flex items-center gap-3 mt-1.5">
+                        <div className="flex items-center border border-gray-300 rounded-full bg-white w-24 h-7">
+                          <button
+                            type="button"
+                            onClick={() => handleUpdateQuantity(item.id, item.quantity - 1)}
+                            className="w-8 h-full flex items-center justify-center hover:bg-gray-50 transition-colors rounded-l-full text-brand-black font-bold"
+                          >
+                            <Minus size={12} />
+                          </button>
+                          <span className="flex-1 text-center text-xs font-bold text-brand-black">
+                            {item.quantity}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => handleUpdateQuantity(item.id, item.quantity + 1)}
+                            className="w-8 h-full flex items-center justify-center hover:bg-gray-50 transition-colors rounded-r-full text-brand-black font-bold"
+                          >
+                            <Plus size={12} />
+                          </button>
+                        </div>
+                      </div>
                     </div>
-                    <span className="font-semibold flex-shrink-0">₹{item.price * item.quantity}</span>
+                    <div className="text-right flex-shrink-0">
+                      <span className="font-semibold text-text-main block">₹{item.price * item.quantity}</span>
+                      {item.mrp > item.price && (
+                        <span className="text-[10px] text-text-muted line-through">₹{item.mrp * item.quantity}</span>
+                      )}
+                    </div>
                   </div>
                 ))}
               </div>
@@ -653,35 +739,63 @@ export default function CheckoutPage() {
                   <div className="space-y-2 mt-2">
                     <p className="text-[11px] font-bold text-text-muted uppercase tracking-wider">Available Coupons</p>
                     <div className="space-y-2 max-h-36 overflow-y-auto no-scrollbar">
-                      {suggestedCoupons.map((sug) => (
-                        <div
-                          key={sug.code}
-                          className="flex items-center justify-between p-2.5 bg-gray-50 border border-gray-100 rounded-xl text-xs hover:bg-gray-100 transition-colors"
-                        >
-                          <div className="min-w-0">
-                            <span className="font-black text-primary bg-primary/10 px-1.5 py-0.5 rounded text-[10px] uppercase">
-                              {sug.code}
-                            </span>
-                            <p className="font-bold text-[11px] text-text-main mt-1">
-                              {sug.discountType === 'percentage'
-                                ? `${sug.value}% OFF${sug.maxDiscount ? ` up to ₹${sug.maxDiscount}` : ''}`
-                                : `Flat ₹${sug.value} OFF`}
-                            </p>
-                            {sug.minOrderValue > 0 && (
-                              <p className="text-[10px] text-text-muted mt-0.5">
-                                Min order: ₹{sug.minOrderValue}
-                              </p>
-                            )}
-                          </div>
-                          <button
-                            type="button"
-                            onClick={() => handleApplyCoupon(sug.code)}
-                            className="text-primary hover:text-brand-dark font-black hover:underline px-2.5 py-1 bg-white border border-gray-200 rounded-lg shadow-sm text-[11px] transition-all active:scale-95"
+                      {suggestedCoupons.map((sug) => {
+                        const isLocked = displaySubtotal < sug.minOrderValue;
+                        const difference = sug.minOrderValue - displaySubtotal;
+                        return (
+                          <div
+                            key={sug.code}
+                            className={`flex items-center justify-between p-2.5 border rounded-xl text-xs transition-colors ${
+                              isLocked
+                                ? 'bg-amber-50/40 border-amber-100 hover:bg-amber-50/60'
+                                : 'bg-gray-50 border-gray-100 hover:bg-gray-100'
+                            }`}
                           >
-                            Apply
-                          </button>
-                        </div>
-                      ))}
+                            <div className="min-w-0">
+                              <span className={`font-black px-1.5 py-0.5 rounded text-[10px] uppercase ${
+                                isLocked ? 'text-amber-700 bg-amber-100' : 'text-primary bg-primary/10'
+                              }`}>
+                                {sug.code}
+                              </span>
+                              <p className="font-bold text-[11px] text-text-main mt-1">
+                                {sug.discountType === 'percentage'
+                                  ? `${sug.value}% OFF${sug.maxDiscount ? ` up to ₹${sug.maxDiscount}` : ''}`
+                                  : `Flat ₹${sug.value} OFF`}
+                              </p>
+                              {sug.minOrderValue > 0 && (
+                                <p className="text-[10px] mt-0.5 font-medium">
+                                  {isLocked ? (
+                                    <span className="text-amber-600">
+                                      Add ₹{difference} more to unlock
+                                    </span>
+                                  ) : (
+                                    <span className="text-text-muted">
+                                      Min order: ₹{sug.minOrderValue}
+                                    </span>
+                                  )}
+                                </p>
+                              )}
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (isLocked) {
+                                  alert(`Minimum order value of ₹${sug.minOrderValue} required to apply this coupon. Please add ₹${difference} more worth of items to your cart!`);
+                                } else {
+                                  handleApplyCoupon(sug.code);
+                                }
+                              }}
+                              className={`font-black px-2.5 py-1 border rounded-lg shadow-sm text-[11px] transition-all active:scale-95 ${
+                                isLocked
+                                  ? 'bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100'
+                                  : 'bg-white text-primary border-gray-200 hover:text-brand-dark hover:bg-gray-50'
+                              }`}
+                            >
+                              {isLocked ? 'Lock' : 'Apply'}
+                            </button>
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
                 )}

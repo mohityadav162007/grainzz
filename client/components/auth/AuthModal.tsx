@@ -4,14 +4,17 @@ import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/store/authStore';
 import { X, Mail, Lock, User, ArrowRight, Loader2, CheckCircle2, AlertCircle, ShoppingBag, Sparkles } from 'lucide-react';
 import Image from 'next/image';
+import { sendOTP, verifyOTPAndSetPassword } from '@/lib/api';
 
 export default function AuthModal() {
   const { isAuthModalOpen, setAuthModalOpen, setUser, authModalMode } = useAuthStore();
 
   // Sync local mode whenever the modal opens with a configured mode
-  const [mode, setMode] = useState<'signin' | 'signup'>(authModalMode);
+  const [mode, setMode] = useState<'signin' | 'signup' | 'forgot_request' | 'forgot_reset'>('signin');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [otpCode, setOtpCode] = useState('');
   const [fullName, setFullName] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -20,12 +23,14 @@ export default function AuthModal() {
   // Reset + sync mode every time the modal opens
   useEffect(() => {
     if (isAuthModalOpen) {
-      setMode(authModalMode);
+      setMode(authModalMode as any || 'signin');
       setError(null);
       setSuccess(null);
       setLoading(false);
       setEmail('');
       setPassword('');
+      setConfirmPassword('');
+      setOtpCode('');
       setFullName('');
     }
   }, [isAuthModalOpen, authModalMode]);
@@ -61,12 +66,31 @@ export default function AuthModal() {
         setSuccess('Account created and verified successfully!');
         if (signInData.user) setUser(signInData.user);
         setTimeout(() => handleClose(), 1200);
-      } else {
+      } else if (mode === 'signin') {
         const { data, error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
         setUser(data.user);
         setSuccess('Successfully signed in!');
         setTimeout(() => handleClose(), 1200);
+      } else if (mode === 'forgot_request') {
+        if (!email.trim()) throw new Error('Please enter your email address.');
+        await sendOTP(email.trim());
+        setSuccess('Verification code sent to your email! Please check your inbox.');
+        setMode('forgot_reset');
+        setPassword('');
+        setConfirmPassword('');
+      } else if (mode === 'forgot_reset') {
+        if (!otpCode.trim()) throw new Error('Please enter the verification code.');
+        if (!password) throw new Error('Please enter a new password.');
+        if (password.length < 6) throw new Error('Password must be at least 6 characters.');
+        if (password !== confirmPassword) throw new Error('Passwords do not match.');
+
+        await verifyOTPAndSetPassword(email.trim(), otpCode.trim(), password);
+        setSuccess('Password updated successfully! You can now sign in with your new password.');
+        setMode('signin');
+        setPassword('');
+        setConfirmPassword('');
+        setOtpCode('');
       }
     } catch (err: any) {
       setError(err.message || 'An error occurred. Please try again.');
@@ -76,6 +100,7 @@ export default function AuthModal() {
   };
 
   const isSignup = mode === 'signup';
+  const isForgot = mode === 'forgot_request' || mode === 'forgot_reset';
 
   return (
     <div
@@ -110,6 +135,11 @@ export default function AuthModal() {
                 <Sparkles size={13} />
                 Join the Grainzz Family – It's Free!
               </div>
+            ) : isForgot ? (
+              <div className="flex items-center gap-1.5 bg-[#FFF8E1] text-[#B45309] text-[12px] font-bold px-3 py-1.5 rounded-full mb-4 border border-[#FDE68A]">
+                <Sparkles size={13} />
+                Password Recovery
+              </div>
             ) : (
               <div className="flex items-center gap-1.5 bg-[#F0FFF4] text-brand-green text-[12px] font-bold px-3 py-1.5 rounded-full mb-4 border border-[#BBF7D0]">
                 <ShoppingBag size={13} />
@@ -118,11 +148,15 @@ export default function AuthModal() {
             )}
 
             <h2 className="text-[26px] font-black text-brand-black tracking-tight font-brand mb-2">
-              {isSignup ? 'Create Your Account' : 'Welcome Back!'}
+              {isSignup ? 'Create Your Account' : isForgot ? 'Reset Password' : 'Welcome Back!'}
             </h2>
             <p className="text-[#666] text-[14px] font-medium max-w-[300px] leading-relaxed">
               {isSignup
                 ? 'Get exclusive deals, track orders & enjoy a healthier snacking life.'
+                : mode === 'forgot_request'
+                ? 'Enter your email below to receive a secure password recovery code.'
+                : mode === 'forgot_reset'
+                ? 'Enter the verification code sent to your email and set your new password.'
                 : 'Sign in to access your cart, orders, and exclusive member deals.'}
             </p>
           </div>
@@ -143,64 +177,190 @@ export default function AuthModal() {
 
           {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-3">
-            {isSignup && (
-              <div className="relative group">
-                <div className="absolute left-5 top-1/2 -translate-y-1/2 text-[#BBBBBB] group-focus-within:text-brand-green transition-colors">
-                  <User size={19} strokeWidth={2} />
+            {(mode === 'signin' || mode === 'signup') && (
+              <>
+                {isSignup && (
+                  <div className="relative group">
+                    <div className="absolute left-5 top-1/2 -translate-y-1/2 text-[#BBBBBB] group-focus-within:text-brand-green transition-colors">
+                      <User size={19} strokeWidth={2} />
+                    </div>
+                    <input
+                      type="text"
+                      required
+                      placeholder="Full Name"
+                      value={fullName}
+                      onChange={(e) => setFullName(e.target.value)}
+                      className="w-full h-[54px] pl-[50px] pr-5 rounded-2xl border-2 border-[#EAEAEA] bg-[#FAFAFA] text-brand-black font-medium text-[15px] focus:bg-white focus:border-brand-green focus:outline-none transition-all"
+                    />
+                  </div>
+                )}
+
+                <div className="relative group">
+                  <div className="absolute left-5 top-1/2 -translate-y-1/2 text-[#BBBBBB] group-focus-within:text-brand-green transition-colors">
+                    <Mail size={19} strokeWidth={2} />
+                  </div>
+                  <input
+                    type="email"
+                    required
+                    placeholder="Email Address"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="w-full h-[54px] pl-[50px] pr-5 rounded-2xl border-2 border-[#EAEAEA] bg-[#FAFAFA] text-brand-black font-medium text-[15px] focus:bg-white focus:border-brand-green focus:outline-none transition-all"
+                  />
                 </div>
-                <input
-                  type="text"
-                  required
-                  placeholder="Full Name"
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
-                  className="w-full h-[54px] pl-[50px] pr-5 rounded-2xl border-2 border-[#EAEAEA] bg-[#FAFAFA] text-brand-black font-medium text-[15px] focus:bg-white focus:border-brand-green focus:outline-none transition-all"
-                />
-              </div>
+
+                <div className="relative group">
+                  <div className="absolute left-5 top-1/2 -translate-y-1/2 text-[#BBBBBB] group-focus-within:text-brand-green transition-colors">
+                    <Lock size={19} strokeWidth={2} />
+                  </div>
+                  <input
+                    type="password"
+                    required
+                    placeholder="Password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="w-full h-[54px] pl-[50px] pr-5 rounded-2xl border-2 border-[#EAEAEA] bg-[#FAFAFA] text-brand-black font-medium text-[15px] focus:bg-white focus:border-brand-green focus:outline-none transition-all"
+                  />
+                </div>
+
+                {!isSignup && (
+                  <div className="flex justify-end pt-1">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setMode('forgot_request');
+                        setError(null);
+                        setSuccess(null);
+                      }}
+                      className="text-xs text-brand-green font-semibold hover:underline"
+                    >
+                      Forgot Password?
+                    </button>
+                  </div>
+                )}
+
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full h-[58px] bg-brand-green text-white rounded-full flex items-center justify-center gap-3 font-black text-[17px] hover:bg-[#154617] disabled:opacity-70 transition-all shadow-[0_4px_20px_rgba(29,94,32,0.25)] hover:shadow-[0_6px_28px_rgba(29,94,32,0.35)] hover:scale-[1.01] active:scale-[0.99] mt-5"
+                >
+                  {loading ? (
+                    <Loader2 size={22} className="animate-spin" />
+                  ) : (
+                    <>
+                      <span>{isSignup ? 'Create My Account' : 'Sign In'}</span>
+                      <ArrowRight size={22} strokeWidth={2.5} />
+                    </>
+                  )}
+                </button>
+              </>
             )}
 
-            <div className="relative group">
-              <div className="absolute left-5 top-1/2 -translate-y-1/2 text-[#BBBBBB] group-focus-within:text-brand-green transition-colors">
-                <Mail size={19} strokeWidth={2} />
-              </div>
-              <input
-                type="email"
-                required
-                placeholder="Email Address"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full h-[54px] pl-[50px] pr-5 rounded-2xl border-2 border-[#EAEAEA] bg-[#FAFAFA] text-brand-black font-medium text-[15px] focus:bg-white focus:border-brand-green focus:outline-none transition-all"
-              />
-            </div>
+            {mode === 'forgot_request' && (
+              <>
+                <div className="relative group">
+                  <div className="absolute left-5 top-1/2 -translate-y-1/2 text-[#BBBBBB] group-focus-within:text-brand-green transition-colors">
+                    <Mail size={19} strokeWidth={2} />
+                  </div>
+                  <input
+                    type="email"
+                    required
+                    placeholder="Email Address"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="w-full h-[54px] pl-[50px] pr-5 rounded-2xl border-2 border-[#EAEAEA] bg-[#FAFAFA] text-brand-black font-medium text-[15px] focus:bg-white focus:border-brand-green focus:outline-none transition-all"
+                  />
+                </div>
 
-            <div className="relative group">
-              <div className="absolute left-5 top-1/2 -translate-y-1/2 text-[#BBBBBB] group-focus-within:text-brand-green transition-colors">
-                <Lock size={19} strokeWidth={2} />
-              </div>
-              <input
-                type="password"
-                required
-                placeholder="Password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full h-[54px] pl-[50px] pr-5 rounded-2xl border-2 border-[#EAEAEA] bg-[#FAFAFA] text-brand-black font-medium text-[15px] focus:bg-white focus:border-brand-green focus:outline-none transition-all"
-              />
-            </div>
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full h-[58px] bg-brand-green text-white rounded-full flex items-center justify-center gap-3 font-black text-[17px] hover:bg-[#154617] disabled:opacity-70 transition-all shadow-[0_4px_20px_rgba(29,94,32,0.25)] hover:shadow-[0_6px_28px_rgba(29,94,32,0.35)] hover:scale-[1.01] active:scale-[0.99] mt-5"
+                >
+                  {loading ? (
+                    <Loader2 size={22} className="animate-spin" />
+                  ) : (
+                    <>
+                      <span>Send Verification Code</span>
+                      <ArrowRight size={22} strokeWidth={2.5} />
+                    </>
+                  )}
+                </button>
+              </>
+            )}
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full h-[58px] bg-brand-green text-white rounded-full flex items-center justify-center gap-3 font-black text-[17px] hover:bg-[#154617] disabled:opacity-70 transition-all shadow-[0_4px_20px_rgba(29,94,32,0.25)] hover:shadow-[0_6px_28px_rgba(29,94,32,0.35)] hover:scale-[1.01] active:scale-[0.99] mt-5"
-            >
-              {loading ? (
-                <Loader2 size={22} className="animate-spin" />
-              ) : (
-                <>
-                  <span>{isSignup ? 'Create My Account' : 'Sign In'}</span>
-                  <ArrowRight size={22} strokeWidth={2.5} />
-                </>
-              )}
-            </button>
+            {mode === 'forgot_reset' && (
+              <>
+                <div className="relative group opacity-70">
+                  <div className="absolute left-5 top-1/2 -translate-y-1/2 text-[#BBBBBB]">
+                    <Mail size={19} strokeWidth={2} />
+                  </div>
+                  <input
+                    type="email"
+                    disabled
+                    value={email}
+                    className="w-full h-[54px] pl-[50px] pr-5 rounded-2xl border-2 border-[#EAEAEA] bg-[#EEEEEE] text-[#666666] font-medium text-[15px] cursor-not-allowed"
+                  />
+                </div>
+
+                <div className="relative group">
+                  <div className="absolute left-5 top-1/2 -translate-y-1/2 text-[#BBBBBB] group-focus-within:text-brand-green transition-colors">
+                    <Mail size={19} strokeWidth={2} />
+                  </div>
+                  <input
+                    type="text"
+                    required
+                    placeholder="Verification Code"
+                    value={otpCode}
+                    onChange={(e) => setOtpCode(e.target.value)}
+                    className="w-full h-[54px] pl-[50px] pr-5 rounded-2xl border-2 border-[#EAEAEA] bg-[#FAFAFA] text-brand-black font-medium text-[15px] focus:bg-white focus:border-brand-green focus:outline-none transition-all"
+                  />
+                </div>
+
+                <div className="relative group">
+                  <div className="absolute left-5 top-1/2 -translate-y-1/2 text-[#BBBBBB] group-focus-within:text-brand-green transition-colors">
+                    <Lock size={19} strokeWidth={2} />
+                  </div>
+                  <input
+                    type="password"
+                    required
+                    placeholder="New Password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="w-full h-[54px] pl-[50px] pr-5 rounded-2xl border-2 border-[#EAEAEA] bg-[#FAFAFA] text-brand-black font-medium text-[15px] focus:bg-white focus:border-brand-green focus:outline-none transition-all"
+                  />
+                </div>
+
+                <div className="relative group">
+                  <div className="absolute left-5 top-1/2 -translate-y-1/2 text-[#BBBBBB] group-focus-within:text-brand-green transition-colors">
+                    <Lock size={19} strokeWidth={2} />
+                  </div>
+                  <input
+                    type="password"
+                    required
+                    placeholder="Confirm New Password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    className="w-full h-[54px] pl-[50px] pr-5 rounded-2xl border-2 border-[#EAEAEA] bg-[#FAFAFA] text-brand-black font-medium text-[15px] focus:bg-white focus:border-brand-green focus:outline-none transition-all"
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full h-[58px] bg-brand-green text-white rounded-full flex items-center justify-center gap-3 font-black text-[17px] hover:bg-[#154617] disabled:opacity-70 transition-all shadow-[0_4px_20px_rgba(29,94,32,0.25)] hover:shadow-[0_6px_28px_rgba(29,94,32,0.35)] hover:scale-[1.01] active:scale-[0.99] mt-5"
+                >
+                  {loading ? (
+                    <Loader2 size={22} className="animate-spin" />
+                  ) : (
+                    <>
+                      <span>Reset Password</span>
+                      <ArrowRight size={22} strokeWidth={2.5} />
+                    </>
+                  )}
+                </button>
+              </>
+            )}
           </form>
 
           {/* Benefits strip (signup only) */}
@@ -216,15 +376,37 @@ export default function AuthModal() {
 
           {/* Toggle Mode */}
           <div className="mt-7 pt-6 border-t border-[#F5F5F5] text-center">
-            <p className="text-[#666] text-[14px] font-medium">
-              {isSignup ? 'Already have an account?' : "Don't have an account?"}
-              <button
-                onClick={() => setMode(isSignup ? 'signin' : 'signup')}
-                className="ml-2 text-brand-green font-bold hover:underline"
-              >
-                {isSignup ? 'Sign In' : 'Sign Up Free'}
-              </button>
-            </p>
+            {isForgot ? (
+              <p className="text-[#666] text-[14px] font-medium">
+                Remember your password?
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMode('signin');
+                    setError(null);
+                    setSuccess(null);
+                  }}
+                  className="ml-2 text-brand-green font-bold hover:underline"
+                >
+                  Sign In
+                </button>
+              </p>
+            ) : (
+              <p className="text-[#666] text-[14px] font-medium">
+                {isSignup ? 'Already have an account?' : "Don't have an account?"}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMode(isSignup ? 'signin' : 'signup');
+                    setError(null);
+                    setSuccess(null);
+                  }}
+                  className="ml-2 text-brand-green font-bold hover:underline"
+                >
+                  {isSignup ? 'Sign In' : 'Sign Up Free'}
+                </button>
+              </p>
+            )}
           </div>
         </div>
       </div>

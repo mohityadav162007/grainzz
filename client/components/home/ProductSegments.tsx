@@ -4,7 +4,7 @@ import Link from 'next/link';
 import ProductCard from '@/components/products/ProductCard';
 import ProductCardSkeleton from '@/components/products/ProductCardSkeleton';
 import { supabase } from '@/lib/supabase';
-import { getHomepageProductTabs, getSiteContent } from '@/lib/api';
+import { getHomepageProductTabs, getSiteContent, getActiveOffersMap, applyOffersToProduct } from '@/lib/api';
 import { ChevronRight, ArrowRight } from 'lucide-react';
 
 interface TabData {
@@ -66,14 +66,16 @@ export default function ProductSegments() {
 
         if (error) throw error;
 
-        // Sanitize placeholder links
+        const offersMap = await getActiveOffersMap();
+
+        // Sanitize placeholder links and apply active offers pricing
         const sanitized = (data || []).map((prod: any) => {
           if (prod && Array.isArray(prod.images)) {
             prod.images = prod.images.map((img: string) =>
               img.includes('placeholder.jpg') ? '/image-2@2x.png' : img
             );
           }
-          return prod;
+          return applyOffersToProduct(prod, offersMap);
         });
 
         setProducts(sanitized);

@@ -5,6 +5,7 @@ import { ChevronRight, Heart } from 'lucide-react';
 import ProductCard from '@/components/products/ProductCard';
 import { useWishlistStore } from '@/store/wishlistStore';
 import { supabase } from '@/lib/supabase';
+import { getActiveOffersMap, applyOffersToProduct } from '@/lib/api';
 
 export default function WishlistPage() {
   const { items } = useWishlistStore();
@@ -22,11 +23,12 @@ export default function WishlistPage() {
           .eq('is_active', true);
         
         if (data) {
+           const offersMap = await getActiveOffersMap();
            const sanitized = data.map((prod: any) => {
              if (prod && Array.isArray(prod.images)) {
                prod.images = prod.images.map((img: string) => img.includes('placeholder.jpg') ? '/image-2@2x.png' : img);
              }
-             return prod;
+             return applyOffersToProduct(prod, offersMap);
            });
            setProducts(sanitized);
         } else {

@@ -65,7 +65,7 @@ export const calculateDiscount = (coupon: CouponData | null, subtotal: number): 
   let discount = 0;
   if (coupon.discountType === 'percentage') {
     discount = (subtotal * coupon.value) / 100;
-    if (coupon.maxDiscount !== null) {
+    if (coupon.maxDiscount !== null && coupon.maxDiscount > 0) {
       discount = Math.min(discount, coupon.maxDiscount);
     }
   } else {

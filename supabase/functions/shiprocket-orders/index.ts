@@ -138,7 +138,7 @@ serve(async (req: Request) => {
     // ═══════════════════════════════════════════════════════════════════
 
     if (action === 'check-serviceability') {
-      const { delivery_pincode, weight, subtotal, has_combo } = body;
+      const { delivery_pincode, weight, subtotal, has_combo, length, breadth, height } = body;
 
       if (!delivery_pincode) {
         return new Response(
@@ -190,9 +190,12 @@ serve(async (req: Request) => {
       try {
         const token = await getShiprocketToken(supabase);
         const packageWeight = Number(weight) || 0.5;
+        const packageLength = Number(length) || 15;
+        const packageBreadth = Number(breadth) || 15;
+        const packageHeight = Number(height) || 10;
 
         // Use standard serviceability endpoint
-        const srUrl = `${SHIPROCKET_BASE_URL}/v1/external/courier/serviceability/?pickup_postcode=${pickupPincode}&delivery_postcode=${delivery_pincode}&weight=${packageWeight}&cod=0`;
+        const srUrl = `${SHIPROCKET_BASE_URL}/v1/external/courier/serviceability/?pickup_postcode=${pickupPincode}&delivery_postcode=${delivery_pincode}&weight=${packageWeight}&cod=0&length=${packageLength}&breadth=${packageBreadth}&height=${packageHeight}`;
 
         console.log(`Requesting Shiprocket Rates: ${srUrl}`);
 

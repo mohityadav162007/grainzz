@@ -29,6 +29,98 @@ const sanitizeProduct = (product: any) => {
   return product;
 };
 
+// ─── Active Offers Pricing Engine ────────────────────────────────────────────
+
+export interface ActiveOffer {
+  id: string;
+  title: string;
+  discount_percentage: number;
+  applicable_categories: string[];
+  expiry_date: string | null;
+}
+
+let cachedOffersMap: Record<string, ActiveOffer> | null = null;
+let lastOffersFetchedTime = 0;
+const CACHE_TTL = 30000; // 30 seconds cache to optimize performance
+
+export const getActiveOffersMap = async (): Promise<Record<string, ActiveOffer>> => {
+  const now = Date.now();
+  if (cachedOffersMap && (now - lastOffersFetchedTime < CACHE_TTL)) {
+    return cachedOffersMap;
+  }
+
+  try {
+    const nowStr = new Date().toISOString();
+    const { data: offers, error } = await supabase
+      .from('offers')
+      .select('*, offer_products(product_id)')
+      .eq('is_active', true)
+      .or(`expiry_date.is.null,expiry_date.gte.${nowStr}`);
+
+    if (error || !offers) return cachedOffersMap || {};
+
+    const productOfferMap: Record<string, ActiveOffer> = {};
+
+    for (const offer of offers) {
+      const productIds = offer.offer_products?.map((op: any) => op.product_id) || [];
+      for (const pid of productIds) {
+        const existing = productOfferMap[pid];
+        if (!existing || offer.discount_percentage > existing.discount_percentage) {
+          productOfferMap[pid] = offer as any;
+        }
+      }
+    }
+
+    cachedOffersMap = productOfferMap;
+    lastOffersFetchedTime = now;
+    return productOfferMap;
+  } catch (err) {
+    console.error('Error fetching active offers:', err);
+    return cachedOffersMap || {};
+  }
+};
+
+export const applyOffersToProduct = (product: any, offersMap: Record<string, ActiveOffer>): any => {
+  if (!product) return null;
+  const mrp = Number(product.mrp || product.price || 0);
+  let bestOffer: ActiveOffer | null = null;
+
+  // 1. Direct offer_products link
+  if (offersMap[product.id]) {
+    bestOffer = offersMap[product.id];
+  }
+
+  // 2. Category link
+  const allOffers = Object.values(offersMap);
+  for (const offer of allOffers) {
+    if (offer.applicable_categories && offer.applicable_categories.includes(product.category)) {
+      if (!bestOffer || offer.discount_percentage > bestOffer.discount_percentage) {
+        bestOffer = offer;
+      }
+    }
+  }
+
+  if (bestOffer) {
+    const discount = (mrp * bestOffer.discount_percentage) / 100;
+    const discountedPrice = Math.round(mrp - discount);
+    return {
+      ...product,
+      price: discountedPrice,
+      mrp: mrp,
+      discount_percent: bestOffer.discount_percentage,
+      offer_title: bestOffer.title,
+      has_offer: true,
+    };
+  }
+
+  return {
+    ...product,
+    price: Number(product.price),
+    mrp: Number(product.mrp || product.price),
+    has_offer: false,
+  };
+};
+
 export const getOrder = async (orderId: string) => {
   const { data, error } = await supabase.from('orders').select('*').eq('id', orderId).single();
   if (error) throw new Error(error.message);
@@ -74,6 +166,9 @@ export const getProducts = async (params?: Record<string, string>) => {
   const { data, error } = await query;
   if (error) throw new Error(error.message);
 
+  const offersMap = await getActiveOffersMap();
+  const processedData = (data || []).map(sanitizeProduct).map(p => applyOffersToProduct(p, offersMap));
+
   // Get total count for pagination
   let countQuery = supabase
     .from('products')
@@ -92,7 +187,7 @@ export const getProducts = async (params?: Record<string, string>) => {
 
   return {
     success: true,
-    data: (data || []).map(sanitizeProduct),
+    data: processedData,
     pagination: {
       total: total || 0,
       page,
@@ -127,7 +222,10 @@ export const getProductBySlug = async (slug: string) => {
     supabase.rpc('increment_product_views', { product_id: data.id }).then(() => {});
   }
 
-  return { success: true, data: data ? sanitizeProduct(data) : null };
+  const offersMap = await getActiveOffersMap();
+  const processedProduct = data ? applyOffersToProduct(sanitizeProduct(data), offersMap) : null;
+
+  return { success: true, data: processedProduct };
 };
 
 // ─── Homepage Dynamic Content ────────────────────────────────────────────────
@@ -293,7 +391,11 @@ export const getAvailabilityLogos = async () => {
       console.error('getRelatedProductsSection error:', error);
       return [];
     }
-    return (data || []).map(r => r.products ? sanitizeProduct(r.products) : null).filter(Boolean);
+    const offersMap = await getActiveOffersMap();
+    return (data || [])
+      .map(r => r.products ? sanitizeProduct(r.products) : null)
+      .filter(Boolean)
+      .map(p => applyOffersToProduct(p, offersMap));
   };
   
   export const submitStockNotification = async (productId: string, email: string) => {
@@ -344,7 +446,8 @@ export const getAvailabilityLogos = async () => {
   export const getProductById = async (id: string) => {
     const { data, error } = await supabase.from('products').select('*').eq('id', id).eq('is_active', true).single();
     if (error) return null;
-    return sanitizeProduct(data);
+    const offersMap = await getActiveOffersMap();
+    return data ? applyOffersToProduct(sanitizeProduct(data), offersMap) : null;
   };
 
 export const getInstagramPosts = async () => {
@@ -377,7 +480,8 @@ export const getProductsByCategory = async (category: string, limit = 8) => {
     .limit(limit);
 
   if (error) throw new Error(error.message);
-  return (data || []).map(sanitizeProduct);
+  const offersMap = await getActiveOffersMap();
+  return (data || []).map(sanitizeProduct).map(p => applyOffersToProduct(p, offersMap));
 };
 
 export const getFeaturedProducts = async (limit = 8) => {
@@ -389,7 +493,8 @@ export const getFeaturedProducts = async (limit = 8) => {
     .limit(limit);
 
   if (error) throw new Error(error.message);
-  return (data || []).map(sanitizeProduct);
+  const offersMap = await getActiveOffersMap();
+  return (data || []).map(sanitizeProduct).map(p => applyOffersToProduct(p, offersMap));
 };
 
 export const getComboProducts = async (limit = 6) => {
@@ -402,7 +507,8 @@ export const getComboProducts = async (limit = 6) => {
     .limit(limit);
 
   if (error) throw new Error(error.message);
-  return (data || []).map(sanitizeProduct);
+  const offersMap = await getActiveOffersMap();
+  return (data || []).map(sanitizeProduct).map(p => applyOffersToProduct(p, offersMap));
 };
 
 // ─── Orders ──────────────────────────────────────────────────────────────────
@@ -655,6 +761,9 @@ export const getShippingRates = async (params: {
   weight: number;
   subtotal: number;
   has_combo: boolean;
+  length?: number;
+  breadth?: number;
+  height?: number;
 }) => {
   try {
     const { data, error } = await supabase.functions.invoke('shiprocket-orders', {

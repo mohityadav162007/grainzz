@@ -28,6 +28,44 @@ export async function GET(req: NextRequest) {
 
     const supabase = getSupabaseAdmin();
 
+    // Check if the coupon is restricted to first-order only
+    const { data: couponData } = await supabase
+      .from('coupons')
+      .select('is_first_order_only')
+      .eq('code', code.toUpperCase())
+      .single();
+
+    if (couponData?.is_first_order_only) {
+      let hasAnyPaidOrder = false;
+
+      if (userId) {
+        const { data } = await supabase
+          .from('orders')
+          .select('id')
+          .eq('user_id', userId)
+          .eq('payment_status', 'paid')
+          .limit(1);
+        if (data && data.length > 0) hasAnyPaidOrder = true;
+      }
+
+      if (email && !hasAnyPaidOrder) {
+        const cleanEmail = email.trim().toLowerCase();
+        if (cleanEmail.includes('@')) {
+          const { data } = await supabase
+            .from('orders')
+            .select('id')
+            .eq('user_email', cleanEmail)
+            .eq('payment_status', 'paid')
+            .limit(1);
+          if (data && data.length > 0) hasAnyPaidOrder = true;
+        }
+      }
+
+      if (hasAnyPaidOrder) {
+        return NextResponse.json({ used: true, error: 'This coupon is only valid for your first order.' });
+      }
+    }
+
     let hasPriorOrder = false;
 
     // 1. Check by userId if provided

@@ -8,6 +8,7 @@ import { useCartStore, validateCoupon, calculateDiscount, type CouponData } from
 import { useAuthStore } from '@/store/authStore';
 import { createOrder, initiatePayment, getShippingRates, getSavedAddresses, getProductById, applyCoupon as apiApplyCoupon, type SavedAddress } from '@/lib/api';
 import { supabase } from '@/lib/supabase';
+import { calculateAggregatedPackage } from '@/lib/shipping';
 
 declare global {
   interface Window {
@@ -245,27 +246,17 @@ export default function CheckoutPage() {
 
   // Aggregation of package weights and dimensions (stacking model)
   const getAggregatedPackages = () => {
-    let totalWeight = 0;
-    let finalLength = 0;
-    let finalBreadth = 0;
-    let finalHeight = 0;
-
-    for (const item of displayItems) {
+    const pkgItems = displayItems.map((item) => {
       const meta = productMetadata[item.id] || { length: 15, breadth: 15, height: 10, weight: 0.5 };
-      const qty = item.quantity || 1;
-
-      totalWeight += meta.weight * qty;
-      finalLength = Math.max(finalLength, meta.length);
-      finalBreadth = Math.max(finalBreadth, meta.breadth);
-      finalHeight += meta.height * qty;
-    }
-
-    return {
-      weight: Math.max(totalWeight, 0.1),
-      length: Math.max(finalLength, 1),
-      breadth: Math.max(finalBreadth, 1),
-      height: Math.max(finalHeight, 1),
-    };
+      return {
+        package_length: meta.length,
+        package_breadth: meta.breadth,
+        package_height: meta.height,
+        package_weight: meta.weight,
+        quantity: item.quantity || 1,
+      };
+    });
+    return calculateAggregatedPackage(pkgItems);
   };
 
   const recalculateShippingCharge = async (pincodeOverride?: string): Promise<boolean> => {

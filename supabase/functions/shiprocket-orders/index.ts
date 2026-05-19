@@ -2,6 +2,7 @@
 import { serve } from 'https://deno.land/std@0.177.0/http/server.ts';
 // @ts-ignore
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
+import { calculateAggregatedPackage } from './shipping.ts';
 
 declare const Deno: any;
 
@@ -194,6 +195,18 @@ serve(async (req: Request) => {
         const packageBreadth = Number(breadth) || 15;
         const packageHeight = Number(height) || 10;
 
+        const volumetricWeight = (packageLength * packageBreadth * packageHeight) / 5000;
+        const applicableWeight = Math.max(packageWeight, volumetricWeight);
+
+        console.log(`[SHIPROCKET RATE ESTIMATION]
+          Delivery Pincode: ${delivery_pincode}
+          Origin Pincode: ${pickupPincode}
+          Calculated Dimensions: Length=${packageLength} cm, Breadth=${packageBreadth} cm, Height=${packageHeight} cm
+          Actual Weight: ${packageWeight} kg
+          Volumetric Weight: ${volumetricWeight.toFixed(4)} kg
+          Applicable Weight: ${applicableWeight.toFixed(4)} kg
+        `);
+
         // Use standard serviceability endpoint
         const srUrl = `${SHIPROCKET_BASE_URL}/v1/external/courier/serviceability/?pickup_postcode=${pickupPincode}&delivery_postcode=${delivery_pincode}&weight=${packageWeight}&cod=0&length=${packageLength}&breadth=${packageBreadth}&height=${packageHeight}`;
 
@@ -336,8 +349,12 @@ serve(async (req: Request) => {
             .map((item: any) => item.product_id)
             .filter(Boolean);
 
-          let pkgLength = 15, pkgBreadth = 15, pkgHeight = 10, pkgWeight = 0.5;
+          const qtyMap: Record<string, number> = {};
+          order.order_items.forEach((item: any) => {
+            if (item.product_id) qtyMap[item.product_id] = (qtyMap[item.product_id] || 0) + item.quantity;
+          });
 
+          let pkgItems: any[] = [];
           if (productIds.length > 0) {
             const { data: products } = await supabase
               .from('products')
@@ -345,28 +362,21 @@ serve(async (req: Request) => {
               .in('id', productIds);
 
             if (products && products.length > 0) {
-              // For multi-item orders: use the largest dimension for L/B/H, sum the weights
-              pkgLength = 0; pkgBreadth = 0; pkgHeight = 0; pkgWeight = 0;
-              const qtyMap: Record<string, number> = {};
-              order.order_items.forEach((item: any) => {
-                if (item.product_id) qtyMap[item.product_id] = (qtyMap[item.product_id] || 0) + item.quantity;
-              });
-
-              for (const p of products) {
-                const qty = qtyMap[p.id] || 1;
-                pkgLength = Math.max(pkgLength, Number(p.package_length) || 15);
-                pkgBreadth = Math.max(pkgBreadth, Number(p.package_breadth) || 15);
-                pkgHeight = Math.max(pkgHeight, Number(p.package_height) || 10);
-                pkgWeight += (Number(p.package_weight) || 0.5) * qty;
-              }
-
-              // Ensure minimums
-              pkgLength = Math.max(pkgLength, 1);
-              pkgBreadth = Math.max(pkgBreadth, 1);
-              pkgHeight = Math.max(pkgHeight, 1);
-              pkgWeight = Math.max(pkgWeight, 0.1);
+              pkgItems = products.map((p: any) => ({
+                package_length: p.package_length,
+                package_breadth: p.package_breadth,
+                package_height: p.package_height,
+                package_weight: p.package_weight,
+                quantity: qtyMap[p.id] || 1,
+              }));
             }
           }
+
+          const pkg = calculateAggregatedPackage(pkgItems);
+          const pkgLength = pkg.length;
+          const pkgBreadth = pkg.breadth;
+          const pkgHeight = pkg.height;
+          const pkgWeight = pkg.weight;
 
           const nameParts = order.user_name.trim().split(' ');
           const firstName = nameParts[0] || '';
@@ -398,6 +408,16 @@ serve(async (req: Request) => {
             weight: pkgWeight,
           };
 
+          console.log(`[SHIPROCKET ORDER CREATION]
+            Order ID: ${orderId}
+            Number of Items: ${order.order_items.length}
+            Calculated Dimensions: Length=${pkg.length} cm, Breadth=${pkg.breadth} cm, Height=${pkg.height} cm
+            Actual Weight: ${pkg.weight} kg
+            Volumetric Weight: ${pkg.volumetric_weight} kg
+            Applicable Weight: ${pkg.applicable_weight} kg
+            Final Payload Sent to Shiprocket: ${JSON.stringify(shiprocketPayload, null, 2)}
+          `);
+
           let shiprocketResponse = await fetch(`${SHIPROCKET_BASE_URL}/v1/external/orders/create/adhoc`, {
             method: 'POST',
             headers: {
@@ -428,6 +448,8 @@ serve(async (req: Request) => {
 
           await logEvent(supabase, 'shiprocket_create_order', {
             orderId,
+            itemsCount: order.order_items.length,
+            calculatedPackage: pkg,
             payload: shiprocketPayload,
             response: shiprocketData,
           });

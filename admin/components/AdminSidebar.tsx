@@ -15,7 +15,7 @@ const navItems = [
   { label: 'Coupons', href: '/dashboard/coupons', icon: Ticket },
   { label: 'Product Reviews', href: '/dashboard/reviews', icon: MessageSquare },
   { label: 'Inquiries', href: '/dashboard/inquiries', icon: Inbox },
-  { label: 'B2B Settings', href: '/dashboard/b2b', icon: Building2 },
+  { label: 'Gifting Settings', href: '/dashboard/b2b', icon: Building2 },
   { label: 'Offers', href: '/dashboard/offers', icon: Star },
   { label: 'Related Products', href: '/dashboard/related-products', icon: Package },
   { label: 'Blogs', href: '/dashboard/blogs', icon: BarChart3 },

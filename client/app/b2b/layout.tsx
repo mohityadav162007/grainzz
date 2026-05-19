@@ -3,7 +3,7 @@ import { constructMetadata } from '@/lib/seo';
 
 export const metadata: Metadata = {
   ...constructMetadata({
-    title: 'B2B & Corporate Orders | Grainzz',
+    title: 'Corporate Gifting & Wholesale Orders | Grainzz',
     description: 'Partner with Grainzz for office pantry supplies, corporate gifting, private labeling, and bulk snack orders across India.',
     path: '/b2b',
   }),

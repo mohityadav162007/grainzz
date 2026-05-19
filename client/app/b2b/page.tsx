@@ -187,7 +187,7 @@ export default function B2BPage() {
 
     // Format message matching guidelines
     const formattedMessage = `
-**B2B Partnership Inquiry Details:**
+**Corporate Gifting Inquiry Details:**
 - **City:** ${city}
 - **Interested In:** ${interests.join(', ') || 'None selected'}
 - **Team Size:** ${teamSize}
@@ -202,8 +202,8 @@ ${quantityTimeline || 'No specific quantity/timeline provided.'}
         lastName: company,
         email,
         phone,
-        subject: 'B2B Partnership Inquiry',
-        orderId: 'B2B',
+        subject: 'Corporate Gifting Inquiry',
+        orderId: 'Gifting',
         message: formattedMessage
       });
       setSubmitted(true);
@@ -229,7 +229,7 @@ ${quantityTimeline || 'No specific quantity/timeline provided.'}
         "@type": "WebPage",
         "@id": "https://www.grainzzindia.com/b2b",
         "url": "https://www.grainzzindia.com/b2b",
-        "name": "B2B & Corporate Orders | Grainzz",
+        "name": "Corporate Gifting & Wholesale Orders | Grainzz",
         "description": "Partner with Grainzz for office pantry supplies, corporate gifting, private labeling, and bulk snack orders across India.",
         "breadcrumb": {
           "@type": "BreadcrumbList",
@@ -243,7 +243,7 @@ ${quantityTimeline || 'No specific quantity/timeline provided.'}
             {
               "@type": "ListItem",
               "position": 2,
-              "name": "B2B Partnership",
+              "name": "Corporate Gifting",
               "item": "https://www.grainzzindia.com/b2b"
             }
           ]

@@ -173,7 +173,7 @@ export default function B2BConfigPage() {
     setSuccessMsg('');
     try {
       await updateStoreSetting('b2b_settings', JSON.stringify(config));
-      setSuccessMsg('B2B Settings updated successfully! All changes are live.');
+      setSuccessMsg('Gifting Settings updated successfully! All changes are live.');
       setTimeout(() => setSuccessMsg(''), 4000);
     } catch (err: any) {
       alert(`Failed to save settings: ${err.message}`);
@@ -196,10 +196,10 @@ export default function B2BConfigPage() {
       <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
         <div>
           <h1 className="text-2xl font-black text-gray-900 flex items-center gap-2">
-            <Building2 size={26} className="text-[#1D5E20]" /> B2B Page Customizer
+            <Building2 size={26} className="text-[#1D5E20]" /> Gifting Page Customizer
           </h1>
           <p className="text-gray-500 text-sm mt-1">
-            Configure every section, texts, bullet lists, FAQ items, margin percentages, and founder details of the B2B Wholesale page.
+            Configure every section, texts, bullet lists, FAQ items, margin percentages, and founder details of the Gifting & Wholesale page.
           </p>
         </div>
         <button
@@ -251,7 +251,7 @@ export default function B2BConfigPage() {
           {activeTab === 'hero' && (
             <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm space-y-6">
               <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2 border-b border-gray-50 pb-3">
-                <Sparkles size={20} className="text-yellow-500" /> B2B Hero Section Settings
+                <Sparkles size={20} className="text-yellow-500" /> Gifting Hero Section Settings
               </h2>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

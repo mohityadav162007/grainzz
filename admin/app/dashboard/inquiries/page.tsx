@@ -147,9 +147,9 @@ export default function InquiriesPage() {
                         {enq.first_name} {enq.last_name}
                       </span>
                       <span className="text-xs text-gray-400 truncate">&lt;{enq.email}&gt;</span>
-                      {(enq.order_id === 'B2B' || enq.subject === 'B2B Partnership Inquiry') && (
+                      {(enq.order_id === 'B2B' || enq.subject === 'B2B Partnership Inquiry' || enq.order_id === 'Gifting' || enq.subject === 'Corporate Gifting Inquiry') && (
                         <span className="bg-purple-100 text-purple-700 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider flex-shrink-0">
-                          B2B
+                          Gifting
                         </span>
                       )}
                     </div>

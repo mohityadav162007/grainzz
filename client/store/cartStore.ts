@@ -60,6 +60,8 @@ export const validateCoupon = (coupon: CouponData | null, subtotal: number): { i
 
 export const calculateDiscount = (coupon: CouponData | null, subtotal: number): number => {
   if (!coupon) return 0;
+  // Free shipping coupons provide no monetary discount
+  if (coupon.freeShipping) return 0;
   const validation = validateCoupon(coupon, subtotal);
   if (!validation.isValid) return 0;
 

@@ -694,7 +694,13 @@ export default function CheckoutPage() {
                 {coupon ? (
                   <div className="flex items-center justify-between bg-green-50 border border-green-200 rounded-xl px-4 py-3 shadow-sm">
                     <div className="text-xs font-bold text-green-700">
-                      "{coupon.code}" applied (−₹{displayDiscount})
+                      {coupon.freeShipping ? (
+                        <span className="flex items-center gap-1.5">
+                          "{coupon.code}" applied — <span className="uppercase">Free Shipping</span>
+                        </span>
+                      ) : (
+                        <>"{coupon.code}" applied (−₹{displayDiscount})</>
+                      )}
                     </div>
                     <button
                       type="button"
@@ -772,14 +778,13 @@ export default function CheckoutPage() {
                                 )}
                               </div>
                               <p className="font-bold text-[11px] text-text-main mt-1">
-                                {sug.freeShipping && sug.value === 0 ? (
+                                {sug.freeShipping ? (
                                   'FREE SHIPPING'
                                 ) : (
                                   <>
                                     {sug.discountType === 'percentage'
                                       ? `${sug.value}% OFF${sug.maxDiscount ? ` up to ₹${sug.maxDiscount}` : ''}`
                                       : `Flat ₹${sug.value} OFF`}
-                                    {sug.freeShipping && ' + FREE SHIPPING'}
                                   </>
                                 )}
                               </p>
@@ -827,7 +832,7 @@ export default function CheckoutPage() {
                   <span className="text-text-muted">Subtotal</span>
                   <span>₹{displaySubtotal}</span>
                 </div>
-                {displayDiscount > 0 && (
+                {displayDiscount > 0 && !coupon?.freeShipping && (
                   <div className="flex justify-between text-green-600">
                     <span>Discount ({coupon?.code})</span>
                     <span>−₹{displayDiscount}</span>
@@ -929,7 +934,7 @@ export default function CheckoutPage() {
                   <span className="text-text-muted">Subtotal</span>
                   <span>₹{displaySubtotal}</span>
                 </div>
-                {displayDiscount > 0 && (
+                {displayDiscount > 0 && !coupon?.freeShipping && (
                   <div className="flex justify-between text-green-600">
                     <span>Discount ({coupon?.code})</span>
                     <span>−₹{displayDiscount}</span>
@@ -972,7 +977,7 @@ export default function CheckoutPage() {
                 <span className="text-text-muted">Items ({displayItems.reduce((s, i) => s + i.quantity, 0)})</span>
                 <span>₹{displaySubtotal}</span>
               </div>
-              {displayDiscount > 0 && (
+              {displayDiscount > 0 && !coupon?.freeShipping && (
                 <div className="flex justify-between text-sm text-green-600">
                   <span>Discount</span>
                   <span>−₹{displayDiscount}</span>

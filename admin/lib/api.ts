@@ -573,19 +573,21 @@ export const createCoupon = async (body: {
   isFirstOrderOnly?: boolean;
   freeShipping?: boolean;
 }) => {
+  // Enforce mutually exclusive modes: Free Shipping coupons get safe defaults
+  const isFreeShip = body.freeShipping === true;
   const { data, error } = await supabase
     .from('coupons')
     .insert({
       code: body.code.toUpperCase(),
-      discount_type: body.discountType,
-      value: Number(body.value),
+      discount_type: isFreeShip ? 'flat' : body.discountType,
+      value: isFreeShip ? 0 : Number(body.value),
       min_order_value: Number(body.minOrderValue) || 0,
-      max_discount: body.maxDiscount ? Number(body.maxDiscount) : null,
+      max_discount: isFreeShip ? null : (body.maxDiscount ? Number(body.maxDiscount) : null),
       expiry_date: new Date(body.expiryDate).toISOString(),
       usage_limit: body.usageLimit ? Number(body.usageLimit) : null,
       is_visible: body.isVisible !== undefined ? body.isVisible : true,
       is_first_order_only: body.isFirstOrderOnly !== undefined ? body.isFirstOrderOnly : false,
-      free_shipping: body.freeShipping !== undefined ? body.freeShipping : false,
+      free_shipping: isFreeShip,
     })
     .select()
     .single();
@@ -608,17 +610,27 @@ export const updateCoupon = async (id: string, body: Partial<{
   freeShipping: boolean;
 }>) => {
   const updates: Record<string, any> = {};
+  // Enforce mutually exclusive modes on update
+  const isFreeShip = body.freeShipping === true;
   if (body.code !== undefined) updates.code = body.code.toUpperCase();
-  if (body.discountType !== undefined) updates.discount_type = body.discountType;
-  if (body.value !== undefined) updates.value = Number(body.value);
+  if (isFreeShip) {
+    // Free Shipping mode: clear discount fields (discount_type cannot be null due to DB constraint)
+    updates.discount_type = 'flat';
+    updates.value = 0;
+    updates.max_discount = null;
+    updates.free_shipping = true;
+  } else {
+    if (body.discountType !== undefined) updates.discount_type = body.discountType;
+    if (body.value !== undefined) updates.value = Number(body.value);
+    if (body.maxDiscount !== undefined) updates.max_discount = body.maxDiscount ? Number(body.maxDiscount) : null;
+    if (body.freeShipping !== undefined) updates.free_shipping = false;
+  }
   if (body.minOrderValue !== undefined) updates.min_order_value = Number(body.minOrderValue) || 0;
-  if (body.maxDiscount !== undefined) updates.max_discount = body.maxDiscount ? Number(body.maxDiscount) : null;
   if (body.expiryDate !== undefined) updates.expiry_date = new Date(body.expiryDate).toISOString();
   if (body.usageLimit !== undefined) updates.usage_limit = body.usageLimit ? Number(body.usageLimit) : null;
   if (body.isActive !== undefined) updates.is_active = body.isActive;
   if (body.isVisible !== undefined) updates.is_visible = body.isVisible;
   if (body.isFirstOrderOnly !== undefined) updates.is_first_order_only = body.isFirstOrderOnly;
-  if (body.freeShipping !== undefined) updates.free_shipping = body.freeShipping;
 
   const { data, error } = await supabase.from('coupons').update(updates).eq('id', id).select().single();
   if (error) throw new Error(error.message);

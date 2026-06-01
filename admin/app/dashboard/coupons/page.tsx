@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { getCoupons, createCoupon, updateCoupon, deleteCoupon } from '@/lib/api';
-import { Plus, Trash2, Edit2, Loader2, X } from 'lucide-react';
+import { Plus, Trash2, Edit2, Loader2, X, Truck } from 'lucide-react';
 
 export default function AdminCouponsPage() {
   const [coupons, setCoupons] = useState<any[]>([]);
@@ -9,6 +9,7 @@ export default function AdminCouponsPage() {
   const [showForm, setShowForm] = useState(false);
   const [editingCoupon, setEditingCoupon] = useState<any>(null);
   const [saving, setSaving] = useState(false);
+  const [isFreeShipping, setIsFreeShipping] = useState(false);
 
   const fetchCoupons = async () => {
     setLoading(true);
@@ -24,6 +25,15 @@ export default function AdminCouponsPage() {
 
   useEffect(() => { fetchCoupons(); }, []);
 
+  // Sync toggle state when opening form for editing
+  useEffect(() => {
+    if (editingCoupon) {
+      setIsFreeShipping(editingCoupon.free_shipping === true);
+    } else {
+      setIsFreeShipping(false);
+    }
+  }, [editingCoupon]);
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setSaving(true);
@@ -31,19 +41,36 @@ export default function AdminCouponsPage() {
     const maxDiscountVal = form.get('maxDiscount') ? Number(form.get('maxDiscount')) : 0;
     const usageLimitVal = form.get('usageLimit') ? Number(form.get('usageLimit')) : 0;
 
-    const payload = {
-      code: form.get('code') as string,
-      discountType: form.get('discountType') as string,
-      value: Number(form.get('value')),
-      minOrderValue: Number(form.get('minOrderValue') || 0),
-      maxDiscount: maxDiscountVal,
-      expiryDate: form.get('expiryDate') as string,
-      usageLimit: usageLimitVal,
-      isActive: form.get('isActive') !== 'false',
-      isVisible: form.get('isVisible') !== 'false',
-      isFirstOrderOnly: form.get('isFirstOrderOnly') !== 'false',
-      freeShipping: form.get('freeShipping') === 'true'
-    };
+    // Enforce mutually exclusive modes
+    const payload = isFreeShipping
+      ? {
+          // Free Shipping mode: no discount fields
+          code: form.get('code') as string,
+          discountType: 'flat',        // safe default (will not be used)
+          value: 0,                     // no monetary discount
+          minOrderValue: Number(form.get('minOrderValue') || 0),
+          maxDiscount: 0,               // not applicable
+          expiryDate: form.get('expiryDate') as string,
+          usageLimit: usageLimitVal,
+          isActive: form.get('isActive') !== 'false',
+          isVisible: form.get('isVisible') !== 'false',
+          isFirstOrderOnly: form.get('isFirstOrderOnly') !== 'false',
+          freeShipping: true,
+        }
+      : {
+          // Discount mode: normal coupon
+          code: form.get('code') as string,
+          discountType: form.get('discountType') as string,
+          value: Number(form.get('value')),
+          minOrderValue: Number(form.get('minOrderValue') || 0),
+          maxDiscount: maxDiscountVal,
+          expiryDate: form.get('expiryDate') as string,
+          usageLimit: usageLimitVal,
+          isActive: form.get('isActive') !== 'false',
+          isVisible: form.get('isVisible') !== 'false',
+          isFirstOrderOnly: form.get('isFirstOrderOnly') !== 'false',
+          freeShipping: false,
+        };
 
     try {
       if (editingCoupon) {
@@ -91,45 +118,81 @@ export default function AdminCouponsPage() {
       {showForm && (
         <form onSubmit={handleSubmit} className="admin-card p-6 mb-6 space-y-4">
           <h2 className="font-bold text-gray-900">{editingCoupon ? 'Edit Coupon' : 'Create Coupon'}</h2>
+
+          {/* Free Shipping Toggle — placed first for prominence */}
+          <div className="flex items-center gap-3 p-3 rounded-xl border border-gray-200 bg-gray-50">
+            <Truck size={20} className={isFreeShipping ? 'text-green-600' : 'text-gray-400'} />
+            <div className="flex-1">
+              <label className="block text-sm font-bold text-gray-800">Free Shipping Coupon</label>
+              <p className="text-xs text-gray-500 mt-0.5">
+                {isFreeShipping
+                  ? 'This coupon only removes shipping charges. No monetary discount.'
+                  : 'Toggle ON to make this a free shipping-only coupon.'}
+              </p>
+            </div>
+            <select
+              value={isFreeShipping ? 'true' : 'false'}
+              onChange={(e) => setIsFreeShipping(e.target.value === 'true')}
+              className="admin-input w-24 text-center font-bold"
+            >
+              <option value="false">OFF</option>
+              <option value="true">ON</option>
+            </select>
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* Always visible: Coupon Code */}
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-1">Code *</label>
               <input name="code" required className="admin-input" placeholder="SAVE20" defaultValue={editingCoupon?.code} />
             </div>
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-1">Type *</label>
-              <select name="discountType" required className="admin-input" defaultValue={editingCoupon?.discount_type || 'percentage'}>
-                <option value="percentage">Percentage</option>
-                <option value="flat">Flat</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-1">Value *</label>
-              <input name="value" type="number" required className="admin-input" placeholder="20" defaultValue={editingCoupon?.value} />
-            </div>
+
+            {/* Only show when NOT free shipping: Discount Type */}
+            {!isFreeShipping && (
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">Type *</label>
+                <select name="discountType" required className="admin-input" defaultValue={editingCoupon?.discount_type || 'percentage'}>
+                  <option value="percentage">Percentage</option>
+                  <option value="flat">Flat</option>
+                </select>
+              </div>
+            )}
+
+            {/* Only show when NOT free shipping: Discount Value */}
+            {!isFreeShipping && (
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">Value *</label>
+                <input name="value" type="number" required className="admin-input" placeholder="20" defaultValue={editingCoupon?.value} />
+              </div>
+            )}
+
+            {/* Always visible: Min Order Value */}
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-1">Min Order (₹)</label>
               <input name="minOrderValue" type="number" className="admin-input" defaultValue={editingCoupon?.min_order_value || 0} />
             </div>
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-1">Max Discount (₹)</label>
-              <input name="maxDiscount" type="number" className="admin-input" placeholder="Optional" defaultValue={editingCoupon?.max_discount || ''} />
-            </div>
+
+            {/* Only show when NOT free shipping: Max Discount */}
+            {!isFreeShipping && (
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">Max Discount (₹)</label>
+                <input name="maxDiscount" type="number" className="admin-input" placeholder="Optional" defaultValue={editingCoupon?.max_discount || ''} />
+              </div>
+            )}
+
+            {/* Always visible: Expiry Date */}
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-1">Expiry Date *</label>
               <input name="expiryDate" type="date" required className="admin-input" defaultValue={editingCoupon ? new Date(editingCoupon.expiry_date).toISOString().split('T')[0] : ''} />
             </div>
+
+            {/* Always visible: Usage Limit */}
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-1">Usage Limit</label>
               <input name="usageLimit" type="number" className="admin-input" placeholder="Unlimited" defaultValue={editingCoupon?.usage_limit || ''} />
             </div>
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-1">Free Shipping Coupon</label>
-              <select name="freeShipping" required className="admin-input" defaultValue={editingCoupon?.free_shipping ? "true" : "false"}>
-                <option value="false">OFF</option>
-                <option value="true">ON</option>
-              </select>
-            </div>
+
+            {/* Always visible: Checkboxes */}
             <div className="flex items-center gap-3 pt-6 md:col-span-1">
               <input name="isVisible" type="checkbox" value="true" defaultChecked={editingCoupon ? editingCoupon.is_visible !== false : true} className="w-4 h-4 rounded border-gray-300" />
               <label className="text-sm font-semibold text-gray-700">Visible to Clients</label>
@@ -180,11 +243,22 @@ export default function AdminCouponsPage() {
               ) : (
                 coupons.map((coupon) => {
                   const isExpired = new Date(coupon.expiry_date) < new Date();
+                  const isFreeShipCoupon = coupon.free_shipping === true;
                   return (
                     <tr key={coupon.id} className="border-b last:border-0 hover:bg-gray-50/50">
                       <td className="px-6 py-4 font-bold font-mono">{coupon.code}</td>
-                      <td className="px-6 py-4 capitalize">{coupon.discount_type}</td>
-                      <td className="px-6 py-4 font-semibold">{coupon.discount_type === 'percentage' ? `${coupon.value}%` : `₹${coupon.value}`}</td>
+                      <td className="px-6 py-4 capitalize">
+                        {isFreeShipCoupon ? (
+                          <span className="px-2 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700 inline-flex items-center gap-1">
+                            <Truck size={12} /> Free Shipping
+                          </span>
+                        ) : coupon.discount_type}
+                      </td>
+                      <td className="px-6 py-4 font-semibold">
+                        {isFreeShipCoupon
+                          ? '—'
+                          : coupon.discount_type === 'percentage' ? `${coupon.value}%` : `₹${coupon.value}`}
+                      </td>
                       <td className="px-6 py-4">₹{coupon.min_order_value}</td>
                       <td className="px-6 py-4">{coupon.used_count}{coupon.usage_limit ? `/${coupon.usage_limit}` : '/∞'}</td>
                       <td className="px-6 py-4 text-gray-500">{new Date(coupon.expiry_date).toLocaleDateString('en-IN')}</td>
@@ -202,11 +276,6 @@ export default function AdminCouponsPage() {
                         <span className={`px-2 py-1 rounded-full text-xs font-semibold block w-fit ${coupon.is_first_order_only ? 'bg-purple-100 text-purple-700' : 'bg-gray-100 text-gray-500'}`}>
                           {coupon.is_first_order_only ? 'First Order' : 'All Orders'}
                         </span>
-                        {coupon.free_shipping && (
-                          <span className="px-2 py-1 rounded-full text-xs font-semibold block w-fit bg-green-100 text-green-700">
-                            Free Shipping
-                          </span>
-                        )}
                       </td>
                       <td className="px-6 py-4 text-right space-x-2">
                         <button onClick={() => handleEdit(coupon)} className="w-8 h-8 rounded-lg text-primary hover:bg-primary/10 inline-flex items-center justify-center transition-colors">

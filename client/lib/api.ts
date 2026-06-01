@@ -647,21 +647,25 @@ export const applyCoupon = async (code: string, orderTotal: number) => {
     throw new Error(`Minimum order value of ₹${coupon.min_order_value} required`);
   }
 
+  // Free shipping coupons provide no monetary discount
+  const isFreeShipCoupon = coupon.free_shipping === true;
   const discountType = coupon.discount_type;
   const value = Number(coupon.value);
   const minOrderValue = Number(coupon.min_order_value || 0);
   const maxDiscount = coupon.max_discount !== null ? Number(coupon.max_discount) : null;
 
   let discountAmount = 0;
-  if (discountType === 'percentage') {
-    discountAmount = (orderTotal * value) / 100;
-    if (maxDiscount !== null) {
-      discountAmount = Math.min(discountAmount, maxDiscount);
+  if (!isFreeShipCoupon) {
+    if (discountType === 'percentage') {
+      discountAmount = (orderTotal * value) / 100;
+      if (maxDiscount !== null) {
+        discountAmount = Math.min(discountAmount, maxDiscount);
+      }
+    } else {
+      discountAmount = value;
     }
-  } else {
-    discountAmount = value;
+    discountAmount = Math.min(discountAmount, orderTotal);
   }
-  discountAmount = Math.min(discountAmount, orderTotal);
 
   return {
     success: true,

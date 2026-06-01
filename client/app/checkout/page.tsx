@@ -64,6 +64,7 @@ export default function CheckoutPage() {
 
   // Shipping state
   const [shippingCharge, setShippingCharge] = useState<number | null>(null);
+  const [calculatedShippingCharge, setCalculatedShippingCharge] = useState<number | null>(null);
   const [estimatedDelivery, setEstimatedDelivery] = useState('');
   const [shippingLoading, setShippingLoading] = useState(false);
   const [freeShipping, setFreeShipping] = useState(false);
@@ -133,6 +134,7 @@ export default function CheckoutPage() {
             usageLimit: c.usage_limit,
             usedCount: c.used_count,
             isActive: c.is_active,
+            freeShipping: c.free_shipping || false,
           });
         }
 
@@ -262,17 +264,16 @@ export default function CheckoutPage() {
   const recalculateShippingCharge = async (pincodeOverride?: string): Promise<boolean> => {
     const activePincode = pincodeOverride || form.pincode;
 
-    // Rule 1: Free shipping above 499 (Shiprocket calculation is skipped)
-    if (displaySubtotal >= 499) {
-      setShippingCharge(0);
-      setFreeShipping(true);
-      setEstimatedDelivery('');
-      return true;
-    }
-
     if (!activePincode || activePincode.length !== 6 || !/^\d{6}$/.test(activePincode)) {
+      if (coupon?.freeShipping) {
+        setShippingCharge(0);
+        setFreeShipping(true);
+        setCalculatedShippingCharge(null);
+        return true;
+      }
       setShippingCharge(null);
       setFreeShipping(false);
+      setCalculatedShippingCharge(null);
       return false;
     }
 
@@ -292,9 +293,17 @@ export default function CheckoutPage() {
       });
 
       if (rates) {
-        setShippingCharge(rates.shipping_charge || 0);
+        const fetchedCharge = rates.shipping_charge || 0;
+        setCalculatedShippingCharge(fetchedCharge);
         setEstimatedDelivery(rates.estimated_delivery || '');
-        setFreeShipping(rates.free_shipping || false);
+        
+        if (coupon?.freeShipping) {
+          setShippingCharge(0);
+          setFreeShipping(true);
+        } else {
+          setShippingCharge(fetchedCharge);
+          setFreeShipping(rates.free_shipping || false);
+        }
         return true;
       }
       return false;
@@ -302,8 +311,15 @@ export default function CheckoutPage() {
       console.error('Shipping calculation error:', err);
       // Failsafe fallback: ₹99 combos, ₹50 single products
       const fallbackCharge = hasCombo ? 99 : 50;
-      setShippingCharge(fallbackCharge);
-      setFreeShipping(false);
+      setCalculatedShippingCharge(fallbackCharge);
+      
+      if (coupon?.freeShipping) {
+        setShippingCharge(0);
+        setFreeShipping(true);
+      } else {
+        setShippingCharge(fallbackCharge);
+        setFreeShipping(false);
+      }
       return true; // proceed using fallback
     } finally {
       setShippingLoading(false);
@@ -743,15 +759,29 @@ export default function CheckoutPage() {
                             }`}
                           >
                             <div className="min-w-0">
-                              <span className={`font-black px-1.5 py-0.5 rounded text-[10px] uppercase ${
-                                isLocked ? 'text-amber-700 bg-amber-100' : 'text-primary bg-primary/10'
-                              }`}>
-                                {sug.code}
-                              </span>
+                              <div className="flex items-center gap-1.5 flex-wrap">
+                                <span className={`font-black px-1.5 py-0.5 rounded text-[10px] uppercase ${
+                                  isLocked ? 'text-amber-700 bg-amber-100' : 'text-primary bg-primary/10'
+                                }`}>
+                                  {sug.code}
+                                </span>
+                                {sug.freeShipping && (
+                                  <span className="font-black px-1.5 py-0.5 rounded text-[10px] uppercase text-green-700 bg-green-100">
+                                    FREE SHIPPING
+                                  </span>
+                                )}
+                              </div>
                               <p className="font-bold text-[11px] text-text-main mt-1">
-                                {sug.discountType === 'percentage'
-                                  ? `${sug.value}% OFF${sug.maxDiscount ? ` up to ₹${sug.maxDiscount}` : ''}`
-                                  : `Flat ₹${sug.value} OFF`}
+                                {sug.freeShipping && sug.value === 0 ? (
+                                  'FREE SHIPPING'
+                                ) : (
+                                  <>
+                                    {sug.discountType === 'percentage'
+                                      ? `${sug.value}% OFF${sug.maxDiscount ? ` up to ₹${sug.maxDiscount}` : ''}`
+                                      : `Flat ₹${sug.value} OFF`}
+                                    {sug.freeShipping && ' + FREE SHIPPING'}
+                                  </>
+                                )}
                               </p>
                               {sug.minOrderValue > 0 && (
                                 <p className="text-[10px] mt-0.5 font-medium">
@@ -908,7 +938,14 @@ export default function CheckoutPage() {
                 <div className="flex justify-between">
                   <span className="text-text-muted flex items-center gap-1 min-w-0"><Truck size={14} className="shrink-0" /> <span className="truncate">Shipping</span></span>
                   <span className={freeShipping ? 'text-green-600 font-bold' : ''}>
-                    {freeShipping ? 'FREE' : `₹${shippingCharge || 0}`}
+                    {freeShipping ? (
+                      coupon?.freeShipping && calculatedShippingCharge ? (
+                        <span className="flex items-center gap-1.5 justify-end">
+                          <span className="text-gray-400 line-through font-normal text-xs">₹{calculatedShippingCharge}</span>
+                          <span>FREE</span>
+                        </span>
+                      ) : 'FREE'
+                    ) : `₹${shippingCharge || 0}`}
                   </span>
                 </div>
                 <div className="flex justify-between text-base font-black border-t pt-3 mt-3">
@@ -944,7 +981,14 @@ export default function CheckoutPage() {
               <div className="flex justify-between text-sm">
                 <span className="text-text-muted">Shipping</span>
                 <span className={freeShipping ? 'text-green-600 font-bold' : ''}>
-                  {freeShipping ? 'FREE' : `₹${shippingCharge || 0}`}
+                  {freeShipping ? (
+                    coupon?.freeShipping && calculatedShippingCharge ? (
+                      <span className="flex items-center gap-1.5 justify-end">
+                        <span className="text-gray-400 line-through font-normal text-xs">₹{calculatedShippingCharge}</span>
+                        <span>FREE</span>
+                      </span>
+                    ) : 'FREE'
+                  ) : `₹${shippingCharge || 0}`}
                 </span>
               </div>
               <div className="flex justify-between text-lg font-black border-t pt-3">

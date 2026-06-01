@@ -115,7 +115,7 @@ export default function CartPage() {
             {/* Trust Badges */}
             <div className="bg-white rounded-2xl p-4 border border-[#EAEAEA] grid grid-cols-3 gap-3">
               {[
-                { icon: Truck, label: 'Free Shipping', sub: 'On orders ₹499+' },
+                { icon: Truck, label: 'Free Shipping', sub: 'With coupon' },
                 { icon: Shield, label: '100% Secure', sub: 'Encrypted checkout' },
                 { icon: RefreshCw, label: 'Easy Returns', sub: '7-day return policy' },
               ].map(({ icon: Icon, label, sub }) => (
@@ -315,7 +315,7 @@ export default function CartPage() {
                   <div className="flex justify-between items-center text-[14px]">
                     <span className="font-medium text-[#666]">Shipping</span>
                     <span className="font-semibold text-[#16a34a]">
-                      {subtotal() - discount() >= 499 ? 'FREE' : 'Calculated at checkout'}
+                      {coupon?.freeShipping ? 'FREE' : 'Calculated at checkout'}
                     </span>
                   </div>
                 </div>

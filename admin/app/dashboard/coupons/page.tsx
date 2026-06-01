@@ -41,7 +41,8 @@ export default function AdminCouponsPage() {
       usageLimit: usageLimitVal,
       isActive: form.get('isActive') !== 'false',
       isVisible: form.get('isVisible') !== 'false',
-      isFirstOrderOnly: form.get('isFirstOrderOnly') !== 'false'
+      isFirstOrderOnly: form.get('isFirstOrderOnly') !== 'false',
+      freeShipping: form.get('freeShipping') === 'true'
     };
 
     try {
@@ -122,6 +123,13 @@ export default function AdminCouponsPage() {
               <label className="block text-sm font-semibold text-gray-700 mb-1">Usage Limit</label>
               <input name="usageLimit" type="number" className="admin-input" placeholder="Unlimited" defaultValue={editingCoupon?.usage_limit || ''} />
             </div>
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-1">Free Shipping Coupon</label>
+              <select name="freeShipping" required className="admin-input" defaultValue={editingCoupon?.free_shipping ? "true" : "false"}>
+                <option value="false">OFF</option>
+                <option value="true">ON</option>
+              </select>
+            </div>
             <div className="flex items-center gap-3 pt-6 md:col-span-1">
               <input name="isVisible" type="checkbox" value="true" defaultChecked={editingCoupon ? editingCoupon.is_visible !== false : true} className="w-4 h-4 rounded border-gray-300" />
               <label className="text-sm font-semibold text-gray-700">Visible to Clients</label>
@@ -190,10 +198,15 @@ export default function AdminCouponsPage() {
                           {coupon.is_visible !== false ? 'Visible' : 'Hidden'}
                         </span>
                       </td>
-                      <td className="px-6 py-4">
-                        <span className={`px-2 py-1 rounded-full text-xs font-semibold ${coupon.is_first_order_only ? 'bg-purple-100 text-purple-700' : 'bg-gray-100 text-gray-500'}`}>
+                      <td className="px-6 py-4 space-y-1">
+                        <span className={`px-2 py-1 rounded-full text-xs font-semibold block w-fit ${coupon.is_first_order_only ? 'bg-purple-100 text-purple-700' : 'bg-gray-100 text-gray-500'}`}>
                           {coupon.is_first_order_only ? 'First Order' : 'All Orders'}
                         </span>
+                        {coupon.free_shipping && (
+                          <span className="px-2 py-1 rounded-full text-xs font-semibold block w-fit bg-green-100 text-green-700">
+                            Free Shipping
+                          </span>
+                        )}
                       </td>
                       <td className="px-6 py-4 text-right space-x-2">
                         <button onClick={() => handleEdit(coupon)} className="w-8 h-8 rounded-lg text-primary hover:bg-primary/10 inline-flex items-center justify-center transition-colors">

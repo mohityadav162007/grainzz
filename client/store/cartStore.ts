@@ -22,6 +22,7 @@ export interface CouponData {
   usageLimit: number | null;
   usedCount: number;
   isActive: boolean;
+  freeShipping?: boolean;
 }
 
 interface CartStore {

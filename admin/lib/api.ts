@@ -571,6 +571,7 @@ export const createCoupon = async (body: {
   usageLimit?: number;
   isVisible?: boolean;
   isFirstOrderOnly?: boolean;
+  freeShipping?: boolean;
 }) => {
   const { data, error } = await supabase
     .from('coupons')
@@ -584,6 +585,7 @@ export const createCoupon = async (body: {
       usage_limit: body.usageLimit ? Number(body.usageLimit) : null,
       is_visible: body.isVisible !== undefined ? body.isVisible : true,
       is_first_order_only: body.isFirstOrderOnly !== undefined ? body.isFirstOrderOnly : false,
+      free_shipping: body.freeShipping !== undefined ? body.freeShipping : false,
     })
     .select()
     .single();
@@ -603,6 +605,7 @@ export const updateCoupon = async (id: string, body: Partial<{
   isActive: boolean;
   isVisible: boolean;
   isFirstOrderOnly: boolean;
+  freeShipping: boolean;
 }>) => {
   const updates: Record<string, any> = {};
   if (body.code !== undefined) updates.code = body.code.toUpperCase();
@@ -615,6 +618,7 @@ export const updateCoupon = async (id: string, body: Partial<{
   if (body.isActive !== undefined) updates.is_active = body.isActive;
   if (body.isVisible !== undefined) updates.is_visible = body.isVisible;
   if (body.isFirstOrderOnly !== undefined) updates.is_first_order_only = body.isFirstOrderOnly;
+  if (body.freeShipping !== undefined) updates.free_shipping = body.freeShipping;
 
   const { data, error } = await supabase.from('coupons').update(updates).eq('id', id).select().single();
   if (error) throw new Error(error.message);

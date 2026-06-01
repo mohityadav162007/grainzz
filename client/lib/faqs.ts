@@ -37,7 +37,7 @@ export const FAQS = [
   },
   {
     question: "Do you offer Free Shipping?",
-    answer: "Yes, we offer free shipping on all orders above ₹499. For orders below this amount, a nominal shipping fee is applied at checkout."
+    answer: "Yes, we offer free shipping through special coupon codes! Apply a free shipping coupon at checkout to enjoy zero shipping charges. Keep an eye on our promotions for the latest free shipping offers."
   },
   {
     question: "Do you deliver to my city?",

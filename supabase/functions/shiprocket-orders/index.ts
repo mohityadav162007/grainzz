@@ -154,8 +154,6 @@ serve(async (req: Request) => {
         .select('key, value')
         .in('key', [
           'shiprocket_pickup_pincode',
-          'free_shipping_enabled',
-          'free_shipping_threshold',
           'fallback_shipping_charge_single',
           'fallback_shipping_charge_combo',
         ]);
@@ -164,28 +162,10 @@ serve(async (req: Request) => {
       (settings || []).forEach((s: any) => { cfg[s.key] = s.value; });
 
       const pickupPincode = cfg.shiprocket_pickup_pincode || '110093';
-      const freeShippingEnabled = cfg.free_shipping_enabled !== 'false';
-      const freeShippingThreshold = Number(cfg.free_shipping_threshold) || 499;
       const fallbackSingle = Number(cfg.fallback_shipping_charge_single) || 50;
       const fallbackCombo = Number(cfg.fallback_shipping_charge_combo) || 99;
       const fallbackCharge = has_combo ? fallbackCombo : fallbackSingle;
       const pickupLocation = cfg.shiprocket_pickup_location || 'Primary';
-
-      // Check free shipping first
-      const cartSubtotal = Number(subtotal) || 0;
-      if (freeShippingEnabled && cartSubtotal >= freeShippingThreshold) {
-        return new Response(
-          JSON.stringify({
-            success: true,
-            serviceable: true,
-            shipping_charge: 0,
-            estimated_delivery: '',
-            courier_name: '',
-            free_shipping: true,
-          }),
-          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
 
       // Fetch rates from Shiprocket
       try {

@@ -677,6 +677,7 @@ export const applyCoupon = async (code: string, orderTotal: number) => {
       usageLimit: coupon.usage_limit,
       usedCount: coupon.used_count,
       isActive: coupon.is_active,
+      freeShipping: coupon.free_shipping || false,
     }
   };
 };

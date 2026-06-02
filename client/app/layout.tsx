@@ -49,6 +49,24 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             __html: `[${JSON.stringify(generateOrganizationSchema())},${JSON.stringify(generateWebSiteSchema())}]`
           }}
         />
+        {/* Google tag (gtag.js) */}
+        <Script
+          async
+          src="https://www.googletagmanager.com/gtag/js?id=G-BJ9E64E63N"
+          strategy="afterInteractive"
+        />
+        <Script
+          id="google-analytics"
+          strategy="afterInteractive"
+          dangerouslySetInnerHTML={{
+            __html: `
+              window.dataLayer = window.dataLayer || [];
+              function gtag(){dataLayer.push(arguments);}
+              gtag('js', new Date());
+              gtag('config', 'G-BJ9E64E63N');
+            `,
+          }}
+        />
         {/* Meta Pixel Code */}
         <Script
           id="meta-pixel"

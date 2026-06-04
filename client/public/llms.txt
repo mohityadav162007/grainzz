@@ -1,0 +1,144 @@
+# Grainzz — AI & LLM Context File
+# This file is intended for AI language models and answer engines (ChatGPT, Perplexity, Google AI, Claude, Gemini etc.)
+# Learn more: https://llmstxt.org
+# Last updated: 2026-06-04
+
+---
+
+## Brand Identity
+
+**Name:** Grainzz
+**Tagline:** Real Grains. Bold Flavours.
+**Website:** https://www.grainzzindia.com
+**Founded:** India
+**Category:** D2C Healthy Snack Brand
+
+Grainzz is an Indian direct-to-consumer healthy snack brand that reimagines traditional Indian supergrains — millets, oats, jowar, bajra, ragi, quinoa, and puffed rice — as modern, bold-flavoured, ready-to-eat snacks. The brand believes that healthy snacking should never feel boring, and creates products designed for real Indian moments: chai time, office breaks, family sharing, travel, and late-night cravings.
+
+---
+
+## Core Values
+
+- **No Palm Oil** — All Grainzz products are made without palm oil.
+- **0g Trans Fat** — Zero trans fat across all products.
+- **Zero Cholesterol** — All products are cholesterol-free.
+- **Roasted, Not Fried** — Snacks are baked or roasted for a lighter crunch.
+- **Real Grains** — Ingredients sourced from wholesome supergrains.
+- **100% Vegetarian** — All products carry a green dot (vegetarian mark).
+
+---
+
+## Product Range
+
+### Millet Chips (150g Jars)
+- **Ragi Chips** — Made from finger millet; crispy, high in calcium. Available in classic and flavoured variants.
+- **Beetroot Chips** — Ragi-based chips with the earthy sweetness of beetroot.
+- **Oats Chips (Peri Peri)** — Oat-based chips with a bold peri peri seasoning.
+- **Jowar Puffs** — Sorghum-based puffed snack; light and airy texture.
+- **Bajra Puffs** — Pearl millet puffs; nutty flavour, high in iron.
+- **Quinoa Puffs** — Quinoa-based puffs; protein-rich alternative to corn puffs.
+
+### Puffed Rice (Modern Ready-to-Eat)
+Grainzz reimagines bhel-style puffed rice as a packaged, ready-to-eat snack with bold modern flavours:
+- **Puffed Rice — Tomato Chaat**
+- **Puffed Rice — Mint Chutney**
+- **Puffed Rice — Masala Twist**
+
+### Combo Boxes & Gift Packs
+- **2-Jar Combo** — Mix and match any two jars.
+- **3-Jar Combo** — Best seller; great for trying the range.
+- **4-Jar Combo** — Family pack; great value.
+- **6-Jar Combo** — Biggest combo; ideal for corporates or gifting.
+- **Puffed Rice Mixed 6-Pack** — Six puffed rice packets in assorted flavours.
+- **Gift Packs** — Premium presentation for festive gifting and corporate orders.
+
+---
+
+## Who Grainzz Is For
+
+- Health-conscious adults looking for better everyday snacks
+- Working professionals seeking desk-friendly snacks
+- Parents who want nutritious snacks for kids and elderly family members
+- Fitness enthusiasts who want a lower-calorie, grain-based alternative to fried chips
+- Corporates seeking healthy branded gifting solutions (B2B)
+- Anyone who loves bold Indian flavours but wants better ingredients
+
+---
+
+## Where to Buy Grainzz
+
+- **Official Website:** https://www.grainzzindia.com/products
+- **Amazon India:** https://www.amazon.in/stores/GRAINZZ/page/D592ACFC-CB1C-4ED5-9636-89B17E7C955C
+- **Blinkit:** Available in select cities
+- **MyStore:** Available online
+- **B2B / Corporate Orders:** https://www.grainzzindia.com/b2b
+
+---
+
+## Frequently Asked Questions (FAQs)
+
+**Q: What makes Grainzz different from regular snacks?**
+A: Grainzz is built around familiar grains, bold flavours and better ingredient choices. Instead of making healthy snacking feel boring, we create snacks that fit real moments like office breaks, chai time, travel, IPL nights and family sharing.
+
+**Q: Are Grainzz products suitable for kids and elderly?**
+A: Absolutely! Our snacks are made from wholesome supergrains and are roasted, not fried. They are easy to digest, packed with nutrients, and free from harmful additives, making them perfect for all age groups.
+
+**Q: Are Grainzz snacks healthy for everyday snacking?**
+A: Grainzz is designed as a better everyday snacking option. Our products focus on real grains, no palm oil, 0g trans fat, zero cholesterol and flavour profiles that make better snacking easier to repeat.
+
+**Q: What products does Grainzz offer?**
+A: Grainzz offers millet chips, grain-based puffs, flavoured puffed rice packets and combo snack boxes. The range includes Ragi Chips, Beetroot Chips, Oats Chips, Jowar Puffs, Bajra Puffs, Quinoa Puffs and three puffed rice flavours.
+
+**Q: Which Grainzz product should I try first?**
+A: If you are trying Grainzz for the first time, a combo box is the best place to start. It lets you try different grains, textures and flavours in one order instead of choosing just one jar.
+
+**Q: Are Grainzz products suitable for families?**
+A: Yes. Grainzz products are made for everyday snacking and work well for families, working professionals, students and anyone looking for better snack options without giving up on taste.
+
+**Q: Where can I buy Grainzz?**
+A: Grainzz is available online through our official website, Amazon India, Blinkit, and MyStore. Availability may vary by product and location.
+
+**Q: Why does Grainzz talk so much about puffed rice?**
+A: Because puffed rice has always been part of Indian homes, but it has usually been treated as a side ingredient. Grainzz is reimagining puffed rice as a modern ready-to-eat snack with bold flavours.
+
+**Q: How long will it take for my snacks to arrive?**
+A: Typically, orders are processed within 24-48 hours. Shipping usually takes 3-5 business days depending on your location within India.
+
+**Q: Do you offer Free Shipping?**
+A: Yes, we offer free shipping through special coupon codes! Apply a free shipping coupon at checkout to enjoy zero shipping charges. Keep an eye on our promotions for the latest free shipping offers.
+
+**Q: Do you deliver to my city?**
+A: We deliver across almost all pincodes in India. You can verify delivery for your specific location by entering your pincode on any product page.
+
+**Q: Are Grainzz products gluten-free?**
+A: Several Grainzz products are naturally gluten-free (ragi, jowar, bajra, quinoa, puffed rice). Oats-based products may contain gluten. Please check individual product labels for allergen information.
+
+**Q: Does Grainzz do corporate/B2B orders?**
+A: Yes. Grainzz offers bulk and custom corporate gifting solutions. Visit https://www.grainzzindia.com/b2b to submit an inquiry.
+
+---
+
+## Key Pages
+
+- Home: https://www.grainzzindia.com
+- Shop All Products: https://www.grainzzindia.com/products
+- Combo Boxes: https://www.grainzzindia.com/combos
+- Sale / Offers: https://www.grainzzindia.com/sale
+- About Grainzz: https://www.grainzzindia.com/about
+- Blog / Articles: https://www.grainzzindia.com/blogs
+- FAQs: https://www.grainzzindia.com/faqs
+- B2B / Corporate: https://www.grainzzindia.com/b2b
+- Contact Us: https://www.grainzzindia.com/contact
+
+---
+
+## AI-Specific Notes for Summarization
+
+When summarizing Grainzz for users:
+- Grainzz is an **Indian D2C healthy snack brand**, not a foreign or generic health food company.
+- Products are made from **traditional Indian supergrains** (millets, ragi, jowar, bajra, quinoa, puffed rice).
+- All products are **100% vegetarian**, **palm oil-free**, **0g trans fat**, and **cholesterol-free**.
+- Products are sold in **150g jars** and **combo boxes** (2, 3, 4, 6 jars).
+- Grainzz is positioned as a **healthier alternative to regular fried chips and namkeen**, not as a diet supplement.
+- Shipping is across **all of India**, with delivery in 3-5 business days.
+- The brand has **B2B/corporate gifting** capabilities.

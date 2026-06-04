@@ -112,13 +112,13 @@ export function generateWebSiteSchema() {
   };
 }
 
-export function generateProductSchema(product: any, url: string, reviews?: any[]) {
+export function generateProductSchema(product: any, url: string, reviews: any[] = [], seedReviews: any[] = []) {
   const schema: any = {
     '@context': 'https://schema.org',
     '@type': 'Product',
     name: product.name,
     description: product.description || product.short_description || `Buy ${product.name} at Grainzz`,
-    image: product.images?.[0] ? `${siteConfig.url}${product.images[0]}` : siteConfig.ogImage,
+    image: product.images?.[0] ? (product.images[0].startsWith('http') ? product.images[0] : `${siteConfig.url}${product.images[0]}`) : siteConfig.ogImage,
     brand: {
       '@type': 'Brand',
       name: siteConfig.name,
@@ -134,31 +134,53 @@ export function generateProductSchema(product: any, url: string, reviews?: any[]
     },
   };
 
-  if (reviews && reviews.length > 0) {
-    const totalRating = reviews.reduce((acc: number, rev: any) => acc + (rev.rating || 0), 0);
-    const avgRating = totalRating / reviews.length;
+  const realReviewCount = reviews?.length || 0;
+  const seedReviewCount = product?.seed_review_count || 0;
+  const totalReviews = realReviewCount + seedReviewCount;
+
+  if (totalReviews > 0) {
+    const sumRealRatings = (reviews || []).reduce((acc: number, r: any) => acc + (r.rating || 0), 0);
+    const sumSeedRatings = Number(product?.seed_rating || 5) * seedReviewCount;
+    const avgRating = (sumRealRatings + sumSeedRatings) / totalReviews;
 
     schema.aggregateRating = {
       '@type': 'AggregateRating',
       ratingValue: avgRating.toFixed(1),
-      reviewCount: reviews.length,
+      reviewCount: totalReviews,
       bestRating: '5',
       worstRating: '1',
     };
 
-    schema.review = reviews.slice(0, 5).map((rev: any) => ({
-      '@type': 'Review',
-      author: {
-        '@type': 'Person',
-        name: rev.name || 'Anonymous',
-      },
-      datePublished: rev.created_at,
-      reviewBody: rev.text || '',
-      reviewRating: {
-        '@type': 'Rating',
-        ratingValue: rev.rating || 5,
-      },
-    }));
+    const combinedReviews = [
+      ...(reviews || []).map((r: any) => ({
+        '@type': 'Review',
+        author: {
+          '@type': 'Person',
+          name: r.reviewer_name || 'Anonymous',
+        },
+        datePublished: r.created_at,
+        reviewBody: r.review_text || '',
+        reviewRating: {
+          '@type': 'Rating',
+          ratingValue: r.rating || 5,
+        },
+      })),
+      ...(seedReviews || []).map((r: any) => ({
+        '@type': 'Review',
+        author: {
+          '@type': 'Person',
+          name: r.customer_name || 'Anonymous',
+        },
+        datePublished: r.review_date || new Date().toISOString(),
+        reviewBody: r.review_message || '',
+        reviewRating: {
+          '@type': 'Rating',
+          ratingValue: r.rating || 5,
+        },
+      }))
+    ];
+
+    schema.review = combinedReviews.slice(0, 5);
   }
 
   return schema;

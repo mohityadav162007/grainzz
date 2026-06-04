@@ -44,8 +44,14 @@ export async function generateMetadata({ params }: { params: { slug: string[] } 
 
   const keywords = blog.meta_keywords ? blog.meta_keywords.split(',').map((k: string) => k.trim()) : undefined;
   const canonicalPath = blog.canonical_url || `/blogs/${blog.slug}`;
-  const title = blog.seo_title || blog.title;
-  const description = blog.meta_description || blog.excerpt || '';
+  const title = blog.seo_title || blog.og_title || blog.title;
+  
+  let description = blog.meta_description || blog.og_description || blog.excerpt || '';
+  if (!description && blog.content) {
+    const strippedContent = blog.content.replace(/<[^>]*>/g, ' ');
+    description = strippedContent.length > 150 ? strippedContent.substring(0, 150) + '...' : strippedContent;
+  }
+  
   const image = blog.og_image_url || blog.featured_image_url || siteConfig.ogImage;
   const ogTitle = blog.og_title || title;
   const ogDescription = blog.og_description || description;
@@ -81,7 +87,7 @@ export async function generateMetadata({ params }: { params: { slug: string[] } 
     },
     robots: {
       index: blog.is_indexable !== false,
-      follow: blog.is_indexable !== false,
+      follow: true,
     },
   };
 }

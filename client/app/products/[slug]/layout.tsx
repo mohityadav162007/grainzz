@@ -1,5 +1,5 @@
 import { Metadata } from 'next';
-import { getProductBySlug, getProductReviews } from '@/lib/api';
+import { getProductBySlug, getProductReviews, getSeedReviewsByProductId } from '@/lib/api';
 import { constructMetadata, generateProductSchema, generateBreadcrumbSchema } from '@/lib/seo';
 
 export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
@@ -29,12 +29,18 @@ export default async function ProductLayout({
   params: { slug: string };
 }) {
   let product = null;
-  let reviews = [];
+  let reviews: any[] = [];
+  let seedReviews: any[] = [];
   try {
     const res = await getProductBySlug(params.slug);
     product = res?.data;
     if (product) {
-      reviews = await getProductReviews(product.id);
+      const [revs, seeds] = await Promise.all([
+        getProductReviews(product.id).catch(() => []),
+        getSeedReviewsByProductId(product.id).catch(() => []),
+      ]);
+      reviews = revs;
+      seedReviews = seeds;
     }
   } catch (error) {
     console.error('Error fetching product or reviews for layout schema:', error);
@@ -47,7 +53,7 @@ export default async function ProductLayout({
       {product && (
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(generateProductSchema(product, url, reviews)) }}
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(generateProductSchema(product, url, reviews, seedReviews)) }}
         />
       )}
       {product && (

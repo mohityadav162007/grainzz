@@ -1,27 +1,24 @@
-'use client';
-import { useState, useEffect } from 'react';
 import { getPublicBlogs } from '@/lib/api';
 import Link from 'next/link';
-import Image from 'next/image';
-import { Calendar, ChevronRight, Loader2 } from 'lucide-react';
-export default function BlogsPage() {
-  const [blogs, setBlogs] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+import { ChevronRight } from 'lucide-react';
 
-  useEffect(() => {
-    getPublicBlogs()
-      .then(res => setBlogs(res.data))
-      .catch(console.error)
-      .finally(() => setLoading(false));
-  }, []);
+export default async function BlogsPage() {
+  let blogs: any[] = [];
+  try {
+    const res = await getPublicBlogs();
+    blogs = res.data || [];
+  } catch (error) {
+    console.error('Failed to load public blogs:', error);
+  }
 
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.grainzzindia.com';
   const structuredData = {
     "@context": "https://schema.org",
     "@graph": [
       {
         "@type": "WebPage",
-        "@id": "https://www.grainzzindia.com/blogs",
-        "url": "https://www.grainzzindia.com/blogs",
+        "@id": `${siteUrl}/blogs`,
+        "url": `${siteUrl}/blogs`,
         "name": "Healthy Snacking Blog | Grainzz",
         "description": "Read expert articles and tips on healthy snacking, nutrition, grains, and wellness from Grainzz.",
         "breadcrumb": {
@@ -31,13 +28,13 @@ export default function BlogsPage() {
               "@type": "ListItem",
               "position": 1,
               "name": "Home",
-              "item": "https://www.grainzzindia.com"
+              "item": siteUrl
             },
             {
               "@type": "ListItem",
               "position": 2,
               "name": "Blog",
-              "item": "https://www.grainzzindia.com/blogs"
+              "item": `${siteUrl}/blogs`
             }
           ]
         }
@@ -62,12 +59,7 @@ export default function BlogsPage() {
       </section>
 
       <section className="max-w-[1440px] mx-auto px-4 lg:px-[40px] py-16">
-        {loading ? (
-          <div className="flex flex-col items-center justify-center py-20">
-            <Loader2 className="animate-spin text-[#1D5E20] mb-4" size={40} />
-            <p className="text-gray-500 font-medium">Fetching latest articles...</p>
-          </div>
-        ) : blogs.length === 0 ? (
+        {blogs.length === 0 ? (
           <div className="text-center py-20">
             <h2 className="text-2xl font-bold text-gray-800">No blog posts yet.</h2>
             <p className="text-gray-500 mt-2">Check back soon for exciting updates!</p>
@@ -77,7 +69,7 @@ export default function BlogsPage() {
             {blogs.map((blog) => (
               <Link 
                 key={blog.id} 
-                href={`/blogs/${blog.slug}`}
+                href={`/blogs/${blog.slug.startsWith('/') ? blog.slug.substring(1) : blog.slug}`}
                 className="group flex flex-col bg-white rounded-[24px] overflow-hidden shadow-sm hover:shadow-xl transition-all duration-500 border border-gray-100 h-full"
               >
                 <div className="relative aspect-[16/9] overflow-hidden bg-gray-50 flex items-center justify-center">

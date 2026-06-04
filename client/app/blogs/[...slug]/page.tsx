@@ -1,72 +1,80 @@
-'use client';
-import { useState, useEffect } from 'react';
-import { useParams, useRouter } from 'next/navigation';
-import { getBlogBySlug } from '@/lib/api';
+import { getBlogBySlug, getProducts } from '@/lib/api';
 import Link from 'next/link';
-import { ArrowLeft, Calendar, Clock, Facebook, Twitter, Link as LinkIcon, Loader2 } from 'lucide-react';
+import { ArrowLeft, Calendar, Clock } from 'lucide-react';
+import ShareButtonsClient from '../ShareButtonsClient';
+import ProductCard from '@/components/products/ProductCard';
 
-export default function BlogDetailPage() {
-  const params = useParams();
-  const slugArray = params.slug as string[];
+interface PageProps {
+  params: {
+    slug: string[];
+  };
+}
+
+async function fetchBlogWithFallback(slugArray: string[]) {
+  if (!slugArray || slugArray.length === 0) return null;
+
+  const fullSlug = slugArray.join('/');
+  const lastSegment = slugArray[slugArray.length - 1];
   
-  const [blog, setBlog] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(false);
-
-  useEffect(() => {
-    if (!slugArray || slugArray.length === 0) return;
-
-    // Join all segments to handle nested paths
-    const fullSlug = slugArray.join('/');
-    const lastSegment = slugArray[slugArray.length - 1];
-    
-    const attemptFetch = async () => {
-      try {
-        // 1. Try exact match (joined)
-        let res = await getBlogBySlug(fullSlug);
-        
-        // 2. Try with leading slash
-        if (!res.data) {
-          res = await getBlogBySlug('/' + fullSlug);
-        }
-
-        // 3. Try stripping "blog/" prefix if it exists
-        if (!res.data && fullSlug.startsWith('blog/')) {
-          const stripped = fullSlug.replace('blog/', '');
-          res = await getBlogBySlug(stripped);
-          if (!res.data) res = await getBlogBySlug('/' + stripped);
-        }
-
-        // 4. Ultimate Fallback: Try just the last segment of the URL
-        // This handles cases where the user navigates to /blogs/blog/slug 
-        // but the DB only has "slug" or "/slug".
-        if (!res.data && slugArray.length > 1) {
-          res = await getBlogBySlug(lastSegment);
-          if (!res.data) res = await getBlogBySlug('/' + lastSegment);
-        }
-
-        if (!res.data) setError(true);
-        else setBlog(res.data);
-      } catch (err) {
-        console.error('Fetch error:', err);
-        setError(true);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    attemptFetch();
-  }, [slugArray]);
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-[#FCF9F2]">
-        <Loader2 className="animate-spin text-[#1D5E20]" size={48} />
-      </div>
-    );
+  // 1. Try exact match
+  let res = await getBlogBySlug(fullSlug);
+  
+  // 2. Try with leading slash
+  if (!res?.data) {
+    res = await getBlogBySlug('/' + fullSlug);
   }
 
-  if (error || !blog) {
+  // 3. Try stripping "blog/" prefix
+  if (!res?.data && fullSlug.startsWith('blog/')) {
+    const stripped = fullSlug.replace('blog/', '');
+    res = await getBlogBySlug(stripped);
+    if (!res?.data) res = await getBlogBySlug('/' + stripped);
+  }
+
+  // 4. Ultimate Fallback
+  if (!res?.data && slugArray.length > 1) {
+    res = await getBlogBySlug(lastSegment);
+    if (!res?.data) res = await getBlogBySlug('/' + lastSegment);
+  }
+
+  return res?.data;
+}
+
+function getRelevantProducts(blog: any, products: any[]): any[] {
+  if (!products || products.length === 0) return [];
+  const searchTerms = new Set<string>();
+  
+  if (blog.meta_keywords) {
+    blog.meta_keywords.split(',').forEach((k: string) => searchTerms.add(k.trim().toLowerCase()));
+  }
+  if (blog.title) {
+    blog.title.split(/\s+/).forEach((w: string) => {
+      const clean = w.replace(/[^a-zA-Z]/g, '').toLowerCase();
+      if (clean.length > 3) searchTerms.add(clean);
+    });
+  }
+
+  const termList = Array.from(searchTerms);
+  const matches = products.filter(p => {
+    const nameLower = p.name?.toLowerCase() || '';
+    const descLower = p.description?.toLowerCase() || '';
+    const catLower = p.category?.toLowerCase() || '';
+    return termList.some(term =>
+      nameLower.includes(term) || descLower.includes(term) || catLower.includes(term)
+    );
+  });
+
+  if (matches.length > 0) {
+    return matches.slice(0, 3);
+  }
+  
+  return products.slice(0, 3);
+}
+
+export default async function BlogDetailPage({ params }: PageProps) {
+  const blog = await fetchBlogWithFallback(params.slug);
+
+  if (!blog) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-[#FCF9F2] px-4 text-center">
         <h1 className="text-4xl font-black text-gray-900 mb-4">Blog Not Found</h1>
@@ -78,18 +86,16 @@ export default function BlogDetailPage() {
     );
   }
 
-  const shareOnFacebook = () => {
-    window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.href)}`, '_blank');
-  };
-
-  const shareOnTwitter = () => {
-    window.open(`https://twitter.com/intent/tweet?url=${encodeURIComponent(window.location.href)}&text=${encodeURIComponent(blog.title)}`, '_blank');
-  };
-
-  const copyToClipboard = () => {
-    navigator.clipboard.writeText(window.location.href);
-    alert('Link copied to clipboard!');
-  };
+  // Fetch products and identify relevant ones
+  let relevantProducts: any[] = [];
+  try {
+    const productsRes = await getProducts({ limit: '100' });
+    if (productsRes.success && productsRes.data) {
+      relevantProducts = getRelevantProducts(blog, productsRes.data);
+    }
+  } catch (error) {
+    console.error('Failed to fetch products for internal linking:', error);
+  }
 
   return (
     <main className="bg-[#FCF9F2] min-h-screen pb-20">
@@ -130,7 +136,7 @@ export default function BlogDetailPage() {
       )}
 
       {/* Content */}
-      <div className="max-w-[900px] mx-auto px-4">
+      <div className="max-w-[900px] mx-auto px-4 mb-16">
         <div className="bg-white rounded-[40px] p-8 lg:p-16 shadow-sm border border-gray-100">
           <div 
             className="blog-content"
@@ -140,29 +146,7 @@ export default function BlogDetailPage() {
           <div className="mt-16 pt-8 border-t border-gray-100 flex flex-col sm:flex-row sm:items-center justify-between gap-6">
             <div className="flex items-center gap-4">
               <span className="font-bold text-gray-900">Share this:</span>
-              <div className="flex gap-3">
-                <button 
-                  onClick={shareOnFacebook}
-                  className="w-10 h-10 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center hover:bg-blue-600 hover:text-white transition-all shadow-sm"
-                  title="Share on Facebook"
-                >
-                  <Facebook size={18}/>
-                </button>
-                <button 
-                  onClick={shareOnTwitter}
-                  className="w-10 h-10 rounded-full bg-sky-50 text-sky-500 flex items-center justify-center hover:bg-sky-500 hover:text-white transition-all shadow-sm"
-                  title="Share on Twitter"
-                >
-                  <Twitter size={18}/>
-                </button>
-                <button 
-                  onClick={copyToClipboard}
-                  className="w-10 h-10 rounded-full bg-gray-50 text-gray-600 flex items-center justify-center hover:bg-gray-600 hover:text-white transition-all shadow-sm"
-                  title="Copy Link"
-                >
-                  <LinkIcon size={18}/>
-                </button>
-              </div>
+              <ShareButtonsClient blogTitle={blog.title} />
             </div>
             
             <Link href="/products" className="text-[#1D5E20] font-black underline underline-offset-8 hover:text-[#164618] transition-colors">
@@ -171,6 +155,23 @@ export default function BlogDetailPage() {
           </div>
         </div>
       </div>
+
+      {/* Relevant Products Section */}
+      {relevantProducts.length > 0 && (
+        <section className="max-w-[1100px] mx-auto px-4 mt-16 pt-16 border-t border-gray-200">
+          <div className="text-center md:text-left mb-10">
+            <h3 className="text-2xl md:text-3xl font-black text-gray-900 mb-2">Related Wholesome Snacks</h3>
+            <p className="text-gray-500 font-medium">Snacks that pair perfectly with the healthy insights in this article.</p>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
+            {relevantProducts.map((product) => (
+              <div key={product.id} className="bg-white p-4 rounded-3xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
+                <ProductCard product={product} />
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
     </main>
   );
 }

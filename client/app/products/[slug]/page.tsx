@@ -2,6 +2,10 @@ import { getProductBySlug, getProductReviews, getSeedReviewsByProductId, getPubl
 import Link from 'next/link';
 import ProductDetailPageClient from './ProductDetailPageClient';
 
+// Always fetch fresh data — product page must reflect latest admin updates immediately
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 interface PageProps {
   params: {
     slug: string;

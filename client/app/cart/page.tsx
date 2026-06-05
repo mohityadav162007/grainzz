@@ -42,10 +42,6 @@ export default function CartPage() {
 
   const handleCheckout = () => {
     setQuickBuy(null);
-    if (!user) {
-      setAuthModalOpen(true);
-      return;
-    }
     router.push('/checkout');
   };
 
@@ -340,24 +336,9 @@ export default function CartPage() {
                   onClick={handleCheckout}
                   className="w-full bg-brand-green text-white font-black text-[17px] h-[60px] rounded-2xl flex items-center justify-center gap-3 hover:bg-[#154617] transition-all duration-300 shadow-[0_4px_20px_rgba(29,94,32,0.25)] hover:shadow-[0_6px_28px_rgba(29,94,32,0.35)] hover:scale-[1.01] active:scale-[0.99] mt-2"
                 >
-                  {!user && <Lock size={18} strokeWidth={2.5} />}
                   Proceed to Checkout
                   <ArrowRight size={20} strokeWidth={2.5} />
                 </button>
-
-                {/* Auth hint for guest */}
-                {!user && (
-                  <p className="text-[12px] text-center text-[#999] font-medium leading-relaxed">
-                    You'll need to{' '}
-                    <button
-                      onClick={() => setAuthModalOpen(true)}
-                      className="text-brand-green font-bold hover:underline"
-                    >
-                      sign in
-                    </button>{' '}
-                    to complete your purchase
-                  </p>
-                )}
 
                 {/* Secure Payment */}
                 <div className="flex items-center justify-center gap-2 text-[12px] text-[#AAA] font-medium mt-1">

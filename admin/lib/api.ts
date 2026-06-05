@@ -172,6 +172,7 @@ export const createProduct = async (formData: FormData) => {
 
   // Social Proof
   const delivery_count = Number(formData.get('delivery_count')) || 0;
+  const delivery_label = (formData.get('delivery_label') as string) || '';
   const seed_rating = Number(formData.get('seed_rating')) || 5.0;
   const seed_review_count = Number(formData.get('seed_review_count')) || 0;
   const seedReviewsStr = formData.get('seedReviews') as string;
@@ -235,6 +236,7 @@ export const createProduct = async (formData: FormData) => {
       package_height,
       package_weight,
       delivery_count,
+      delivery_label,
       seed_rating,
       seed_review_count,
     })
@@ -331,6 +333,8 @@ export const updateProduct = async (id: string, formData: FormData) => {
   // Social Proof
   const deliveryCount = formData.get('delivery_count');
   if (deliveryCount !== null) updates.delivery_count = Number(deliveryCount) || 0;
+  const deliveryLabel = formData.get('delivery_label');
+  if (deliveryLabel !== null) updates.delivery_label = deliveryLabel as string;
   const seedRating = formData.get('seed_rating');
   if (seedRating !== null) updates.seed_rating = Number(seedRating) || 5.0;
   const seedReviewCount = formData.get('seed_review_count');

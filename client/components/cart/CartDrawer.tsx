@@ -1,11 +1,11 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { X, Plus, Minus, Trash2, ShoppingBag, Tag, Lock } from 'lucide-react';
 import { useCartStore } from '@/store/cartStore';
 import { useAuthStore } from '@/store/authStore';
-import { applyCoupon as apiApplyCoupon } from '@/lib/api';
+import { applyCoupon as apiApplyCoupon, getActiveCoupons } from '@/lib/api';
 
 export default function CartDrawer() {
   const {
@@ -20,16 +20,22 @@ export default function CartDrawer() {
   const [couponError, setCouponError] = useState('');
   const [applyingCoupon, setApplyingCoupon] = useState(false);
   const [couponOpen, setCouponOpen] = useState(false);
+  const [couponsList, setCouponsList] = useState<any[]>([]);
+  const [loadingCoupons, setLoadingCoupons] = useState(false);
   const drawerRef = null;
+
+  useEffect(() => {
+    if (isOpen) {
+      setLoadingCoupons(true);
+      getActiveCoupons()
+        .then((data) => setCouponsList(data))
+        .catch((err) => console.error('Error fetching active coupons:', err))
+        .finally(() => setLoadingCoupons(false));
+    }
+  }, [isOpen]);
 
   const handleCheckout = () => {
     setQuickBuy(null);
-    if (!user) {
-      closeCart();
-      if (setGuestPopupMode) setGuestPopupMode('signin');
-      setAuthModalOpen(true);
-      return;
-    }
     closeCart();
     router.push('/checkout');
   };
@@ -45,6 +51,20 @@ export default function CartDrawer() {
     setCouponError('');
     try {
       const res = await apiApplyCoupon(couponCode.trim(), subtotal());
+      applyCoupon(res.data);
+      setCouponCode('');
+    } catch (err: any) {
+      setCouponError(err.message || 'Invalid coupon');
+    } finally {
+      setApplyingCoupon(false);
+    }
+  };
+
+  const handleApplySuggestedCoupon = async (code: string) => {
+    setApplyingCoupon(true);
+    setCouponError('');
+    try {
+      const res = await apiApplyCoupon(code, subtotal());
       applyCoupon(res.data);
       setCouponCode('');
     } catch (err: any) {
@@ -193,6 +213,82 @@ export default function CartDrawer() {
                       </div>
                     )}
                     {couponError && <p className="text-[13px] text-brand-red font-bold mt-[8px]">{couponError}</p>}
+                    
+                    {/* Suggestions List */}
+                    {!loadingCoupons && couponsList.length > 0 && (
+                      <div className="mt-4 space-y-3">
+                        <h4 className="text-[11px] font-extrabold uppercase text-gray-500 tracking-wider">Available Coupons</h4>
+                        <div className="space-y-2 max-h-[180px] overflow-y-auto pr-1 no-scrollbar">
+                          {couponsList.map((cp) => {
+                            const minOrder = Number(cp.min_order_value || 0);
+                            const currentCartTotal = subtotal();
+                            const isLocked = currentCartTotal < minOrder;
+                            const isCurrentlyApplied = coupon?.code === cp.code;
+                            const amountNeeded = minOrder - currentCartTotal;
+
+                            let benefitText = '';
+                            if (cp.free_shipping) {
+                              benefitText = 'FREE SHIPPING';
+                            } else if (cp.discount_type === 'percentage') {
+                              benefitText = `${Number(cp.value)}% OFF`;
+                            } else {
+                              benefitText = `₹${Number(cp.value)} OFF`;
+                            }
+
+                            return (
+                              <div
+                                key={cp.id}
+                                className={`p-3 rounded-xl border transition-all duration-300 bg-white ${
+                                  isCurrentlyApplied
+                                    ? 'border-[#1E8A38] bg-[#1E8A38]/5'
+                                    : isLocked
+                                    ? 'border-gray-200 opacity-75'
+                                    : 'border-brand-green/20 hover:border-[#1E8A38]/40'
+                                }`}
+                              >
+                                <div className="flex justify-between items-start">
+                                  <div>
+                                    <div className="flex items-center gap-2 flex-wrap">
+                                      <span className="font-mono font-bold text-[12px] text-brand-black bg-gray-100 px-2 py-0.5 rounded border border-gray-200">
+                                        {cp.code}
+                                      </span>
+                                      <span className="text-[11px] font-extrabold text-brand-green">
+                                        {benefitText}
+                                      </span>
+                                    </div>
+                                    <p className="text-[10px] text-gray-500 mt-1">
+                                      Min Order: ₹{minOrder}
+                                    </p>
+                                  </div>
+                                  <div>
+                                    {isCurrentlyApplied ? (
+                                      <span className="text-[11px] font-bold text-[#1E8A38] bg-[#1E8A38]/10 px-2 py-1 rounded">Applied</span>
+                                    ) : isLocked ? (
+                                      <div className="text-right">
+                                        <span className="text-[10px] font-bold text-gray-400 bg-gray-50 px-2 py-1 rounded inline-flex items-center gap-1">
+                                          <Lock size={10} /> Locked
+                                        </span>
+                                        <p className="text-[9px] text-brand-red font-semibold mt-1">
+                                          Add ₹{amountNeeded} more
+                                        </p>
+                                      </div>
+                                    ) : (
+                                      <button
+                                        type="button"
+                                        onClick={() => handleApplySuggestedCoupon(cp.code)}
+                                        className="bg-brand-green text-white text-[11px] font-bold px-3 py-1 rounded-lg hover:bg-[#154617] transition-all"
+                                      >
+                                        Apply
+                                      </button>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
@@ -232,14 +328,8 @@ export default function CartDrawer() {
                 onClick={handleCheckout}
                 className="w-full bg-brand-green text-white text-center h-[56px] flex items-center justify-center gap-2 rounded-[40px] font-bold text-[18px] hover:bg-[#154617] transition-all duration-300 shadow-[0_4px_16px_rgba(29,94,32,0.2)] tracking-wide"
               >
-                {!user && <Lock size={16} />}
-                {user ? 'Proceed to Checkout' : 'Sign In to Checkout'}
+                Proceed to Checkout
               </button>
-              {!user && (
-                <p className="text-center text-[12px] text-[#999] font-medium mt-2">
-                  Sign in or create an account to place your order
-                </p>
-              )}
             </div>
           </>
         )}

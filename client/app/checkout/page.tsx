@@ -35,7 +35,7 @@ export default function CheckoutPage() {
     revalidateCouponState,
     updateQuantity
   } = useCartStore();
-  const { user } = useAuthStore();
+  const { user, setAuthModalOpen } = useAuthStore();
   const router = useRouter();
 
   const handleUpdateQuantity = (itemId: string, newQty: number) => {
@@ -382,6 +382,13 @@ export default function CheckoutPage() {
 
   const handleSubmit = async () => {
     if (displayItems.length === 0) return;
+
+    // Auth gate — guest users must sign in before payment is initiated
+    if (!user) {
+      setAuthModalOpen(true);
+      return;
+    }
+
     setLoading(true);
     setError('');
     try {

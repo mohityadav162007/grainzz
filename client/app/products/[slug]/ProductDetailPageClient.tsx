@@ -431,7 +431,7 @@ export default function ProductDetailPageClient({
                   <Check size={12} className="text-[#1D5E2E]" />
                 </div>
                 <span className="text-[14px] font-bold text-[#1D5E2E] tracking-tight">
-                  {product.delivery_count.toLocaleString()}+ smiles delivered
+                  {product.delivery_count.toLocaleString()}+ {product.delivery_label?.trim() || 'Smiles Delivered'}
                 </span>
               </div>
             )}

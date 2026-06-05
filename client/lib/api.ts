@@ -951,3 +951,21 @@ export const getBlogBySlug = async (slug: string) => {
   if (error) throw new Error(error.message);
   return { success: true, data };
 };
+
+export const getActiveCoupons = async (): Promise<any[]> => {
+  const now = new Date().toISOString();
+  const { data, error } = await supabase
+    .from('coupons')
+    .select('*')
+    .eq('is_active', true)
+    .eq('is_visible', true)
+    .gt('expiry_date', now)
+    .order('min_order_value', { ascending: true });
+
+  if (error) {
+    console.error('getActiveCoupons error:', error);
+    return [];
+  }
+  return data || [];
+};
+

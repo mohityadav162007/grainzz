@@ -483,10 +483,14 @@ export default function EditProductPage() {
             <p className="text-xs text-gray-500 mt-1">Configure seed stats and customer testimonials for immediate trust.</p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-1">Delivery Count (Smiles)</label>
               <input name="delivery_count" type="number" className="admin-input" defaultValue={product.delivery_count || 0} placeholder="e.g. 146000" />
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-1">Delivery Label</label>
+              <input name="delivery_label" type="text" className="admin-input" defaultValue={product.delivery_label || 'Meals Delivered'} placeholder="e.g. Meals Delivered" />
             </div>
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-1">Seed Rating (0.0–5.0)</label>

@@ -47,6 +47,7 @@ interface CartStore {
   total: () => number;
   itemCount: () => number;
   revalidateCouponState: (showNotification?: boolean) => void;
+  revalidateCouponStateAsync: (showNotification?: boolean, userId?: string, email?: string) => Promise<void>;
 }
 
 export const validateCoupon = (coupon: CouponData | null, subtotal: number): { isValid: boolean; reason?: string } => {
@@ -87,6 +88,60 @@ export const useCartStore = create<CartStore>()(
       couponNotification: null,
 
       setCouponNotification: (msg) => set({ couponNotification: msg }),
+
+      revalidateCouponStateAsync: async (showNotification = false, userId?: string, email?: string) => {
+        const { coupon, items, subtotal, quickBuyItem } = get();
+        const activeItems = quickBuyItem ? [quickBuyItem] : items;
+        // Rule: Clear coupon if cart is empty
+        if (activeItems.length === 0) {
+          if (coupon) {
+            set({ coupon: null });
+          }
+          return;
+        }
+
+        if (!coupon) return;
+
+        const currentSubtotal = quickBuyItem ? (quickBuyItem.price * quickBuyItem.quantity) : subtotal();
+        const validation = validateCoupon(coupon, currentSubtotal);
+
+        if (!validation.isValid) {
+          set({ coupon: null });
+          if (showNotification) {
+            set({ couponNotification: validation.reason || 'Coupon removed because threshold is no longer met.' });
+          }
+          return;
+        }
+
+        // If userId or email is available, query history API for first-order coupons or prior usage
+        if (userId || email) {
+          try {
+            const cleanEmail = email?.trim().toLowerCase() || '';
+            const verifyRes = await fetch(`/api/coupons/verify?code=${encodeURIComponent(coupon.code)}&email=${encodeURIComponent(cleanEmail)}&userId=${encodeURIComponent(userId || '')}`);
+            const verifyData = await verifyRes.json();
+            if (verifyData.used) {
+              set({ coupon: null });
+              if (showNotification) {
+                set({ couponNotification: verifyData.error || 'Coupon removed because it is only valid for your first order.' });
+              }
+              return;
+            }
+          } catch (err) {
+            console.error('Failed to verify coupon history in store:', err);
+          }
+        }
+
+        // Dynamic discount amount update based on new subtotal
+        const newDiscount = calculateDiscount(coupon, currentSubtotal);
+        if (newDiscount !== coupon.discountAmount) {
+          set({
+            coupon: {
+              ...coupon,
+              discountAmount: newDiscount
+            }
+          });
+        }
+      },
 
       revalidateCouponState: (showNotification = false) => {
         const { coupon, items, subtotal, quickBuyItem } = get();

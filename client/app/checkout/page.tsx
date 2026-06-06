@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -33,6 +33,7 @@ export default function CheckoutPage() {
     removeCoupon,
     applyCoupon,
     revalidateCouponState,
+    revalidateCouponStateAsync,
     updateQuantity
   } = useCartStore();
   const { user, setAuthModalOpen } = useAuthStore();
@@ -89,8 +90,26 @@ export default function CheckoutPage() {
     revalidateCouponState(false);
   }, []);
 
-  const displayItems = quickBuyItem ? [quickBuyItem] : items;
-  const displaySubtotal = quickBuyItem ? quickBuyItem.price * quickBuyItem.quantity : subtotal();
+  // Revalidate coupon any time the logged-in user's email (or entered email) changes.
+  // This catches scenarios where a guest fills email first, then logs in or updates their email.
+  useEffect(() => {
+    if (user && (form.email?.trim() || user.email)) {
+      const email = form.email?.trim() || user.email || '';
+      revalidateCouponStateAsync(true, user.id, email);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id, form.email]);
+
+  // Memoize so effect deps get stable references — prevents infinite shipping-recalc loops
+  const displayItems = useMemo(
+    () => (quickBuyItem ? [quickBuyItem] : items),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [quickBuyItem?.id, quickBuyItem?.quantity, quickBuyItem?.price, items]
+  );
+  const displaySubtotal = useMemo(
+    () => (quickBuyItem ? quickBuyItem.price * quickBuyItem.quantity : subtotal()),
+    [quickBuyItem?.price, quickBuyItem?.quantity, items, subtotal]
+  );
   const displayDiscount = coupon ? calculateDiscount(coupon, displaySubtotal) : 0;
   const displayTotal = Math.max(displaySubtotal - displayDiscount, 0);
   const finalTotal = displayTotal + (shippingCharge || 0);
@@ -306,7 +325,18 @@ export default function CheckoutPage() {
         }
         return true;
       }
-      return false;
+      // Shipping API returned a falsy response — apply fallback charge and allow checkout to proceed
+      console.warn('[Checkout] Shipping API returned null/empty response. Applying fallback charge.');
+      const fallbackOnNull = hasCombo ? 99 : 50;
+      setCalculatedShippingCharge(fallbackOnNull);
+      if (coupon?.freeShipping) {
+        setShippingCharge(0);
+        setFreeShipping(true);
+      } else {
+        setShippingCharge(fallbackOnNull);
+        setFreeShipping(false);
+      }
+      return true;
     } catch (err: any) {
       console.error('Shipping calculation error:', err);
       // Failsafe fallback: ₹99 combos, ₹50 single products
@@ -326,10 +356,25 @@ export default function CheckoutPage() {
     }
   };
 
-  // Trigger dynamic shipping calculation reactively on changes
+  // ── Effect 1: Call the Shiprocket API only when physical shipping factors change.
+  // Coupon is intentionally excluded — changing coupon state must NOT trigger a new API call.
   useEffect(() => {
     recalculateShippingCharge();
-  }, [displayItems, productMetadata, displaySubtotal, displayDiscount, coupon, form.pincode, hasCombo]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [displayItems, productMetadata, displaySubtotal, form.pincode, hasCombo]);
+
+  // ── Effect 2: Apply/remove free-shipping display immediately when coupon changes.
+  // This is purely local — no spinner, no API call, no flicker.
+  useEffect(() => {
+    if (calculatedShippingCharge === null) return; // no rate fetched yet — skip
+    if (coupon?.freeShipping) {
+      setShippingCharge(0);
+      setFreeShipping(true);
+    } else {
+      setShippingCharge(calculatedShippingCharge);
+      setFreeShipping(false);
+    }
+  }, [coupon, calculatedShippingCharge]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -363,11 +408,12 @@ export default function CheckoutPage() {
   const handleContinueToSummary = async () => {
     if (!validateForm()) return;
 
-    // Verify coupon threshold is still met before proceeding to summary step
+    // Verify coupon threshold and first-order usage before proceeding
     if (coupon) {
-      revalidateCouponState(false);
+      // Use async validation that checks server-side history (first-order rule)
+      await revalidateCouponStateAsync(true, user?.id || '', form.email?.trim() || user?.email || '');
       if (!useCartStore.getState().coupon) {
-        setError('Your applied coupon is no longer valid because the minimum order value is no longer met.');
+        setError('Your applied coupon is no longer valid because the minimum order value is no longer met or it is a first‑order‑only coupon you have already used.');
         return;
       }
     }

@@ -6,19 +6,46 @@ export const runtime = 'nodejs';
 /**
  * GET /api/coupons/verify
  * Query params: ?code=...&email=...&userId=...
- * 
+ *
  * Verifies if a given coupon code has already been used by the user or email
- * in a successfully paid order. This uses the Supabase service role key to bypass RLS,
- * which is necessary since guest users cannot query the orders table.
+ * in a successfully paid/processing/shipped/delivered order. Uses the Supabase
+ * service role key to bypass RLS (needed for guest users querying the orders table).
  */
+
+/** Returns true if the query yielded at least one order matching the filter. */
+async function hasOrder(supabase: ReturnType<typeof getSupabaseAdmin>, filter: Record<string, string>): Promise<boolean> {
+  let query = supabase.from('orders').select('id').limit(1);
+  for (const [key, val] of Object.entries(filter)) {
+    query = (query as any).eq(key, val);
+  }
+  // Broaden to match any of: payment_status='paid' OR status in meaningful statuses
+  // We achieve this by OR-ing conditions at the PostgREST level.
+  // Since filter already narrows by user/email and optionally coupon_code,
+  // we additionally filter for any active/paid-like status.
+  const { data } = await (query as any).or(
+    'payment_status.eq.paid,status.eq.paid,status.eq.processing,status.eq.shipped,status.eq.delivered'
+  );
+  return Array.isArray(data) && data.length > 0;
+}
+
 export async function GET(req: NextRequest) {
   try {
     const code = req.nextUrl.searchParams.get('code');
     const email = req.nextUrl.searchParams.get('email');
     const userId = req.nextUrl.searchParams.get('userId');
 
+    // Basic validation – code must be alphanumeric, 3-20 chars
     if (!code) {
       return NextResponse.json({ error: 'Missing coupon code' }, { status: 400 });
+    }
+    const codePattern = /^[A-Z0-9]{3,20}$/i;
+    if (!codePattern.test(code)) {
+      return NextResponse.json({ error: 'Invalid coupon code format' }, { status: 400 });
+    }
+
+    // Validate email format if provided
+    if (email && !/^\S+@\S+\.\S+$/.test(email)) {
+      return NextResponse.json({ error: 'Invalid email format' }, { status: 400 });
     }
 
     // If neither email nor userId is provided, we can't verify history, so assume unused.
@@ -28,7 +55,7 @@ export async function GET(req: NextRequest) {
 
     const supabase = getSupabaseAdmin();
 
-    // Check if the coupon is restricted to first-order only
+    // ── 1. First-order-only check ────────────────────────────────────────────
     const { data: couponData } = await supabase
       .from('coupons')
       .select('is_first_order_only')
@@ -36,68 +63,42 @@ export async function GET(req: NextRequest) {
       .single();
 
     if (couponData?.is_first_order_only) {
-      let hasAnyPaidOrder = false;
+      let hasAnyOrder = false;
 
       if (userId) {
-        const { data } = await supabase
-          .from('orders')
-          .select('id')
-          .eq('user_id', userId)
-          .eq('payment_status', 'paid')
-          .limit(1);
-        if (data && data.length > 0) hasAnyPaidOrder = true;
+        hasAnyOrder = await hasOrder(supabase, { user_id: userId });
       }
 
-      if (email && !hasAnyPaidOrder) {
+      if (!hasAnyOrder && email) {
         const cleanEmail = email.trim().toLowerCase();
         if (cleanEmail.includes('@')) {
-          const { data } = await supabase
-            .from('orders')
-            .select('id')
-            .eq('user_email', cleanEmail)
-            .eq('payment_status', 'paid')
-            .limit(1);
-          if (data && data.length > 0) hasAnyPaidOrder = true;
+          hasAnyOrder = await hasOrder(supabase, { user_email: cleanEmail });
         }
       }
 
-      if (hasAnyPaidOrder) {
-        return NextResponse.json({ used: true, error: 'This coupon is only valid for your first order.' });
+      if (hasAnyOrder) {
+        return NextResponse.json({
+          used: true,
+          error: 'This coupon is only valid for your first order.',
+        });
       }
     }
 
-    let hasPriorOrder = false;
+    // ── 2. Coupon-already-used check ─────────────────────────────────────────
+    let hasPriorUsage = false;
 
-    // 1. Check by userId if provided
     if (userId) {
-      const { data } = await supabase
-        .from('orders')
-        .select('id')
-        .eq('user_id', userId)
-        .eq('coupon_code', code)
-        .eq('payment_status', 'paid')
-        .limit(1);
-      
-      if (data && data.length > 0) hasPriorOrder = true;
+      hasPriorUsage = await hasOrder(supabase, { user_id: userId, coupon_code: code });
     }
 
-    // 2. Check by email if provided and not already found
-    if (email && !hasPriorOrder) {
+    if (!hasPriorUsage && email) {
       const cleanEmail = email.trim().toLowerCase();
       if (cleanEmail.includes('@')) {
-        const { data } = await supabase
-          .from('orders')
-          .select('id')
-          .eq('user_email', cleanEmail)
-          .eq('coupon_code', code)
-          .eq('payment_status', 'paid')
-          .limit(1);
-        
-        if (data && data.length > 0) hasPriorOrder = true;
+        hasPriorUsage = await hasOrder(supabase, { user_email: cleanEmail, coupon_code: code });
       }
     }
 
-    return NextResponse.json({ used: hasPriorOrder });
+    return NextResponse.json({ used: hasPriorUsage });
 
   } catch (error: any) {
     console.error('Server coupon verification error:', error);

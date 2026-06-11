@@ -426,8 +426,8 @@ export const getAvailabilityLogos = async () => {
         // Legacy format — convert to new shape
         return {
           section_title: 'The Essential Snack Box',
-          variants: parsed.map((item: any) => ({
-            id: item.id || crypto.randomUUID(),
+          variants: parsed.map((item: any, idx: number) => ({
+            id: item.id || `snack-legacy-${idx}`,
             title: item.title || '',
             subtitle: item.description || '',
             image_url: item.image_url || '',

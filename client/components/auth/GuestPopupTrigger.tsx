@@ -21,7 +21,11 @@ export default function GuestPopupTrigger() {
     // Already signed in
     if (user) return;
     // Already fired this session
-    if (typeof window !== 'undefined' && sessionStorage.getItem('gz_guest_popup')) return;
+    try {
+      if (typeof window !== 'undefined' && sessionStorage.getItem('gz_guest_popup')) return;
+    } catch {
+      // Safari private browsing may throw — treat as no prior popup
+    }
     // Already scheduled
     if (firedRef.current) return;
 
@@ -31,8 +35,12 @@ export default function GuestPopupTrigger() {
       // Final check inside timeout
       const state = useAuthStore.getState();
       if (!state.user && !state.isAuthModalOpen) {
-        if (typeof window !== 'undefined') {
-          sessionStorage.setItem('gz_guest_popup', '1');
+        try {
+          if (typeof window !== 'undefined') {
+            sessionStorage.setItem('gz_guest_popup', '1');
+          }
+        } catch {
+          // Safari private browsing — silently fail
         }
         state.setGuestPopupMode('signup');
         state.setAuthModalOpen(true);

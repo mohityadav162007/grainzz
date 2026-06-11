@@ -25,6 +25,29 @@
     margin: 0;
     padding: 0;
     -webkit-overflow-scrolling: touch;
+    /* Safari safe text rendering */
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+}
+
+/* Safari backdrop-filter fallback — ensure -webkit- prefix is always present */
+@supports (-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px)) {
+  .backdrop-blur-sm {
+    -webkit-backdrop-filter: blur(4px);
+    backdrop-filter: blur(4px);
+  }
+  .backdrop-blur-md {
+    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(12px);
+  }
+  .backdrop-blur-\[1px\] {
+    -webkit-backdrop-filter: blur(1px);
+    backdrop-filter: blur(1px);
+  }
+  .backdrop-blur-\[2px\] {
+    -webkit-backdrop-filter: blur(2px);
+    backdrop-filter: blur(2px);
   }
 }
 
@@ -134,3 +157,30 @@
 .blog-content img { @apply rounded-2xl my-8 w-full shadow-lg; }
 .blog-content blockquote { @apply border-l-4 border-[#1D5E20] pl-6 py-2 italic bg-[#1D5E20]/5 rounded-r-xl my-8 text-gray-700; }
 
+/* Safari GPU compositing hints for commonly animated elements */
+.animate-fade-in,
+.animate-slide-in-right,
+.animate-pulse {
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+}
+
+/* Reduce motion for users who prefer it (improves Safari iOS battery life) */
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-in,
+  .animate-slide-in-right,
+  .animate-pulse,
+  .marquee-content,
+  .marquee-track {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+/* iOS Safari smooth scrolling for overflow containers */
+.overflow-y-auto,
+.overflow-x-auto {
+  -webkit-overflow-scrolling: touch;
+}

@@ -1,5 +1,22 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { persist, createJSONStorage } from 'zustand/middleware';
+
+// Safari-safe storage getter: returns a localStorage-compatible object
+// that guards against unavailability (Safari private browsing, SSR, quota exceeded)
+const getSafeStorage = (): Storage => ({
+  getItem: (name: string): string | null => {
+    try { return localStorage.getItem(name); } catch { return null; }
+  },
+  setItem: (name: string, value: string): void => {
+    try { localStorage.setItem(name, value); } catch { /* quota exceeded */ }
+  },
+  removeItem: (name: string): void => {
+    try { localStorage.removeItem(name); } catch { /* ignore */ }
+  },
+  get length() { try { return localStorage.length; } catch { return 0; } },
+  clear: () => { try { localStorage.clear(); } catch { /* ignore */ } },
+  key: (index: number) => { try { return localStorage.key(index); } catch { return null; } },
+});
 
 export interface CartItem {
   id: string;
@@ -230,6 +247,9 @@ export const useCartStore = create<CartStore>()(
     }),
     {
       name: 'grainzz-cart',
+      storage: createJSONStorage(() =>
+        typeof window !== 'undefined' ? getSafeStorage() : (undefined as any)
+      ),
       onRehydrateStorage: () => (state) => {
         if (state) {
           state.revalidateCouponState(false);

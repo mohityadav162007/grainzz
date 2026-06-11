@@ -87,6 +87,7 @@ export default function PoweredBy() {
 
   const [windowWidth, setWindowWidth] = useState(0);
   useEffect(() => {
+    if (typeof window === 'undefined') return;
     setWindowWidth(window.innerWidth);
     const handleResize = () => setWindowWidth(window.innerWidth);
     window.addEventListener('resize', handleResize);

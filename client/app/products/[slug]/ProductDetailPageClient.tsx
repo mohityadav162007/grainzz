@@ -61,7 +61,7 @@ export default function ProductDetailPageClient({
     if (!product?.id) return;
     
     // Set up realtime subscription for reviews
-    const channelName = `public:reviews:${product.id}:${Math.random().toString(36).substring(7)}`;
+    const channelName = `public:reviews:${product.id}:${Date.now()}`;
     const channel: any = supabase.channel(channelName);
     const subscription = channel
       .on('postgres_changes', { event: '*', schema: 'public', table: 'reviews', filter: `product_id=eq.${product.id}` }, () => {

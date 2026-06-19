@@ -143,7 +143,7 @@ export default function CartDrawer() {
                     
                     <div className="flex items-center gap-[8px] mt-[4px]">
                       <span className="text-[16px] font-bold text-brand-black">₹{item.price}</span>
-                      {item.mrp > item.price && (
+                      {(item?.mrp ?? 0) > (item?.price ?? 0) && (
                         <span className="text-[13px] text-[#8E8E8E] line-through font-medium">₹{item.mrp}</span>
                       )}
                     </div>
@@ -167,7 +167,7 @@ export default function CartDrawer() {
                           <Plus size={14} />
                         </button>
                       </div>
-                      <span className="text-[16px] font-bold text-brand-black">₹{item.price * item.quantity}</span>
+                      <span className="text-[16px] font-bold text-brand-black">₹{(item?.price ?? 0) * (item?.quantity ?? 0)}</span>
                     </div>
                   </div>
                 </div>

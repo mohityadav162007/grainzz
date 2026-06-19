@@ -217,6 +217,7 @@ ${quantityTimeline || 'No specific quantity/timeline provided.'}
 
   // Smooth scroll helper
   const scrollToId = (id: string) => {
+    if (typeof document === 'undefined') return;
     const el = document.getElementById(id);
     if (el) el.scrollIntoView({ behavior: 'smooth' });
   };

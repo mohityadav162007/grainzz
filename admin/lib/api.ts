@@ -1504,6 +1504,7 @@ export const createBlog = async (formData: FormData) => {
   const excerpt = formData.get('excerpt') as string;
   const content = formData.get('content') as string;
   const sort_order = Number(formData.get('sort_order')) || 0;
+  // Checkboxes are absent from FormData when unchecked — treat absence as false
   const is_active = formData.get('is_active') === 'true';
 
   let slug = (formData.get('slug') as string) || title
@@ -1580,8 +1581,8 @@ export const updateBlog = async (id: string, formData: FormData) => {
   const sort_order = formData.get('sort_order');
   if (sort_order !== null) updates.sort_order = Number(sort_order);
 
-  const is_active = formData.get('is_active');
-  if (is_active !== null) updates.is_active = is_active === 'true';
+  // Checkboxes are absent from FormData when unchecked — always explicitly set the boolean
+  updates.is_active = formData.get('is_active') === 'true';
 
   const file = formData.get('featured_image') as File;
   if (file && file.size > 0) {
@@ -1611,8 +1612,8 @@ export const updateBlog = async (id: string, formData: FormData) => {
   const og_description = formData.get('og_description');
   if (og_description !== null) updates.og_description = og_description as string;
 
-  const is_indexable = formData.get('is_indexable');
-  if (is_indexable !== null) updates.is_indexable = is_indexable !== 'false';
+  // Checkboxes are absent from FormData when unchecked — always explicitly set the boolean
+  updates.is_indexable = formData.get('is_indexable') === 'true';
 
   const ogImageFile = formData.get('og_image') as File;
   if (ogImageFile && ogImageFile.size > 0) {

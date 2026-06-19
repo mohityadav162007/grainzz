@@ -4,16 +4,24 @@ import { Facebook, Twitter, Link as LinkIcon } from 'lucide-react';
 
 export default function ShareButtonsClient({ blogTitle }: { blogTitle: string }) {
   const shareOnFacebook = () => {
+    if (typeof window === 'undefined') return;
     window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.href)}`, '_blank');
   };
 
   const shareOnTwitter = () => {
+    if (typeof window === 'undefined') return;
     window.open(`https://twitter.com/intent/tweet?url=${encodeURIComponent(window.location.href)}&text=${encodeURIComponent(blogTitle)}`, '_blank');
   };
 
   const copyToClipboard = () => {
-    navigator.clipboard.writeText(window.location.href);
-    alert('Link copied to clipboard!');
+    if (typeof window === 'undefined') return;
+    try {
+      navigator.clipboard.writeText(window.location.href);
+      alert('Link copied to clipboard!');
+    } catch {
+      // Fallback for Safari or browsers that don't support clipboard API
+      alert('Could not copy link.');
+    }
   };
 
   return (

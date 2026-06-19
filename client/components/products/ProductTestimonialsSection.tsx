@@ -52,6 +52,7 @@ export default function ProductTestimonialsSection() {
   
   // Responsive cards to show
   useEffect(() => {
+    if (typeof window === 'undefined') return;
     const handleResize = () => {
       if (window.innerWidth < 768) {
         setCardsToShow(1);

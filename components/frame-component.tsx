@@ -7,8 +7,8 @@ import ButtonPrimary from "./button-primary";
 export type FrameComponentType = {
   className?: string;
   offerBackground: string;
-  property1?: CSSProperties["property1"];
-  property2?: CSSProperties["property2"];
+  property1?: string;
+  property2?: string;
   buyNow?: string;
 
   /** Style props */

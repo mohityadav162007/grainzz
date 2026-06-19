@@ -1,12 +1,12 @@
 import type { NextPage } from "next";
-import { type CSSProperties } from "react";
+
 import FooterContent from "./footer-content";
 
 export type FooterType = {
   className?: string;
 
   /** Variant props */
-  property1?: CSSProperties["property1"];
+  property1?: string;
 };
 
 const Footer: NextPage<FooterType> = ({

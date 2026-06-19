@@ -1,7 +1,7 @@
 import "./global.css";
 import Script from "next/script";
 
-import { ReactNode } from "react";
+import type { ReactNode } from "react";
 
 export const metadata = {
   title: `Grainzz (Copy)`,
@@ -10,7 +10,7 @@ export const metadata = {
 export default function RootLayout({
   children,
 }: {
-  children: React.ReactNode;
+  children: ReactNode;
 }) {
   return (
     <html lang="en" suppressHydrationWarning>

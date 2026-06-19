@@ -1,5 +1,5 @@
 import type { NextPage } from "next";
-import { type CSSProperties } from "react";
+
 import Image from "next/image";
 
 export type ButtonPrimaryType = {
@@ -7,8 +7,8 @@ export type ButtonPrimaryType = {
   buyNow?: string;
 
   /** Variant props */
-  property1?: CSSProperties["property1"];
-  property2?: CSSProperties["property2"];
+  property1?: string;
+  property2?: string;
 };
 
 const getButtonPrimaryStyle = (styleKey: string) => {

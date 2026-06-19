@@ -10,9 +10,11 @@ import FAQSection from '@/components/home/FAQSection';
 import { constructMetadata } from '@/lib/seo';
 
 export const metadata: Metadata = constructMetadata({
-  title: 'About Us | Grainzz',
-  description: 'Learn about Grainzz and our mission to create healthier snacks made with real grains and clean ingredients.',
+  title: 'About Us | Grainzz — Healthy Grain Snack Brand from India',
+  description: 'Learn about Grainzz, India\'s healthy grain snack brand. Founded by Vibhor Kataria and Rishel Puri, we craft roasted millet snacks with real grains and no palm oil.',
   path: '/about',
+  image: '/about-hero.jpg',
+  keywords: ['grainzz founders', 'healthy Indian snack brand', 'millet snacks India', 'grain based snacks', 'roasted snacks brand India', 'no palm oil snacks'],
 });
 
 const story = [
@@ -159,13 +161,13 @@ export default function AboutPage() {
             <h2 className="text-[36px] md:text-[48px] font-semibold mb-[28px] leading-[1.15] tracking-tight text-white">Meet The Founders</h2>
             <div className="space-y-6">
               <p className="text-white/90 text-[16px] md:text-[18px] leading-[1.6] font-normal">
-                Grainzz was founded by Vibhor Kataria and Rishel Puri, two young entrepreneurs who first met during their bachelor&apos;s at JIMS Vasant Kunj and later pursued their MBA from Delhi Technological University. Their journey started like many young professionals in India: college, corporate roles, long workdays, late evenings and endless conversations about what they could build on their own.
+                Grainzz was founded by Vibhor Kataria and Rishel Puri, two young entrepreneurs who first met during their bachelor&apos;s at JIMS Vasant Kunj and later pursued their MBA from Delhi Technological University. Their journey started like many young professionals in India — college, corporate roles, long workdays, late evenings, and endless conversations about what they could build on their own.
               </p>
               <p className="text-white/90 text-[16px] md:text-[18px] leading-[1.6] font-normal">
-                During that phase, they realised how deeply snacks had become part of everyday life. Office breaks, travel, study sessions, IPL nights, family time and late-night work all had one thing in common: people were snacking more than ever, but better options were still hard to find. Most snacks were either tasty but heavy, or healthier but not exciting enough to repeat.
+                During that phase, they noticed how deeply snacking had become part of everyday Indian life. Office breaks, travel, study sessions, IPL nights, family time and late-night work all had one thing in common: people were reaching for snacks more than ever, but genuinely better options were still hard to find. Most snacks were either tasty but heavy, or labelled &quot;healthy&quot; but too boring to go back to. That gap — between clean ingredients and real flavour — became the founding insight behind Grainzz.
               </p>
               <p className="text-white/90 text-[16px] md:text-[18px] leading-[1.6] font-normal">
-                That gap became the starting point for Grainzz. Vibhor brings execution, operations and ground-level problem solving to the brand, while Rishel brings branding, marketing and growth strategy. Together, they are building Grainzz as a modern Indian snack company that makes better snacking easier to choose without making it feel boring.
+                That insight became Grainzz — a modern Indian healthy snack brand built on real grains like Ragi, Bajra, Jowar, Quinoa, Oats, and Puffed Rice. Roasted not fried, made with no palm oil, zero trans fat, and bold Indian flavours. Vibhor drives execution, operations, and ground-level problem solving, while Rishel leads branding, marketing, and growth. Together, they are building a millet snacks brand that makes smarter snacking the easier and more exciting choice for everyday India.
               </p>
             </div>
           </div>

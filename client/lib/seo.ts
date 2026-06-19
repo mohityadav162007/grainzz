@@ -1,10 +1,13 @@
 import { Metadata } from 'next';
 
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.grainzzindia.com';
+
 export const siteConfig = {
   name: 'Grainzz',
   description: 'GRAINZZ – Healthy Millet Snacks Made with Real Grains.',
-  url: process.env.NEXT_PUBLIC_SITE_URL || 'https://www.grainzzindia.com',
-  ogImage: '/og-image.jpg',
+  url: SITE_URL,
+  // Absolute URL — required for Google OG tags and JSON-LD schema
+  ogImage: `${SITE_URL}/og-image.jpg`,
   links: {
     instagram: 'https://www.instagram.com/grainzbyvitalicious/',
     facebook: 'https://www.facebook.com/grainzzbyvitalicious',
@@ -113,12 +116,19 @@ export function generateWebSiteSchema() {
 }
 
 export function generateProductSchema(product: any, url: string, reviews: any[] = [], seedReviews: any[] = []) {
+  // Resolve product image to an absolute URL (required for Google rich results)
+  const resolveImage = (img: string | undefined): string => {
+    if (!img) return siteConfig.ogImage;
+    if (img.startsWith('http')) return img;
+    return `${siteConfig.url}${img.startsWith('/') ? img : '/' + img}`;
+  };
+
   const schema: any = {
     '@context': 'https://schema.org',
     '@type': 'Product',
     name: product.name,
     description: product.description || product.short_description || `Buy ${product.name} at Grainzz`,
-    image: product.images?.[0] ? (product.images[0].startsWith('http') ? product.images[0] : `${siteConfig.url}${product.images[0]}`) : siteConfig.ogImage,
+    image: resolveImage(product.images?.[0]),
     brand: {
       '@type': 'Brand',
       name: siteConfig.name,
@@ -215,12 +225,20 @@ export function generateFAQSchema(faqs: { question: string; answer: string }[]) 
 }
 
 export function generateBlogSchema(blog: any, url: string) {
+  // Ensure image URL is absolute for Google structured data
+  const blogImage = (() => {
+    const raw = blog.og_image_url || blog.featured_image_url || siteConfig.ogImage;
+    if (!raw) return siteConfig.ogImage;
+    if (raw.startsWith('http')) return raw;
+    return `${siteConfig.url}${raw.startsWith('/') ? raw : '/' + raw}`;
+  })();
+
   return {
     '@context': 'https://schema.org',
     '@type': 'BlogPosting',
     headline: blog.seo_title || blog.title,
     description: blog.meta_description || blog.excerpt,
-    image: blog.og_image_url || blog.featured_image_url || siteConfig.ogImage,
+    image: blogImage,
     datePublished: new Date(blog.created_at).toISOString(),
     dateModified: new Date(blog.updated_at || blog.created_at).toISOString(),
     author: {

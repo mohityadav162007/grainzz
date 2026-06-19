@@ -4,10 +4,10 @@ import Image from 'next/image';
 import { Droplets, Wheat, ShieldCheck, Heart } from 'lucide-react';
 
 const fallbackBenefits = [
-  { icon: 'Droplets', title: 'Clean Snacking', description: 'We\'ve removed the "bad stuff". Our snacks are crafted with zero palm oil, zero trans fat, and no added preservatives.' },
-  { icon: 'Wheat', title: 'Powered by Supergrains', description: 'We skip refined flour (maida). Instead, we use a base of nutrient-dense millets and grains like Jowar, Bajra, Quinoa, and Oats.' },
-  { icon: 'Heart', title: 'Roasted, Not Deep-Fried', description: 'We believe great taste shouldn\'t come at the cost of your heart health. That\'s why we use roasting techniques instead of deep-frying.' },
-  { icon: 'ShieldCheck', title: 'Bold, Authentic & Indian', description: 'We refuse to let "healthy" mean "bland." We use real spices and natural seasonings to bring you the nostalgic zing of Indian food.' },
+  { icon: 'Droplets', title: 'Clean Snacking', description: 'No palm oil, zero trans fat, zero cholesterol, and no added preservatives. Every Grainzz snack is made to be a cleaner, smarter choice for your daily routine.' },
+  { icon: 'Wheat', title: 'Powered by Supergrains', description: 'We use nutrient-dense millets and grains like Ragi, Bajra, Jowar, Quinoa, and Oats instead of refined flour (maida). Real grains. Real nutrition.' },
+  { icon: 'Heart', title: 'Roasted, Not Deep-Fried', description: 'Our snacks are roasted, not deep-fried — delivering bold crunch and great taste without the extra oil. Better for your heart and better for everyday snacking.' },
+  { icon: 'ShieldCheck', title: 'Bold, Authentic & Indian', description: 'We use real Indian spices and natural seasonings to deliver the authentic zing of Indian flavours — without the guilt. Healthy snacking should never be bland.' },
 ];
 
 const iconMap: Record<string, any> = {
@@ -16,7 +16,7 @@ const iconMap: Record<string, any> = {
 
 export default function BenefitsSection() {
   const [benefits] = useState(fallbackBenefits);
-  const heading = 'Healthy Snacking With\nBenefits Beyond The Ordinary';
+  const heading = 'Why Grainzz Is India\'s\nSmarter Snacking Choice';
 
   return (
     <>

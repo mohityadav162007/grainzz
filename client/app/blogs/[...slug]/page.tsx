@@ -1,3 +1,6 @@
+// Always fetch fresh — ensures blog content/image edits appear without redeploy
+export const revalidate = 0;
+
 import { getBlogBySlug, getProducts } from '@/lib/api';
 import Link from 'next/link';
 import { ArrowLeft, Calendar, Clock } from 'lucide-react';

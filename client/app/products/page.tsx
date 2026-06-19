@@ -205,7 +205,11 @@ function ProductsContent() {
       <div className="max-w-[1280px] mx-auto px-4 md:px-[40px] lg:px-[60px] pt-[40px]">
         {/* Page Heading */}
         <h1 className="text-[28px] md:text-[36px] font-bold text-brand-black tracking-tight m-0 mb-[32px]">
-          {search ? `Search: "${search}"` : selectedCategories.length === 1 ? selectedCategories[0] : 'All Products'}
+          {search
+            ? `Search: "${search}"`
+            : selectedCategories.length === 1
+            ? selectedCategories[0]
+            : 'Shop Healthy Grain Snacks — Ragi Chips, Bajra Puffs & More'}
         </h1>
 
         <div className="flex gap-[40px] lg:gap-[48px] items-start">

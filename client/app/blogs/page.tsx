@@ -1,3 +1,6 @@
+// Always fetch fresh — ensures blog edits appear immediately without a redeploy
+export const revalidate = 0;
+
 import { getPublicBlogs } from '@/lib/api';
 import Link from 'next/link';
 import { ChevronRight } from 'lucide-react';

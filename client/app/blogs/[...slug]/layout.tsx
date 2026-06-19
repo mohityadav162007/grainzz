@@ -1,3 +1,6 @@
+// Always fetch fresh — ensures metadata reflects latest blog edits immediately
+export const revalidate = 0;
+
 import { Metadata } from 'next';
 import { getBlogBySlug } from '@/lib/api';
 import { constructMetadata, generateBlogSchema, siteConfig } from '@/lib/seo';

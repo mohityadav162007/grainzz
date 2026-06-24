@@ -5,7 +5,7 @@ export const FAQS = [
   },
   {
     question: "Are Grainzz products suitable for kids and elderly?",
-    answer: "Absolutely! Our snacks are made from wholesome supergrains and are roasted, not fried. They are easy to digest, packed with nutrients, and free from harmful additives, making them perfect for all age groups."
+    answer: "Light on the stomach, real on the label. Our grain puffs and puffed rice are roasted, our chips are built on millets — and nothing in the range contains palm oil or maida. The kind of snack you can hand to a child, a colleague, or a parent without flinching."
   },
   {
     question: "Are Grainzz snacks healthy for everyday snacking?",

@@ -204,13 +204,19 @@ function ProductsContent() {
     <div className="bg-white min-h-screen pb-[80px]">
       <div className="max-w-[1280px] mx-auto px-4 md:px-[40px] lg:px-[60px] pt-[40px]">
         {/* Page Heading */}
-        <h1 className="text-[28px] md:text-[36px] font-bold text-brand-black tracking-tight m-0 mb-[32px]">
+        <h1 className="text-[28px] md:text-[36px] font-bold text-brand-black tracking-tight m-0 mb-[12px]">
           {search
             ? `Search: "${search}"`
             : selectedCategories.length === 1
             ? selectedCategories[0]
             : 'Shop Healthy Grain Snacks — Ragi Chips, Bajra Puffs & More'}
         </h1>
+
+        {!search && selectedCategories.length !== 1 && (
+          <p className="text-[14px] md:text-[16px] text-[#555] leading-[1.65] mb-[32px] max-w-[720px] font-normal">
+            Browse the full Grainzz range: <strong>millet chips</strong> (ragi, oats, beetroot), <strong>roasted grain puffs</strong> (bajra, jowar, quinoa), and <strong>roasted flavoured puffed rice</strong>. Every product made with no palm oil, no maida, 0g trans fat and zero cholesterol. Free PAN-India shipping above ₹499.
+          </p>
+        )}
 
         <div className="flex gap-[40px] lg:gap-[48px] items-start">
           {/* ─── Sidebar ─── */}

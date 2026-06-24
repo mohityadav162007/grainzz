@@ -4,9 +4,9 @@ import Image from 'next/image';
 import { Droplets, Wheat, ShieldCheck, Heart } from 'lucide-react';
 
 const fallbackBenefits = [
-  { icon: 'Droplets', title: 'Clean Snacking', description: 'No palm oil, zero trans fat, zero cholesterol, and no added preservatives. Every Grainzz snack is made to be a cleaner, smarter choice for your daily routine.' },
-  { icon: 'Wheat', title: 'Powered by Supergrains', description: 'We use nutrient-dense millets and grains like Ragi, Bajra, Jowar, Quinoa, and Oats instead of refined flour (maida). Real grains. Real nutrition.' },
-  { icon: 'Heart', title: 'Roasted, Not Deep-Fried', description: 'Our snacks are roasted, not deep-fried — delivering bold crunch and great taste without the extra oil. Better for your heart and better for everyday snacking.' },
+  { icon: 'Droplets', title: 'Real Grains. No Palm Oil. No Maida.', description: 'No palm oil. No maida. 0g trans fat. Zero cholesterol. Across every chip, puff and puffed-rice pack. The kind of label you actually want your kids reading.' },
+  { icon: 'Wheat', title: 'Powered by Supergrains', description: 'Every Grainzz snack is built on Indian supergrains — ragi, bajra, jowar, quinoa and oats. Ragi alone delivers about 344mg of calcium per 100g of grain (ICMR-NIN), one of the highest of any cereal. You are snacking on real grain nutrition, not refined flour.' },
+  { icon: 'Heart', title: 'Roasted, Never Fried', description: 'Grainzz grain puffs (bajra, jowar, quinoa) and flavoured puffed rice are roasted, never deep-fried. Roasting crisps with heat instead of an oil bath, which keeps fat low and lets the grain do the work.' },
   { icon: 'ShieldCheck', title: 'Bold, Authentic & Indian', description: 'We use real Indian spices and natural seasonings to deliver the authentic zing of Indian flavours — without the guilt. Healthy snacking should never be bland.' },
 ];
 
@@ -16,7 +16,8 @@ const iconMap: Record<string, any> = {
 
 export default function BenefitsSection() {
   const [benefits] = useState(fallbackBenefits);
-  const heading = 'Why Grainzz Is India\'s\nSmarter Snacking Choice';
+  const heading = 'Healthy Snacking With Benefits Beyond The Ordinary';
+  const subLine = 'Grainzz makes millet-based snacks for honest, everyday Indian snacking — millet chips, roasted grain puffs, and roasted flavoured puffed rice. No palm oil. No maida. 0g trans fat. Zero cholesterol. Shipped across India.';
 
   return (
     <>
@@ -37,9 +38,12 @@ export default function BenefitsSection() {
 
             {/* Text & Grid Content */}
             <div className="flex-1 flex flex-col items-start w-full py-[16px]">
-              <h2 className="text-[28px] md:text-[36px] font-semibold text-brand-black mb-[32px] md:mb-[40px] leading-[1.2] whitespace-pre-line tracking-tight">
+              <h2 className="text-[28px] md:text-[36px] font-semibold text-brand-black mb-[16px] md:mb-[20px] leading-[1.2] whitespace-pre-line tracking-tight">
                 {heading}
               </h2>
+              <p className="text-[14px] md:text-[16px] text-[#4A4A4A] leading-[1.65] mb-[32px] md:mb-[40px] max-w-[600px] font-normal">
+                {subLine}
+              </p>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-[32px] gap-y-[32px] md:gap-y-[48px] w-full">
                 {benefits.map((benefit) => {

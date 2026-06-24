@@ -4,6 +4,7 @@ import ProductSegments from '@/components/home/ProductSegments';
 import BenefitsSection from '@/components/home/BenefitsSection';
 import PoweredBy from '@/components/home/PoweredBy';
 
+
 import EssentialSnackBox from '@/components/home/EssentialSnackBox';
 import TestimonialsSection from '@/components/home/TestimonialsSection';
 import InstagramSection from '@/components/home/InstagramSection';

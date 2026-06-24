@@ -161,13 +161,7 @@ export default function AboutPage() {
             <h2 className="text-[36px] md:text-[48px] font-semibold mb-[28px] leading-[1.15] tracking-tight text-white">Meet The Founders</h2>
             <div className="space-y-6">
               <p className="text-white/90 text-[16px] md:text-[18px] leading-[1.6] font-normal">
-                Grainzz was founded by Vibhor Kataria and Rishel Puri, two young entrepreneurs who first met during their bachelor&apos;s at JIMS Vasant Kunj and later pursued their MBA from Delhi Technological University. Their journey started like many young professionals in India — college, corporate roles, long workdays, late evenings, and endless conversations about what they could build on their own.
-              </p>
-              <p className="text-white/90 text-[16px] md:text-[18px] leading-[1.6] font-normal">
-                During that phase, they noticed how deeply snacking had become part of everyday Indian life. Office breaks, travel, study sessions, IPL nights, family time and late-night work all had one thing in common: people were reaching for snacks more than ever, but genuinely better options were still hard to find. Most snacks were either tasty but heavy, or labelled &quot;healthy&quot; but too boring to go back to. That gap — between clean ingredients and real flavour — became the founding insight behind Grainzz.
-              </p>
-              <p className="text-white/90 text-[16px] md:text-[18px] leading-[1.6] font-normal">
-                That insight became Grainzz — a modern Indian healthy snack brand built on real grains like Ragi, Bajra, Jowar, Quinoa, Oats, and Puffed Rice. Roasted not fried, made with no palm oil, zero trans fat, and bold Indian flavours. Vibhor drives execution, operations, and ground-level problem solving, while Rishel leads branding, marketing, and growth. Together, they are building a millet snacks brand that makes smarter snacking the easier and more exciting choice for everyday India.
+                Grainzz was started in Delhi by Vibhor Kataria and Rishel Puri after one frustrating realisation — every &quot;tasty&quot; Indian snack on the shelf was fried in palm oil and built on maida. The grain on the pack was usually a marketing line. We made the opposite: millet-based chips, roasted grain puffs and roasted flavoured puffed rice, where the ingredient list reads like real food. We say what we mean. No palm oil. No maida. No empty claims.
               </p>
             </div>
           </div>

@@ -1,5 +1,5 @@
-// Always fetch fresh — ensures metadata reflects latest blog edits immediately
-export const revalidate = 0;
+// ISR: re-generate at most once every 5 minutes — blog edits appear quickly without hammering the DB
+export const revalidate = 300;
 
 import { Metadata } from 'next';
 import { getBlogBySlug } from '@/lib/api';

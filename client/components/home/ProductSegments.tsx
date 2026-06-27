@@ -12,15 +12,23 @@ interface TabData {
   product_ids: string[];
 }
 
-export default function ProductSegments() {
-  const [tabs, setTabs] = useState<TabData[]>([]);
-  const [activeTab, setActiveTab] = useState('');
-  const [products, setProducts] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [heading, setHeading] = useState('Our Product Segments');
+interface ProductSegmentsProps {
+  initialTabs?: TabData[];
+  initialProducts?: any[];
+  initialHeading?: string;
+  offersMap?: Record<string, any>;
+}
 
-  // Fetch tabs + heading on mount
+export default function ProductSegments({ initialTabs, initialProducts, initialHeading, offersMap: initialOffersMap }: ProductSegmentsProps) {
+  const [tabs, setTabs] = useState<TabData[]>(initialTabs || []);
+  const [activeTab, setActiveTab] = useState(initialTabs?.[0]?.title || '');
+  const [products, setProducts] = useState<any[]>(initialProducts || []);
+  const [loading, setLoading] = useState(initialTabs === undefined);
+  const [heading, setHeading] = useState(initialHeading || 'Our Product Segments');
+
+  // Fetch tabs + heading on mount (only if not server-provided)
   useEffect(() => {
+    if (initialTabs !== undefined) return;
     const init = async () => {
       setLoading(true);
       try {
@@ -42,16 +50,23 @@ export default function ProductSegments() {
       }
     };
     init();
-  }, []);
+  }, [initialTabs]);
 
-  // Fetch products when active tab changes
+  // Fetch products when active tab changes (client-side tab switching)
   useEffect(() => {
     if (!activeTab || tabs.length === 0) return;
+    // Skip the initial render — server already provided products for the first tab
+    const currentTab = tabs.find((t) => t.title === activeTab);
+    const isFirstTab = tabs[0]?.title === activeTab;
+    if (isFirstTab && initialProducts && initialProducts.length > 0) {
+      setProducts(initialProducts);
+      setLoading(false);
+      return;
+    }
 
     const fetchProducts = async () => {
       setLoading(true);
       try {
-        const currentTab = tabs.find((t) => t.title === activeTab);
         if (!currentTab || !currentTab.product_ids || currentTab.product_ids.length === 0) {
           setProducts([]);
           setLoading(false);
@@ -66,7 +81,7 @@ export default function ProductSegments() {
 
         if (error) throw error;
 
-        const offersMap = await getActiveOffersMap();
+        const offersMap = initialOffersMap || await getActiveOffersMap();
 
         // Sanitize placeholder links and apply active offers pricing
         const sanitized = (data || []).map((prod: any) => {

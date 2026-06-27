@@ -18,11 +18,15 @@ interface HeroSlide {
 
 // Direction-aware variants are defined inside the component
 
-export default function HeroSection() {
+interface HeroSectionProps {
+  initialSlides?: HeroSlide[];
+}
+
+export default function HeroSection({ initialSlides }: HeroSectionProps) {
   const [[page, direction], setPage] = useState([0, 0]);
   const imageIndex = page;
 
-  const [slides, setSlides] = useState<HeroSlide[] | null>(null);
+  const [slides, setSlides] = useState<HeroSlide[] | null>(initialSlides ?? null);
   const [mounted, setMounted] = useState(false);
   const router = useRouter();
 
@@ -39,7 +43,9 @@ export default function HeroSection() {
 
   const isMobileActual = windowWidth < 768;
 
+  // Only fetch on the client if we didn't get server-side data
   useEffect(() => {
+    if (initialSlides !== undefined) return;
     let cancelled = false;
     getHeroSlides()
       .then((data) => {
@@ -48,7 +54,7 @@ export default function HeroSection() {
       })
       .catch(() => { if (!cancelled) setSlides([]); });
     return () => { cancelled = true; };
-  }, []);
+  }, [initialSlides]);
 
   const slideCount = slides?.length || 0;
 

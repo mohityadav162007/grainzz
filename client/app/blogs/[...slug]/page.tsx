@@ -1,7 +1,7 @@
-// Always fetch fresh — ensures blog content/image edits appear without redeploy
-export const revalidate = 0;
+// ISR: re-generate at most once every 5 minutes — blog edits appear quickly without hammering the DB
+export const revalidate = 300;
 
-import { getBlogBySlug, getProducts } from '@/lib/api';
+import { getBlogBySlug, getProducts, getPublicBlogs } from '@/lib/api';
 import Link from 'next/link';
 import { ArrowLeft, Calendar, Clock } from 'lucide-react';
 import ShareButtonsClient from '../ShareButtonsClient';
@@ -11,6 +11,18 @@ interface PageProps {
   params: {
     slug: string[];
   };
+}
+
+// Pre-render all known blog slugs at build time
+export async function generateStaticParams() {
+  try {
+    const res = await getPublicBlogs();
+    return (res.data || []).map((blog: any) => ({
+      slug: (blog.slug.startsWith('/') ? blog.slug.slice(1) : blog.slug).split('/'),
+    }));
+  } catch {
+    return [];
+  }
 }
 
 async function fetchBlogWithFallback(slugArray: string[]) {

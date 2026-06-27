@@ -4,13 +4,20 @@ import { Instagram } from 'lucide-react';
 import Image from 'next/image';
 import { getInstagramPosts, getSiteContent } from '@/lib/api';
 
-export default function InstagramSection() {
-  const [posts, setPosts] = useState<any[] | null>(null); // null = loading
-  const [heading, setHeading] = useState('Follow us on Instagram');
-  const [handle, setHandle] = useState('grainzbyvitalicious');
-  const [isActive, setIsActive] = useState<boolean | null>(null); // null = checking
+interface InstagramSectionProps {
+  initialPosts?: any[];
+  initialSection?: any;
+  initialConfig?: any;
+}
+
+export default function InstagramSection({ initialPosts, initialSection, initialConfig }: InstagramSectionProps) {
+  const [posts, setPosts] = useState<any[] | null>(initialPosts !== undefined ? initialPosts : null);
+  const [heading, setHeading] = useState(initialSection?.heading || 'Follow us on Instagram');
+  const [handle, setHandle] = useState(initialSection?.handle || 'grainzbyvitalicious');
+  const [isActive, setIsActive] = useState<boolean | null>(initialConfig !== undefined ? (initialConfig?.is_active !== false) : null);
 
   useEffect(() => {
+    if (initialPosts !== undefined) return; // use server-provided data
     let cancelled = false;
 
     // Fetch all data in parallel
@@ -27,7 +34,7 @@ export default function InstagramSection() {
     });
 
     return () => { cancelled = true; };
-  }, []);
+  }, [initialPosts]);
 
   // Still loading — show nothing (prevents flash of default content)
   if (isActive === null || posts === null) {

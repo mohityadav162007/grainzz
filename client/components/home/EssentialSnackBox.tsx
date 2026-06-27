@@ -30,9 +30,13 @@ interface SnackBoxData {
   variants: SnackBoxVariant[];
 }
 
-export default function EssentialSnackBox() {
-  const [data, setData] = useState<SnackBoxData | null>(null);
-  const [loading, setLoading] = useState(true);
+interface EssentialSnackBoxProps {
+  initialData?: SnackBoxData | null;
+}
+
+export default function EssentialSnackBox({ initialData }: EssentialSnackBoxProps) {
+  const [data, setData] = useState<SnackBoxData | null>(initialData !== undefined ? initialData : null);
+  const [loading, setLoading] = useState(initialData === undefined);
   const [activeVariant, setActiveVariant] = useState(0);
   const [qty, setQty] = useState(1);
   const [openAccordion, setOpenAccordion] = useState<string | null>(null);
@@ -44,6 +48,7 @@ export default function EssentialSnackBox() {
   const router = useRouter();
 
   useEffect(() => {
+    if (initialData !== undefined) return; // use server-provided data
     getSnackBoxItems()
       .then((raw) => {
         if (raw && raw.variants && raw.variants.length > 0) {
@@ -52,7 +57,7 @@ export default function EssentialSnackBox() {
       })
       .catch(() => {})
       .finally(() => setLoading(false));
-  }, []);
+  }, [initialData]);
 
   const variant = data?.variants?.[activeVariant];
 

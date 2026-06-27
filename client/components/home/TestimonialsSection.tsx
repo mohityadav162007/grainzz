@@ -58,13 +58,18 @@ const HOMEPAGE_REVIEWS = [
 import { motion, AnimatePresence } from 'framer-motion';
 import ProductCard from '@/components/products/ProductCard';
 
-export default function TestimonialsSection() {
-  const [reviews, setReviews] = useState<any[] | null>(null);
+interface TestimonialsSectionProps {
+  initialReviews?: any[];
+}
+
+export default function TestimonialsSection({ initialReviews }: TestimonialsSectionProps) {
+  const [reviews, setReviews] = useState<any[] | null>(initialReviews !== undefined ? initialReviews : null);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [direction, setDirection] = useState(0); // 1 for next, -1 for prev
   const { addItem } = useCartStore();
 
   useEffect(() => {
+    if (initialReviews !== undefined) return; // use server-provided data
     let cancelled = false;
     const productIds = HOMEPAGE_REVIEWS.map(r => r.product_id);
 
@@ -87,7 +92,7 @@ export default function TestimonialsSection() {
         setReviews(resolved);
       });
     return () => { cancelled = true; };
-  }, []);
+  }, [initialReviews]);
 
   const reviewCount = reviews?.length || 0;
   

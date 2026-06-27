@@ -1,8 +1,9 @@
 import { supabase } from './supabase';
 import { uploadProductImageCloudinary, uploadHeroImageCloudinary, uploadInstagramImageCloudinary, uploadToCloudinary } from './cloudinary';
 import { submitToIndexNow } from './indexnow';
+import { revalidateClientPaths } from './revalidate';
 
-// ─── Auth ────────────────────────────────────────────────────────────────────
+// --- Auth ---
 
 export const adminLogin = async (email: string, password: string) => {
   const { data, error } = await supabase.auth.signInWithPassword({ email, password });
@@ -36,7 +37,7 @@ export const getSession = async () => {
   return data.session;
 };
 
-// ─── Product Reference Validation Utility ────────────────────────────────────
+// --- Product Reference Validation Utility ---
 
 /**
  * Scans all JSON stores for orphan product references and removes them.
@@ -131,7 +132,7 @@ export const validateProductReferences = async (): Promise<{ cleaned: string[]; 
   return { cleaned, total: cleaned.length };
 };
 
-// ─── Products ────────────────────────────────────────────────────────────────
+// â”€â”€â”€ Products â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export const getProducts = async (params?: Record<string, string>) => {
   let query = supabase.from('products').select('*').order('created_at', { ascending: false });
@@ -258,6 +259,8 @@ export const createProduct = async (formData: FormData) => {
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.grainzz.com';
     submitToIndexNow([`${siteUrl}/products/${slug}`]);
   }
+  // Trigger instant ISR revalidation on the client website
+  revalidateClientPaths(['/', '/products', `/products/${slug}`]);
   return { success: true, data };
 };
 
@@ -387,12 +390,16 @@ export const updateProduct = async (id: string, formData: FormData) => {
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.grainzz.com';
     submitToIndexNow([`${siteUrl}/products/${data.slug}`]);
   }
+  // Trigger instant ISR revalidation on the client website
+  if (data?.slug) {
+    revalidateClientPaths(['/', '/products', `/products/${data.slug}`]);
+  }
   return { success: true, data };
 };
 
 
 export const deleteProduct = async (id: string) => {
-  // ── Cascade cleanup: remove product references from all JSON stores ──
+  // â”€â”€ Cascade cleanup: remove product references from all JSON stores â”€â”€
   // The DB trigger (019) also does this, but we do it here too for immediate
   // UI consistency and as a safety net.
 
@@ -458,7 +465,7 @@ export const deleteProduct = async (id: string) => {
     console.warn('[deleteProduct] Reference cleanup had errors (non-fatal):', cleanupErr);
   }
 
-  // ── Now delete the actual product ──
+  // â”€â”€ Now delete the actual product â”€â”€
   const { data: productToDelete } = await supabase.from('products').select('slug').eq('id', id).single();
   
   const { error } = await supabase.from('products').delete().eq('id', id);
@@ -467,6 +474,9 @@ export const deleteProduct = async (id: string) => {
   if (productToDelete?.slug) {
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.grainzz.com';
     submitToIndexNow([`${siteUrl}/products/${productToDelete.slug}`]);
+    revalidateClientPaths(['/', '/products', `/products/${productToDelete.slug}`]);
+  } else {
+    revalidateClientPaths(['/', '/products']);
   }
 
   return { success: true, message: 'Product deleted permanently' };
@@ -474,8 +484,12 @@ export const deleteProduct = async (id: string) => {
 };
 
 export const setProductVisibility = async (id: string, isActive: boolean) => {
-  const { error } = await supabase.from('products').update({ is_active: isActive }).eq('id', id);
+  const { data, error } = await supabase.from('products').update({ is_active: isActive }).eq('id', id).select('slug').single();
   if (error) throw new Error(error.message);
+  // Trigger instant ISR revalidation on the client website
+  if (data?.slug) {
+    revalidateClientPaths(['/', '/products', `/products/${data.slug}`]);
+  }
   return { success: true };
 };
 
@@ -489,7 +503,7 @@ export const getSeedReviewsByProductId = async (productId: string) => {
   return { success: true, data: data || [] };
 };
 
-// ─── Categories ──────────────────────────────────────────────────────────────
+// â”€â”€â”€ Categories â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export const getCategories = async () => {
   const { data, error } = await supabase.from('categories').select('*').order('sort_order', { ascending: true });
@@ -515,7 +529,7 @@ export const deleteCategory = async (id: string) => {
   return { success: true };
 };
 
-// ─── Orders ──────────────────────────────────────────────────────────────────
+// â”€â”€â”€ Orders â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export const getOrders = async (params?: Record<string, string>) => {
   let query = supabase
@@ -557,7 +571,7 @@ export const updateOrder = async (id: string, body: { status?: string; paymentSt
   return { success: true, data };
 };
 
-// ─── Coupons ─────────────────────────────────────────────────────────────────
+// â”€â”€â”€ Coupons â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export const getCoupons = async () => {
   const { data, error } = await supabase.from('coupons').select('*').order('created_at', { ascending: false });
@@ -647,7 +661,7 @@ export const deleteCoupon = async (id: string) => {
   return { success: true, message: 'Coupon deleted' };
 };
 
-// ─── Offers ──────────────────────────────────────────────────────────────────
+// â”€â”€â”€ Offers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export const getOffers = async () => {
   const { data, error } = await supabase
@@ -769,7 +783,7 @@ export const deleteOffer = async (id: string) => {
   return { success: true, message: 'Offer deleted' };
 };
 
-// ─── Homepage Sections ───────────────────────────────────────────────────────
+// â”€â”€â”€ Homepage Sections â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export const getHomepageSections = async () => {
   const { data, error } = await supabase.from('store_settings').select('*').eq('key', 'product_tabs_json').single();
@@ -801,7 +815,7 @@ export const saveProductTabs = async (tabs: { title: string; product_ids: string
   return { success: true };
 };
 
-// ─── Site Content (Key-Value Store) ──────────────────────────────────────────
+// â”€â”€â”€ Site Content (Key-Value Store) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export const getSiteContent = async (key: string) => {
   const { data, error } = await supabase
@@ -835,7 +849,7 @@ export const upsertSiteContent = async (key: string, value: any) => {
   }
 };
 
-// ─── Hero Slides ─────────────────────────────────────────────────────────────
+// â”€â”€â”€ Hero Slides â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export const getHeroSlides = async () => {
   const { data, error } = await supabase.from('store_settings').select('*').eq('key', 'hero_slides_json').single();
@@ -891,7 +905,7 @@ export const deleteHeroImage = async (_url: string) => {
   // Images are managed via Cloudinary dashboard if cleanup is needed.
 };
 
-// ─── Powered By Cards ────────────────────────────────────────────────────────
+// â”€â”€â”€ Powered By Cards â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export const getPoweredByCards = async () => {
   const { data, error } = await supabase.from('store_settings').select('*').eq('key', 'powered_by_json').single();
@@ -942,7 +956,7 @@ export const uploadPoweredByImage = async (file: File): Promise<string> => {
   return uploadToCloudinary(file, 'grainzz/powered-by');
 };
 
-// ─── Snack Box Items ─────────────────────────────────────────────────────────
+// â”€â”€â”€ Snack Box Items â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export const getSnackBoxItems = async () => {
   const { data, error } = await supabase.from('store_settings').select('*').eq('key', 'snack_box_json').single();
@@ -972,7 +986,7 @@ export const uploadSnackBoxImage = async (file: File): Promise<string> => {
   return uploadToCloudinary(file, 'grainzz/snack-box');
 };
 
-// ─── Trust Metrics ───────────────────────────────────────────────────────────
+// â”€â”€â”€ Trust Metrics â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export const getTrustMetrics = async () => {
   const { data, error } = await supabase.from('trust_metrics').select('*').order('sort_order', { ascending: true });
@@ -986,7 +1000,7 @@ export const updateTrustMetric = async (id: string, metric: any) => {
   return data;
 };
 
-// ─── Benefits ────────────────────────────────────────────────────────────────
+// â”€â”€â”€ Benefits â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export const getBenefits = async () => {
   const { data, error } = await supabase.from('benefits').select('*').order('sort_order', { ascending: true });
@@ -1000,7 +1014,7 @@ export const updateBenefit = async (id: string, benefit: any) => {
   return data;
 };
 
-// ─── Availability Logos ──────────────────────────────────────────────────────
+// â”€â”€â”€ Availability Logos â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export const getAvailabilityLogos = async () => {
   const { data, error } = await supabase.from('availability_logos').select('*').order('sort_order', { ascending: true });
@@ -1025,7 +1039,7 @@ export const deleteAvailabilityLogo = async (id: string) => {
   if (error) throw new Error(error.message);
 };
 
-// ─── Testimonials ────────────────────────────────────────────────────────────
+// â”€â”€â”€ Testimonials â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export const getTestimonials = async () => {
   const { data, error } = await supabase.from('testimonials').select('*').order('sort_order', { ascending: true });
@@ -1050,7 +1064,7 @@ export const deleteTestimonial = async (id: string) => {
   if (error) throw new Error(error.message);
 };
 
-// ─── Product Reviews (Admin Control) ──────────────────────────────────────────
+// â”€â”€â”€ Product Reviews (Admin Control) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export const getAllProductReviews = async (params?: Record<string, string>) => {
   let query = supabase.from('reviews').select('*, products(name)').order('created_at', { ascending: false });
@@ -1072,7 +1086,7 @@ export const deleteProductReview = async (id: string) => {
   return { success: true };
 };
 
-// ─── Related Products Section ───────────────────────────────────────────────
+// â”€â”€â”€ Related Products Section â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export const getRelatedProductsSectionAdmin = async () => {
   const { data, error } = await supabase.from('related_products_section').select('*, products(name, images)').order('position', { ascending: true });
@@ -1092,7 +1106,7 @@ export const updateRelatedProductsSection = async (productsData: any[]) => {
   return { success: true };
 };
 
-// ─── Instagram Section ────────────────────────────────────────────────────────
+// â”€â”€â”€ Instagram Section â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export const getInstagramPostsAdmin = async () => {
   const { data, error } = await supabase.from('store_settings').select('*').eq('key', 'instagram_json').single();
@@ -1148,7 +1162,7 @@ export const deleteInstagramImage = async (_url: string) => {
   // Images are managed via Cloudinary dashboard if cleanup is needed.
 };
 
-// ─── FAQs ────────────────────────────────────────────────────────────────────
+// â”€â”€â”€ FAQs â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export const getFaqs = async () => {
   const { data, error } = await supabase.from('faqs').select('*').order('sort_order', { ascending: true });
@@ -1173,7 +1187,7 @@ export const deleteFaq = async (id: string) => {
   if (error) throw new Error(error.message);
 };
 
-// ─── Analytics & Export ──────────────────────────────────────────────────────
+// â”€â”€â”€ Analytics & Export â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export const getUsersCount = async () => {
   const { count, error } = await supabase
@@ -1199,7 +1213,7 @@ export const getAnalyticsData = async () => {
   const offers = offersRes.data || [];
   const usersCount = usersRes.count || 0;
 
-  // ── KPIs ──
+  // â”€â”€ KPIs â”€â”€
   const totalOrders = orders.length;
   const paidOrders = orders.filter((o) => o.payment_status === 'paid');
   const totalRevenue = paidOrders.reduce((sum, o) => sum + Number(o.total_amount), 0);
@@ -1209,7 +1223,7 @@ export const getAnalyticsData = async () => {
   const totalViews = products.reduce((sum, p) => sum + (p.views || 0), 0);
   const totalDiscount = orders.reduce((sum, o) => sum + Number(o.discount_amount || 0), 0);
 
-  // ── Revenue by Month ──
+  // â”€â”€ Revenue by Month â”€â”€
   const revenueByMonth: Record<string, number> = {};
   const ordersByMonth: Record<string, number> = {};
   paidOrders.forEach((o) => {
@@ -1223,7 +1237,7 @@ export const getAnalyticsData = async () => {
     orders: ordersByMonth[month] || 0,
   }));
 
-  // ── Daily Orders (last 30 days) ──
+  // â”€â”€ Daily Orders (last 30 days) â”€â”€
   const thirtyDaysAgo = new Date();
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
   const dailyOrders: Record<string, { count: number; revenue: number }> = {};
@@ -1247,21 +1261,21 @@ export const getAnalyticsData = async () => {
     .map(([date, data]) => ({ date, ...data }))
     .reverse();
 
-  // ── Order Status Distribution ──
+  // â”€â”€ Order Status Distribution â”€â”€
   const statusCounts: Record<string, number> = {};
   orders.forEach((o) => {
     statusCounts[o.status] = (statusCounts[o.status] || 0) + 1;
   });
   const orderStatusDistribution = Object.entries(statusCounts).map(([name, value]) => ({ name, value }));
 
-  // ── Payment Status Distribution ──
+  // â”€â”€ Payment Status Distribution â”€â”€
   const paymentCounts: Record<string, number> = {};
   orders.forEach((o) => {
     paymentCounts[o.payment_status] = (paymentCounts[o.payment_status] || 0) + 1;
   });
   const paymentStatusDistribution = Object.entries(paymentCounts).map(([name, value]) => ({ name, value }));
 
-  // ── Category Breakdown (by products + revenue) ──
+  // â”€â”€ Category Breakdown (by products + revenue) â”€â”€
   const categoryProducts: Record<string, number> = {};
   const categoryRevenue: Record<string, number> = {};
   products.forEach((p) => {
@@ -1281,13 +1295,13 @@ export const getAnalyticsData = async () => {
     revenue: Math.round(categoryRevenue[name] || 0),
   }));
 
-  // ── Top Products by Views ──
+  // â”€â”€ Top Products by Views â”€â”€
   const topProductsByViews = [...products]
     .sort((a, b) => (b.views || 0) - (a.views || 0))
     .slice(0, 10)
     .map((p) => ({ name: p.name, views: p.views || 0, revenue: 0, sold: 0 }));
 
-  // ── Top Products by Revenue ──
+  // â”€â”€ Top Products by Revenue â”€â”€
   const productRevenue: Record<string, { revenue: number; sold: number; name: string }> = {};
   orders.forEach((o) => {
     (o.order_items || []).forEach((item: any) => {
@@ -1303,7 +1317,7 @@ export const getAnalyticsData = async () => {
     .slice(0, 10)
     .map((p) => ({ name: p.name, revenue: Math.round(p.revenue), sold: p.sold }));
 
-  // ── Coupon Usage ──
+  // â”€â”€ Coupon Usage â”€â”€
   const couponUsage = coupons.map((c) => ({
     code: c.code,
     used: c.used_count || 0,
@@ -1313,7 +1327,7 @@ export const getAnalyticsData = async () => {
     active: c.is_active,
   }));
 
-  // ── Stock Alerts ──
+  // â”€â”€ Stock Alerts â”€â”€
   const lowStockProducts = products
     .filter((p) => p.is_active && p.stock <= 10)
     .sort((a, b) => a.stock - b.stock)
@@ -1358,7 +1372,7 @@ export const exportData = async (table: string, format: 'csv' | 'json' = 'json')
   return JSON.stringify(data, null, 2);
 };
 
-// ─── Store Settings ──────────────────────────────────────────────────────────
+// â”€â”€â”€ Store Settings â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export const getStoreSettings = async () => {
   const { data, error } = await supabase.from('store_settings').select('*').order('key', { ascending: true });
@@ -1372,7 +1386,7 @@ export const updateStoreSetting = async (key: string, value: string) => {
   return { success: true };
 };
 
-// ─── Enquiries (Contact Form Submissions) ───────────────────────────────────
+// â”€â”€â”€ Enquiries (Contact Form Submissions) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export const getEnquiries = async () => {
   const { data, error } = await supabase
@@ -1398,7 +1412,7 @@ export const deleteEnquiry = async (id: string) => {
   return { success: true };
 };
 
-// ─── Shiprocket Integration ─────────────────────────────────────────────────
+// â”€â”€â”€ Shiprocket Integration â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 /**
  * Send selected orders to Shiprocket for shipment creation.
@@ -1476,7 +1490,7 @@ export const updateOrderShipmentFields = async (id: string, fields: Record<strin
   return { success: true, data };
 };
 
-// ─── Blogs ───────────────────────────────────────────────────────────────────
+// â”€â”€â”€ Blogs â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export const getBlogs = async () => {
   const { data, error } = await supabase
@@ -1504,7 +1518,7 @@ export const createBlog = async (formData: FormData) => {
   const excerpt = formData.get('excerpt') as string;
   const content = formData.get('content') as string;
   const sort_order = Number(formData.get('sort_order')) || 0;
-  // Checkboxes are absent from FormData when unchecked — treat absence as false
+  // Checkboxes are absent from FormData when unchecked â€” treat absence as false
   const is_active = formData.get('is_active') === 'true';
 
   let slug = (formData.get('slug') as string) || title
@@ -1581,7 +1595,7 @@ export const updateBlog = async (id: string, formData: FormData) => {
   const sort_order = formData.get('sort_order');
   if (sort_order !== null) updates.sort_order = Number(sort_order);
 
-  // Checkboxes are absent from FormData when unchecked — always explicitly set the boolean
+  // Checkboxes are absent from FormData when unchecked â€” always explicitly set the boolean
   updates.is_active = formData.get('is_active') === 'true';
 
   const file = formData.get('featured_image') as File;
@@ -1612,7 +1626,7 @@ export const updateBlog = async (id: string, formData: FormData) => {
   const og_description = formData.get('og_description');
   if (og_description !== null) updates.og_description = og_description as string;
 
-  // Checkboxes are absent from FormData when unchecked — always explicitly set the boolean
+  // Checkboxes are absent from FormData when unchecked â€” always explicitly set the boolean
   updates.is_indexable = formData.get('is_indexable') === 'true';
 
   const ogImageFile = formData.get('og_image') as File;
@@ -1632,17 +1646,30 @@ export const updateBlog = async (id: string, formData: FormData) => {
     .single();
 
   if (error) throw new Error(error.message);
+  // Trigger instant ISR revalidation on the client website
+  if (data?.slug) {
+    revalidateClientPaths(['/', '/blogs', `/blogs/${data.slug}`, `/blogs/blog/${data.slug}`]);
+  }
   return { success: true, data };
 };
 
 export const deleteBlog = async (id: string) => {
+  // Fetch slug before deletion so we can revalidate
+  const { data: blogToDelete } = await supabase.from('blogs').select('slug').eq('id', id).single();
   const { error } = await supabase.from('blogs').delete().eq('id', id);
   if (error) throw new Error(error.message);
+  if (blogToDelete?.slug) {
+    revalidateClientPaths(['/', '/blogs', `/blogs/${blogToDelete.slug}`, `/blogs/blog/${blogToDelete.slug}`]);
+  }
   return { success: true, message: 'Blog deleted' };
 };
 
 export const setBlogVisibility = async (id: string, is_active: boolean) => {
-  const { error } = await supabase.from('blogs').update({ is_active }).eq('id', id);
+  const { data, error } = await supabase.from('blogs').update({ is_active }).eq('id', id).select('slug').single();
   if (error) throw new Error(error.message);
+  // Trigger instant ISR revalidation on the client website
+  if (data?.slug) {
+    revalidateClientPaths(['/', '/blogs', `/blogs/${data.slug}`, `/blogs/blog/${data.slug}`]);
+  }
   return { success: true };
 };

@@ -1,5 +1,5 @@
-// Always fetch fresh — ensures blog edits appear immediately without a redeploy
-export const revalidate = 0;
+// ISR: re-generate at most once every 5 minutes — blog edits appear quickly without hammering the DB
+export const revalidate = 300;
 
 import { getPublicBlogs } from '@/lib/api';
 import Link from 'next/link';

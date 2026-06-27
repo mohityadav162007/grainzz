@@ -7,10 +7,15 @@ const iconMap: Record<string, any> = {
   Heart, ShieldCheck, Package, MapPin, Leaf, Star, Flame, Award,
 };
 
-export default function StatsBar() {
-  const [stats, setStats] = useState<any[] | null>(null); // null = loading
+interface StatsBarProps {
+  initialStats?: any[];
+}
+
+export default function StatsBar({ initialStats }: StatsBarProps) {
+  const [stats, setStats] = useState<any[] | null>(initialStats !== undefined ? initialStats : null);
 
   useEffect(() => {
+    if (initialStats !== undefined) return; // use server-provided data
     let cancelled = false;
     getTrustMetrics()
       .then((data) => {
@@ -19,7 +24,7 @@ export default function StatsBar() {
       })
       .catch(() => { if (!cancelled) setStats([]); });
     return () => { cancelled = true; };
-  }, []);
+  }, [initialStats]);
 
   // Loading — skeleton
   if (stats === null) {

@@ -35,14 +35,19 @@ interface ResolvedCard {
   product?: any;
 }
 
-export default function PoweredBy() {
-  const [cards, setCards] = useState<ResolvedCard[]>([]);
-  const [loading, setLoading] = useState(true);
+interface PoweredByProps {
+  initialCards?: ResolvedCard[];
+}
+
+export default function PoweredBy({ initialCards }: PoweredByProps) {
+  const [cards, setCards] = useState<ResolvedCard[]>(initialCards || []);
+  const [loading, setLoading] = useState(initialCards === undefined);
   const { addItem, setQuickBuy } = useCartStore();
   const router = useRouter();
   
 
   useEffect(() => {
+    if (initialCards !== undefined) return; // use server-provided data
     const loadCards = async () => {
       try {
         const rawCards: PoweredByCard[] = await getPoweredByCards();
@@ -83,7 +88,7 @@ export default function PoweredBy() {
       }
     };
     loadCards();
-  }, []);
+  }, [initialCards]);
 
   const [windowWidth, setWindowWidth] = useState(0);
   useEffect(() => {

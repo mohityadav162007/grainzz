@@ -1,15 +1,24 @@
-import { getProductBySlug, getProductReviews, getSeedReviewsByProductId, getPublicBlogs } from '@/lib/api';
+import { getProductBySlug, getProductReviews, getSeedReviewsByProductId, getPublicBlogs, getProducts } from '@/lib/api';
 import Link from 'next/link';
 import ProductDetailPageClient from './ProductDetailPageClient';
 
-// Always fetch fresh data — product page must reflect latest admin updates immediately
-export const dynamic = 'force-dynamic';
-export const revalidate = 0;
+// ISR: re-generate at most once every 5 minutes — product changes are visible quickly without a redeploy
+export const revalidate = 300;
 
 interface PageProps {
   params: {
     slug: string;
   };
+}
+
+// Pre-render all known product slugs at build time
+export async function generateStaticParams() {
+  try {
+    const res = await getProducts({ limit: '200' });
+    return (res.data || []).map((p: any) => ({ slug: p.slug }));
+  } catch {
+    return [];
+  }
 }
 
 function getRelevantBlogs(product: any, blogs: any[]): any[] {

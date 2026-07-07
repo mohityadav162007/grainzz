@@ -39,56 +39,10 @@ interface PoweredByProps {
   initialCards?: ResolvedCard[];
 }
 
-export default function PoweredBy({ initialCards }: PoweredByProps) {
-  const [cards, setCards] = useState<ResolvedCard[]>(initialCards || []);
-  const [loading, setLoading] = useState(initialCards === undefined);
+export default function PoweredBy({ initialCards = [] }: PoweredByProps) {
+  const cards = initialCards;
   const { addItem, setQuickBuy } = useCartStore();
   const router = useRouter();
-
-
-  useEffect(() => {
-    if (initialCards !== undefined) return; // use server-provided data
-    const loadCards = async () => {
-      try {
-        const rawCards: PoweredByCard[] = await getPoweredByCards();
-        if (!rawCards || rawCards.length === 0) { setLoading(false); return; }
-
-        // Resolve product data for each card
-        const resolved = await Promise.all(
-          rawCards.slice(0, 3).map(async (card) => {
-            let productData: any = null;
-            if (card.product_id) {
-              productData = await getProductById(card.product_id).catch(() => null);
-            }
-
-            // Favor product images from the database over legacy image_url fields
-            const image = card.custom_image_url || productData?.images?.[0] || card.image_url || '/Rectangle-10@2x.webp';
-            const title = productData?.name || card.title || 'Product';
-            const link = productData ? `/products/${productData.slug}` : card.link || '#';
-
-            return {
-              title,
-              subtitle: card.subtitle || '',
-              topBg: card.top_bg_color || '#C68356',
-              bottomBg: card.bottom_bg_color || '#FDECE7',
-              image,
-              link,
-              price: productData?.price,
-              mrp: productData?.mrp,
-              product: productData,
-            };
-          })
-        );
-
-        setCards(resolved);
-      } catch (err) {
-        console.error('PoweredBy load error:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    loadCards();
-  }, [initialCards]);
 
   const [windowWidth, setWindowWidth] = useState(0);
   useEffect(() => {
@@ -120,23 +74,7 @@ export default function PoweredBy({ initialCards }: PoweredByProps) {
 
   const isMobile = windowWidth > 0 && windowWidth < 768;
 
-  if (loading) {
-    return (
-      <section className="py-16 bg-white w-full">
-        <div className="max-w-[1100px] mx-auto px-4 md:px-10">
-          <div className="h-8 w-64 bg-gray-100 rounded-lg mx-auto mb-10 animate-pulse" />
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8">
-            {[1, 2, 3].map(i => (
-              <div key={i} className="rounded-xl overflow-hidden shadow-sm">
-                <div className="aspect-square bg-gray-100 animate-pulse" />
-                <div className="p-6 bg-gray-50"><div className="h-6 bg-gray-100 rounded mb-2 animate-pulse" /><div className="h-4 bg-gray-100 rounded w-24 animate-pulse" /></div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-    );
-  }
+
 
   if (cards.length === 0) return null;
 

@@ -69,13 +69,18 @@ export default async function HomePage() {
     getSiteContent('product_tabs_heading').catch(() => null),
     getActiveOffersMap().catch(() => ({})),
     // Fetch testimonial products in one batch query
-    supabase
-      .from('products')
-      .select('*')
-      .in('id', HOMEPAGE_REVIEW_IDS)
-      .eq('is_active', true)
-      .then(r => r.data || [])
-      .catch(() => []),
+    (async () => {
+      try {
+        const { data } = await supabase
+          .from('products')
+          .select('*')
+          .in('id', HOMEPAGE_REVIEW_IDS)
+          .eq('is_active', true);
+        return data || [];
+      } catch {
+        return [];
+      }
+    })(),
   ]);
 
   // ── Collect all product IDs we need in one go ─────────────────────────────
@@ -90,19 +95,24 @@ export default async function HomePage() {
     : [];
 
   // ── Batch fetch remaining product data in ONE query ───────────────────────
-  const allNeededIds = [...new Set([...poweredByProductIds, ...firstTabProductIds])];
+  const allNeededIds = Array.from(new Set([...poweredByProductIds, ...firstTabProductIds]));
 
   const batchProducts: any[] = allNeededIds.length > 0
-    ? await supabase
-      .from('products')
-      .select('*')
-      .in('id', allNeededIds)
-      .eq('is_active', true)
-      .then(r => (r.data || []).map((p: any) => {
-        if (p?.images) p.images = p.images.map((img: string) => img.includes('placeholder.jpg') ? '/image-2@2x.png' : img);
-        return p;
-      }))
-      .catch(() => [])
+    ? await (async () => {
+        try {
+          const { data } = await supabase
+            .from('products')
+            .select('*')
+            .in('id', allNeededIds)
+            .eq('is_active', true);
+          return (data || []).map((p: any) => {
+            if (p?.images) p.images = p.images.map((img: string) => img.includes('placeholder.jpg') ? '/image-2@2x.png' : img);
+            return p;
+          });
+        } catch {
+          return [];
+        }
+      })()
     : [];
 
   const batchMap = new Map(batchProducts.map((p: any) => [p.id, p]));

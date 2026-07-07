@@ -9,6 +9,8 @@ import FAQSection from '@/components/home/FAQSection';
 
 import { constructMetadata } from '@/lib/seo';
 
+export const revalidate = 86400; // 24 hour cache for static about page
+
 export const metadata: Metadata = constructMetadata({
   title: 'About Us | Grainzz — Healthy Grain Snack Brand from India',
   description: 'Learn about Grainzz, India\'s healthy grain snack brand. Founded by Vibhor Kataria and Rishel Puri, we craft roasted millet snacks with real grains and no palm oil.',

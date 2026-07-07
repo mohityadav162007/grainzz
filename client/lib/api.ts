@@ -21,10 +21,19 @@ import { supabase } from './supabase';
    return { success: true, data };
  };
 
-const sanitizeImage = (url: string) => url.includes('placeholder.jpg') ? '/image-2@2x.png' : url;
+const sanitizeImage = (url: string) => {
+  if (!url) return '/image-2@2x.png';
+  return url.includes('placeholder.jpg') ? '/image-2@2x.png' : url;
+};
+
 const sanitizeProduct = (product: any) => {
-  if (product && Array.isArray(product.images)) {
-    product.images = product.images.map(sanitizeImage);
+  if (!product) return null;
+  if (Array.isArray(product.images)) {
+    product.images = product.images.length > 0 
+      ? product.images.map(sanitizeImage)
+      : ['/image-2@2x.png'];
+  } else {
+    product.images = ['/image-2@2x.png'];
   }
   return product;
 };

@@ -1,5 +1,3 @@
-'use client';
-import { useState, useEffect } from 'react';
 import { Instagram } from 'lucide-react';
 import Image from 'next/image';
 import { getInstagramPosts, getSiteContent } from '@/lib/api';
@@ -11,46 +9,10 @@ interface InstagramSectionProps {
 }
 
 export default function InstagramSection({ initialPosts, initialSection, initialConfig }: InstagramSectionProps) {
-  const [posts, setPosts] = useState<any[] | null>(initialPosts !== undefined ? initialPosts : null);
-  const [heading, setHeading] = useState(initialSection?.heading || 'Follow us on Instagram');
-  const [handle, setHandle] = useState(initialSection?.handle || 'grainzbyvitalicious');
-  const [isActive, setIsActive] = useState<boolean | null>(initialConfig !== undefined ? (initialConfig?.is_active !== false) : null);
-
-  useEffect(() => {
-    if (initialPosts !== undefined) return; // use server-provided data
-    let cancelled = false;
-
-    // Fetch all data in parallel
-    Promise.all([
-      getInstagramPosts().catch(() => []),
-      getSiteContent('instagram_section').catch(() => null),
-      getSiteContent('instagram_config').catch(() => null),
-    ]).then(([reels, section, config]) => {
-      if (cancelled) return;
-      setPosts(reels && reels.length > 0 ? reels : []);
-      if (section?.heading) setHeading(section.heading);
-      if (section?.handle) setHandle(section.handle);
-      setIsActive(config?.is_active !== false);
-    });
-
-    return () => { cancelled = true; };
-  }, [initialPosts]);
-
-  // Still loading — show nothing (prevents flash of default content)
-  if (isActive === null || posts === null) {
-    return (
-      <section className="py-[40px] md:py-[60px] bg-white w-full overflow-hidden border-t border-[#f0f0f0]">
-        <div className="max-w-[1440px] mx-auto px-4 md:px-[60px] lg:px-[100px]">
-          <div className="h-8 w-64 bg-gray-100 rounded-lg mb-[32px] animate-pulse" />
-          <div className="flex gap-[16px] md:gap-[24px]">
-            {[1,2,3,4,5].map(i => (
-              <div key={i} className="flex-shrink-0 w-[240px] md:w-1/5 aspect-[9/16] rounded-[20px] bg-gray-100 animate-pulse" />
-            ))}
-          </div>
-        </div>
-      </section>
-    );
-  }
+  const posts = initialPosts || [];
+  const heading = initialSection?.heading || 'Follow us on Instagram';
+  const handle = initialSection?.handle || 'grainzbyvitalicious';
+  const isActive = initialConfig?.is_active !== false;
 
   // Section disabled or no reels
   if (!isActive || posts.length === 0) return null;

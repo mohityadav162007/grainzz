@@ -29,9 +29,12 @@ export default function ContactPage() {
 
   const validate = () => {
     const errs: Record<string, string> = {};
-    if (!form.firstName) errs.firstName = 'Required';
-    if (!form.email || !/\S+@\S+\.\S+/.test(form.email)) errs.email = 'Valid email required';
-    if (!form.subject) errs.subject = 'Required';
+    if (!form.firstName.trim()) errs.firstName = 'Required';
+    if (!form.lastName.trim()) errs.lastName = 'Required';
+    if (!form.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) errs.email = 'Valid email required';
+    if (!form.phone || !/^\d{10,15}$/.test(form.phone.replace(/\D/g, ''))) errs.phone = 'Valid phone required';
+    if (!form.subject.trim()) errs.subject = 'Required';
+    if (form.message.length > 2000) errs.message = 'Message too long';
     return errs;
   };
 
@@ -190,9 +193,10 @@ export default function ContactPage() {
                     <input 
                       value={form.lastName} 
                       onChange={(e) => setForm({ ...form, lastName: e.target.value })} 
-                      className="w-full h-[56px] px-[20px] rounded-[16px] border border-[#CCCCCC] bg-white focus:border-brand-green focus:outline-none text-[16px] font-medium transition-colors shadow-sm"
+                      className={`w-full h-[56px] px-[20px] rounded-[16px] border ${errors.lastName ? 'border-[#D72638] bg-[#FFF5F6]' : 'border-[#CCCCCC] bg-white'} focus:border-brand-green focus:outline-none text-[16px] font-medium transition-colors shadow-sm`}
                       placeholder="Your last name" 
                     />
+                    {errors.lastName && <p className="text-[12px] text-[#D72638] font-bold mt-[8px]">{errors.lastName}</p>}
                   </div>
                 </div>
                 
@@ -214,9 +218,10 @@ export default function ContactPage() {
                       type="tel" 
                       value={form.phone} 
                       onChange={(e) => setForm({ ...form, phone: e.target.value })} 
-                      className="w-full h-[56px] px-[20px] rounded-[16px] border border-[#CCCCCC] bg-white focus:border-brand-green focus:outline-none text-[16px] font-medium transition-colors shadow-sm"
+                      className={`w-full h-[56px] px-[20px] rounded-[16px] border ${errors.phone ? 'border-[#D72638] bg-[#FFF5F6]' : 'border-[#CCCCCC] bg-white'} focus:border-brand-green focus:outline-none text-[16px] font-medium transition-colors shadow-sm`}
                       placeholder="Your phone number"
                     />
+                    {errors.phone && <p className="text-[12px] text-[#D72638] font-bold mt-[8px]">{errors.phone}</p>}
                   </div>
                 </div>
                 
@@ -228,6 +233,7 @@ export default function ContactPage() {
                     className={`w-full h-[56px] px-[20px] rounded-[16px] border ${errors.subject ? 'border-[#D72638] bg-[#FFF5F6]' : 'border-[#CCCCCC] bg-white'} focus:border-brand-green focus:outline-none text-[16px] font-medium transition-colors shadow-sm`} 
                     placeholder="What is this regarding?" 
                   />
+                  {errors.subject && <p className="text-[12px] text-[#D72638] font-bold mt-[8px]">{errors.subject}</p>}
                 </div>
                 
                 <div>
@@ -246,9 +252,11 @@ export default function ContactPage() {
                     value={form.message} 
                     onChange={(e) => setForm({ ...form, message: e.target.value })}
                     rows={4} 
-                    className="w-full p-[20px] rounded-[16px] border border-[#CCCCCC] bg-white focus:border-brand-green focus:outline-none text-[16px] font-medium transition-colors shadow-sm resize-none" 
+                    maxLength={2000}
+                    className={`w-full p-[20px] rounded-[16px] border ${errors.message ? 'border-[#D72638] bg-[#FFF5F6]' : 'border-[#CCCCCC] bg-white'} focus:border-brand-green focus:outline-none text-[16px] font-medium transition-colors shadow-sm resize-none`} 
                     placeholder="Write your message here..."
                   />
+                  {errors.message && <p className="text-[12px] text-[#D72638] font-bold mt-[8px]">{errors.message}</p>}
                 </div>
                 
                 <button 

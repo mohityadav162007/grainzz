@@ -401,6 +401,22 @@ export default function CheckoutPage() {
       setError('Please enter a valid 6-digit pincode.');
       return false;
     }
+    
+    const digitsOnly = form.phone.replace(/\D/g, '');
+    if (digitsOnly.length < 10 || digitsOnly.length > 15) {
+      setError('Please enter a valid phone number (10 digits).');
+      return false;
+    }
+
+    if (form.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
+      setError('Please enter a valid email address.');
+      return false;
+    }
+
+    if (form.name.length > 100) {
+      setError('Name is too long.');
+      return false;
+    }
     setError('');
     return true;
   };

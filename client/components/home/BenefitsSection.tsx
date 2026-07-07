@@ -1,5 +1,3 @@
-'use client';
-import { useState } from 'react';
 import Image from 'next/image';
 import { Droplets, Wheat, ShieldCheck, Heart } from 'lucide-react';
 
@@ -15,7 +13,7 @@ const iconMap: Record<string, any> = {
 };
 
 export default function BenefitsSection() {
-  const [benefits] = useState(fallbackBenefits);
+  const benefits = fallbackBenefits;
   const heading = 'Healthy Snacking With Benefits Beyond The Ordinary';
   const subLine = 'Grainzz makes millet-based snacks for honest, everyday Indian snacking — millet chips, roasted grain puffs, and roasted flavoured puffed rice. No palm oil. No maida. 0g trans fat. Zero cholesterol. Shipped across India.';
 

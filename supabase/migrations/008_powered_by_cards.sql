@@ -24,6 +24,6 @@ CREATE TRIGGER powered_by_cards_updated_at BEFORE UPDATE ON powered_by_cards
 
 -- INITIAL SEED
 INSERT INTO powered_by_cards (title, subtitle, top_bg_color, bottom_bg_color, image_url, link, sort_order) VALUES
-('Vegetable Chips', 'upto 40% off', 'bg-[#C68356]', 'bg-[#FDECE7]', '/Rectangle-10@2x.png', '/collections/vegetable-chips', 1),
-('Vegetable Chips', 'upto 40% off', 'bg-[#C68356]', 'bg-[#EEFCD3]', '/Rectangle-10@2x.png', '/collections/popped-chips', 2),
-('Vegetable Chips', 'upto 40% off', 'bg-[#C68356]', 'bg-[#FDECE7]', '/Rectangle-10@2x.png', '/collections/grain-puffs', 3);
+('Vegetable Chips', 'upto 40% off', 'bg-[#C68356]', 'bg-[#FDECE7]', '/Rectangle-10@2x.webp', '/collections/vegetable-chips', 1),
+('Vegetable Chips', 'upto 40% off', 'bg-[#C68356]', 'bg-[#EEFCD3]', '/Rectangle-10@2x.webp', '/collections/popped-chips', 2),
+('Vegetable Chips', 'upto 40% off', 'bg-[#C68356]', 'bg-[#FDECE7]', '/Rectangle-10@2x.webp', '/collections/grain-puffs', 3);

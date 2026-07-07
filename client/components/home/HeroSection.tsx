@@ -3,7 +3,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { getHeroSlides } from '@/lib/api';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, LazyMotion, domAnimation, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
 
 interface HeroSlide {
@@ -122,30 +122,32 @@ export default function HeroSection({ initialSlides }: HeroSectionProps) {
       {/* Hero image — clean, no overlay controls */}
       <section className="relative w-full bg-[#f3f3f3] md:aspect-auto aspect-[1024/1537] md:h-[540px] lg:h-[600px] overflow-hidden">
         <div className="relative w-full h-full">
-          <AnimatePresence initial={false} custom={direction} mode="popLayout">
-            <motion.div
-              key={page}
-              custom={direction}
-              variants={variants}
-              initial="enter"
-              animate="center"
-              exit="exit"
-              transition={{
-                x: { type: "spring", stiffness: 300, damping: 30 },
-                opacity: { duration: 0.2 }
-              }}
-              className="w-full h-full absolute inset-0 cursor-pointer"
-              onClick={() => handleSlideClick(slides[imageIndex])}
-            >
-              <Image
-                src={isMobileActual ? (slides[imageIndex].mobile_image_url || slides[imageIndex].image_url) : slides[imageIndex].image_url}
-                alt={slides[imageIndex].title || 'Hero Banner'}
-                fill
-                className="object-cover"
-                priority
-              />
-            </motion.div>
-          </AnimatePresence>
+          <LazyMotion features={domAnimation}>
+            <AnimatePresence initial={false} custom={direction} mode="popLayout">
+              <m.div
+                key={page}
+                custom={direction}
+                variants={variants}
+                initial="enter"
+                animate="center"
+                exit="exit"
+                transition={{
+                  x: { type: "spring", stiffness: 300, damping: 30 },
+                  opacity: { duration: 0.2 }
+                }}
+                className="w-full h-full absolute inset-0 cursor-pointer"
+                onClick={() => handleSlideClick(slides[imageIndex])}
+              >
+                <Image
+                  src={isMobileActual ? (slides[imageIndex].mobile_image_url || slides[imageIndex].image_url) : slides[imageIndex].image_url}
+                  alt={slides[imageIndex].title || 'Hero Banner'}
+                  fill
+                  className="object-cover"
+                  priority
+                />
+              </m.div>
+            </AnimatePresence>
+          </LazyMotion>
         </div>
       </section>
 

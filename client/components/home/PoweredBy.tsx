@@ -44,7 +44,7 @@ export default function PoweredBy({ initialCards }: PoweredByProps) {
   const [loading, setLoading] = useState(initialCards === undefined);
   const { addItem, setQuickBuy } = useCartStore();
   const router = useRouter();
-  
+
 
   useEffect(() => {
     if (initialCards !== undefined) return; // use server-provided data
@@ -62,7 +62,7 @@ export default function PoweredBy({ initialCards }: PoweredByProps) {
             }
 
             // Favor product images from the database over legacy image_url fields
-            const image = card.custom_image_url || productData?.images?.[0] || card.image_url || '/Rectangle-10@2x.png';
+            const image = card.custom_image_url || productData?.images?.[0] || card.image_url || '/Rectangle-10@2x.webp';
             const title = productData?.name || card.title || 'Product';
             const link = productData ? `/products/${productData.slug}` : card.link || '#';
 
@@ -178,15 +178,15 @@ function CardWrapper({ cat, idx, isMobile, handleBuyNow, containerProgress }: an
   const start = idx * 0.33;
   // We want a smooth continuous scale down as subsequent cards scroll over
   const scale = useTransform(containerProgress, [start, 1], [1, 1 - (2 - idx) * 0.04]);
-  
+
   return (
-    <MotionLink 
+    <MotionLink
       href={cat.link}
       className="flex flex-col w-full rounded-[24px] overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.05)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.1)] transition-all duration-300 sticky md:relative group/card"
-      style={isMobile ? { 
+      style={isMobile ? {
         top: `calc(70px + ${idx * 15}px)`,
         zIndex: idx + 1,
-        scale: isMobile ? scale : 1, 
+        scale: isMobile ? scale : 1,
         transformOrigin: 'top center'
       } : {}}
     >
@@ -218,14 +218,14 @@ function CardWrapper({ cat, idx, isMobile, handleBuyNow, containerProgress }: an
         <h3 className="text-[20px] md:text-[24px] font-bold text-[#1A1A1A] mb-6 tracking-tight">
           {cat.title}
         </h3>
-        
+
         <button
           onClick={(e) => handleBuyNow(e, cat)}
           className="mt-auto inline-flex items-center justify-between gap-4 bg-white/50 border border-black/10 text-brand-green pl-5 pr-1 py-1 rounded-full transition-all group hover:bg-brand-green hover:text-white hover:border-brand-green"
         >
           <span className="font-bold text-[14px] md:text-[16px]">Buy Now</span>
           <div className="w-8 h-8 md:w-9 md:h-9 bg-brand-green group-hover:bg-white rounded-full flex items-center justify-center text-white group-hover:text-brand-green transition-colors">
-            <ArrowRight size={16} strokeWidth={3}/>
+            <ArrowRight size={16} strokeWidth={3} />
           </div>
         </button>
       </div>

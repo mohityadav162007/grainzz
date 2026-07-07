@@ -59,13 +59,13 @@ export default function ProductDetailPageClient({
 
   useEffect(() => {
     if (!product?.id) return;
-    
+
     // Set up realtime subscription for reviews
     const channelName = `public:reviews:${product.id}:${Date.now()}`;
     const channel: any = supabase.channel(channelName);
     const subscription = channel
       .on('postgres_changes', { event: '*', schema: 'public', table: 'reviews', filter: `product_id=eq.${product.id}` }, () => {
-        getProductReviews(product.id).then(revs => setReviews(revs)).catch(() => {});
+        getProductReviews(product.id).then(revs => setReviews(revs)).catch(() => { });
       })
       .subscribe();
 
@@ -155,7 +155,7 @@ export default function ProductDetailPageClient({
   const handleRelatedScroll = (e: React.UIEvent<HTMLDivElement>) => {
     const container = e.currentTarget;
     const scrollPosition = container.scrollLeft;
-    const cardWidth = container.offsetWidth * 0.85; 
+    const cardWidth = container.offsetWidth * 0.85;
     const newIndex = Math.round(scrollPosition / cardWidth);
     if (newIndex !== mobileRelatedIndex) {
       setMobileRelatedIndex(Math.min(newIndex, relatedProducts.length - 1));
@@ -166,12 +166,12 @@ export default function ProductDetailPageClient({
     e.preventDefault();
     if (reviewForm.rating === 0) return alert('Please select a rating');
     if (!reviewForm.title || !reviewForm.text) return alert('Please fill in all required fields');
-    
+
     if (!user) {
       setAuthModalOpen(true);
       return;
     }
-    
+
     setSubmittingReview(true);
     try {
       let imageUrl = '';
@@ -180,11 +180,11 @@ export default function ProductDetailPageClient({
       }
 
       const reviewerEmail = user.email || '';
-      const reviewerName = user.user_metadata?.full_name || 
-                           user.user_metadata?.name || 
-                           user.email?.split('@')[0] || 
-                           'Anonymous';
-      
+      const reviewerName = user.user_metadata?.full_name ||
+        user.user_metadata?.name ||
+        user.email?.split('@')[0] ||
+        'Anonymous';
+
       await submitProductReview({
         product_id: product.id,
         reviewer_name: reviewerName,
@@ -194,7 +194,7 @@ export default function ProductDetailPageClient({
         rating: reviewForm.rating,
         review_image_url: imageUrl || undefined
       });
-      
+
       setReviewSuccess(true);
       setReviewForm({ rating: 0, title: '', text: '' });
       setReviewImage(null);
@@ -228,17 +228,17 @@ export default function ProductDetailPageClient({
   const realReviewCount = reviews.length;
   const seedReviewCount = product?.seed_review_count || 0;
   const totalReviewCount = realReviewCount + seedReviewCount;
-  
+
   const sumRealRatings = reviews.reduce((acc, r) => acc + r.rating, 0);
   const sumSeedRatings = Number(product?.seed_rating || 5) * seedReviewCount;
-  
-  const avgRating = totalReviewCount > 0 
-    ? ((sumRealRatings + sumSeedRatings) / totalReviewCount).toFixed(1) 
+
+  const avgRating = totalReviewCount > 0
+    ? ((sumRealRatings + sumSeedRatings) / totalReviewCount).toFixed(1)
     : (product?.seed_rating || '5.0');
 
   const ratingCounts = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
   mergedReviews.forEach(r => { if (ratingCounts[r.rating as keyof typeof ratingCounts] !== undefined) ratingCounts[r.rating as keyof typeof ratingCounts]++; });
-  
+
   const totalReviewsForBar = mergedReviews.length;
 
   const discount = product?.mrp > product?.price ? Math.round(((product.mrp - product.price) / product.mrp) * 100) : 0;
@@ -273,7 +273,7 @@ export default function ProductDetailPageClient({
         {/* PRODUCT DETAILS SECTION        */}
         {/* ============================== */}
         <div className="flex flex-col lg:flex-row lg:items-start gap-[32px] lg:gap-[60px] xl:gap-[80px] mb-[80px]">
-          
+
           {/* Mobile Header (Shows above image on small screens) */}
           <div className="flex lg:hidden flex-col items-start w-full order-1">
             <nav className="flex items-center gap-[8px] text-[13px] font-medium text-[#8E8E8E] mb-3 tracking-wide">
@@ -288,7 +288,7 @@ export default function ProductDetailPageClient({
                 ))}
               </div>
             )}
-            
+
             {/* Visual title for mobile - converted to h2 to avoid duplicate h1 */}
             <h2 className="text-[28px] font-bold text-brand-black mb-[4px] leading-[1.2]">
               {product?.name}
@@ -300,14 +300,14 @@ export default function ProductDetailPageClient({
           {/* LEFT: Image Gallery */}
           <div className="w-full lg:w-[46%] xl:w-[46%] flex-shrink-0 order-2 lg:order-1 flex flex-col gap-[16px]">
             {/* Main Image */}
-            <div 
+            <div
               className="relative w-full rounded-[24px] overflow-hidden bg-[#F5F0E8] shadow-sm border border-[#EAEAEA]"
               style={{ aspectRatio: '1 / 1' }}
             >
               {product?.images?.length > 0 ? (
                 <Image src={product.images[selectedImage % product.images.length]} alt={product.name} fill className="object-cover transition-transform duration-700 hover:scale-[1.03]" priority />
               ) : (
-                <Image src="/Rectangle-10@2x.png" alt={product.name} fill className="object-cover" />
+                <Image src="/Rectangle-10@2x.webp" alt={product.name} fill className="object-cover" />
               )}
               {discount > 0 && (
                 <div className="absolute top-[20px] left-[20px] bg-[#9A0000] text-white text-[13px] font-medium px-[14px] py-[6px] rounded-full tracking-wide shadow-sm z-10">
@@ -345,7 +345,7 @@ export default function ProductDetailPageClient({
             {/* Mobile Image Gallery Controls (Dots & Arrows) */}
             {product?.images?.length > 1 && (
               <div className="flex lg:hidden items-center justify-center gap-6 mt-[8px]">
-                <button 
+                <button
                   onClick={() => setSelectedImage(prev => prev === 0 ? product.images.length - 1 : prev - 1)}
                   className="p-2 text-[#888888] hover:text-[#222222] transition-colors"
                 >
@@ -360,7 +360,7 @@ export default function ProductDetailPageClient({
                     />
                   ))}
                 </div>
-                <button 
+                <button
                   onClick={() => setSelectedImage(prev => (prev + 1) % product.images.length)}
                   className="p-2 text-[#888888] hover:text-[#222222] transition-colors"
                 >
@@ -404,16 +404,16 @@ export default function ProductDetailPageClient({
                   <form onSubmit={handleNotifySubmit} className="flex flex-col gap-4">
                     <div>
                       <label className="text-[13px] text-[#4A4A4A] mb-1.5 block">Email<span className="text-red-500">*</span></label>
-                      <input 
-                        type="email" 
-                        required 
+                      <input
+                        type="email"
+                        required
                         value={notificationEmail}
                         onChange={(e) => setNotificationEmail(e.target.value)}
                         className="w-full h-[48px] border border-[#EAEAEA] rounded-[8px] px-[16px] outline-none focus:border-brand-green focus:ring-1 focus:ring-brand-green text-[14px] transition-all"
                       />
                     </div>
-                    <button 
-                      type="submit" 
+                    <button
+                      type="submit"
                       disabled={notificationSubmitting}
                       className="w-full h-[48px] bg-[#1a1a1a] text-white rounded-[24px] font-bold text-[15px] hover:bg-black transition-colors disabled:opacity-50"
                     >
@@ -470,22 +470,22 @@ export default function ProductDetailPageClient({
                 <span className="text-[22px] lg:text-[24px] font-bold text-brand-black w-[24px] text-center select-none">{qty}</span>
                 <button onClick={() => setQty(qty + 1)} className="w-[60px] h-[60px] lg:w-[60px] lg:h-[60px] rounded-full border border-[#D9D9D9] flex items-center justify-center text-[#4A4A4A] hover:bg-white transition-colors"><Plus size={22} strokeWidth={1.5} /></button>
               </div>
-              <button 
+              <button
                 onClick={handleAddToCart}
                 disabled={product?.stock === 0}
                 className={`w-full lg:flex-1 h-[64px] lg:h-[64px] rounded-full border-[1.5px] font-bold text-[18px] lg:text-[18px] transition-all
-                  ${product?.stock === 0 
-                    ? 'border-[#b5d4a6] text-[#b5d4a6] cursor-not-allowed bg-transparent' 
+                  ${product?.stock === 0
+                    ? 'border-[#b5d4a6] text-[#b5d4a6] cursor-not-allowed bg-transparent'
                     : 'border-[#8cb369] text-[#4d7a2f] hover:bg-[#F2F9ED]'}`}
               >
                 {added ? 'Added ✓' : 'Add to Cart'}
               </button>
-              <button 
+              <button
                 onClick={handleQuickBuy}
                 disabled={product?.stock === 0}
                 className={`w-full lg:flex-1 h-[64px] lg:h-[64px] rounded-full font-bold text-[18px] lg:text-[18px] transition-all shadow-sm
-                  ${product?.stock === 0 
-                    ? 'bg-[#999999] text-white cursor-not-allowed' 
+                  ${product?.stock === 0
+                    ? 'bg-[#999999] text-white cursor-not-allowed'
                     : 'bg-[#1D5E2E] text-white hover:bg-[#154617]'}`}
               >
                 Quick Buy
@@ -498,13 +498,13 @@ export default function ProductDetailPageClient({
                 const isOpen = openSection === item.label;
                 return (
                   <div key={item.label} className="border-b border-[#EAEAEA]">
-                    <button 
+                    <button
                       onClick={() => toggleSection(item.label)}
                       className="w-full py-[20px] flex items-center justify-between font-bold text-[15px] text-brand-black hover:text-brand-green transition-colors"
                     >
                       {item.label}
                       <span className={`transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`}>
-                        {isOpen ? <Minus size={20} strokeWidth={1.5} className="text-black"/> : <Plus size={20} strokeWidth={1.5} className="text-black"/>}
+                        {isOpen ? <Minus size={20} strokeWidth={1.5} className="text-black" /> : <Plus size={20} strokeWidth={1.5} className="text-black" />}
                       </span>
                     </button>
                     <div
@@ -600,26 +600,26 @@ export default function ProductDetailPageClient({
         {/* ============================== */}
         <div className="w-full border-t border-[#EAEAEA] pt-[60px] pb-[80px]">
           <h2 className="text-[32px] md:text-[40px] font-bold text-brand-black text-center mb-[60px]">Customer Reviews</h2>
-          
+
           <div className="flex flex-col lg:flex-row gap-[60px] lg:gap-[100px]">
-            
+
             {/* LEFT: Stats & Review List */}
             <div className="flex-1 w-full max-w-[600px] mx-auto lg:mx-0">
               <div className="flex gap-[40px] mb-[40px]">
                 <div className="flex flex-col">
                   <span className="text-[64px] font-bold text-[#1D5E2E] leading-[1] mb-2">{avgRating}</span>
                   <div className="flex gap-[4px] mb-2">
-                    {[1,2,3,4,5].map(i => <Star key={i} size={20} className={i <= Math.round(Number(avgRating)) ? "fill-[#1D5E2E] text-[#1D5E2E]" : "text-[#D9D9D9]"} />)}
+                    {[1, 2, 3, 4, 5].map(i => <Star key={i} size={20} className={i <= Math.round(Number(avgRating)) ? "fill-[#1D5E2E] text-[#1D5E2E]" : "text-[#D9D9D9]"} />)}
                   </div>
                 </div>
-                
+
                 <div className="flex-1 flex flex-col gap-[8px] justify-center">
                   {[5, 4, 3, 2, 1].map(stars => {
                     const count = ratingCounts[stars as keyof typeof ratingCounts];
                     const percent = totalReviewsForBar > 0 ? (count / totalReviewsForBar) * 100 : 0;
                     return (
                       <div key={stars} className="flex items-center gap-[12px] text-[13px] font-bold text-[#1D5E2E] cursor-pointer group" onClick={() => setReviewFilter(stars)}>
-                        <div className="flex items-center gap-1 w-[32px]"><span>{stars}</span><Star size={12} className="fill-[#1D5E2E]"/></div>
+                        <div className="flex items-center gap-1 w-[32px]"><span>{stars}</span><Star size={12} className="fill-[#1D5E2E]" /></div>
                         <div className="flex-1 h-[8px] bg-[#EEEEEE] rounded-full overflow-hidden">
                           <div className="h-full bg-[#1D5E2E] transition-all" style={{ width: `${percent}%` }} />
                         </div>
@@ -656,18 +656,18 @@ export default function ProductDetailPageClient({
                     <div key={isSeed ? `seed-${ridx}` : review.id} className="pb-[32px] border-b border-[#EAEAEA] last:border-0">
                       <div className="mb-[12px]">
                         <div className="flex gap-[4px]">
-                          {[1,2,3,4,5].map(i => <Star key={i} size={16} className={i <= review.rating ? "fill-[#1D5E2E] text-[#1D5E2E]" : "text-[#D9D9D9]"} />)}
+                          {[1, 2, 3, 4, 5].map(i => <Star key={i} size={16} className={i <= review.rating ? "fill-[#1D5E2E] text-[#1D5E2E]" : "text-[#D9D9D9]"} />)}
                         </div>
                       </div>
                       <h4 className="font-bold text-[18px] text-brand-black mb-[4px]">{title}</h4>
                       <p className="text-[14px] text-[#666666] leading-[1.6] mb-[16px]">{text}</p>
-                      
+
                       {!isSeed && review.review_image_url && (
                         <div className="relative w-[120px] h-[120px] rounded-[12px] overflow-hidden mb-[16px] border border-[#EAEAEA]">
                           <Image src={review.review_image_url} alt="Review attachment" fill className="object-cover" />
                         </div>
                       )}
-                      
+
                       <div className="flex justify-between items-center text-[12px] text-[#888888]">
                         <span className="font-medium">-{name}</span>
                         <span>{date}</span>
@@ -684,7 +684,7 @@ export default function ProductDetailPageClient({
             <div id="write-review" className="flex-1 w-full max-w-[500px] mx-auto lg:mx-0">
               <div className="bg-white rounded-[24px] p-[32px] md:p-[48px] border border-[#EAEAEA] shadow-sm">
                 <h3 className="text-[24px] font-bold text-brand-black mb-[32px] text-center">Leave us a review!</h3>
-                
+
                 {reviewSuccess ? (
                   <div className="text-center py-[60px] flex flex-col items-center">
                     <div className="w-[60px] h-[60px] bg-[#EEFBDC] rounded-full flex items-center justify-center text-[#1D5E2E] mb-4">
@@ -698,12 +698,12 @@ export default function ProductDetailPageClient({
                     <div>
                       <label className="text-[13px] font-bold text-brand-black mb-[8px] block">Overall Rating<span className="text-red-500">*</span></label>
                       <div className="flex gap-[8px]">
-                        {[1,2,3,4,5].map(i => (
-                          <Star 
-                            key={i} 
-                            size={24} 
+                        {[1, 2, 3, 4, 5].map(i => (
+                          <Star
+                            key={i}
+                            size={24}
                             onClick={() => setReviewForm(p => ({ ...p, rating: i }))}
-                            className={`cursor-pointer transition-colors ${i <= reviewForm.rating ? "fill-[#1D5E2E] text-[#1D5E2E]" : "text-[#D9D9D9] hover:text-[#1D5E2E]"}`} 
+                            className={`cursor-pointer transition-colors ${i <= reviewForm.rating ? "fill-[#1D5E2E] text-[#1D5E2E]" : "text-[#D9D9D9] hover:text-[#1D5E2E]"}`}
                           />
                         ))}
                       </div>
@@ -711,9 +711,9 @@ export default function ProductDetailPageClient({
 
                     <div>
                       <label className="text-[13px] font-bold text-brand-black mb-[8px] block">Review Title<span className="text-red-500">*</span></label>
-                      <input 
-                        type="text" 
-                        value={reviewForm.title} onChange={e => setReviewForm(p => ({...p, title: e.target.value}))}
+                      <input
+                        type="text"
+                        value={reviewForm.title} onChange={e => setReviewForm(p => ({ ...p, title: e.target.value }))}
                         className="w-full h-[48px] border border-[#EAEAEA] rounded-[8px] px-[16px] outline-none focus:border-[#1D5E2E] text-[14px]"
                         required
                       />
@@ -721,8 +721,8 @@ export default function ProductDetailPageClient({
 
                     <div>
                       <label className="text-[13px] font-bold text-brand-black mb-[8px] block">Review<span className="text-red-500">*</span></label>
-                      <textarea 
-                        value={reviewForm.text} onChange={e => setReviewForm(p => ({...p, text: e.target.value}))}
+                      <textarea
+                        value={reviewForm.text} onChange={e => setReviewForm(p => ({ ...p, text: e.target.value }))}
                         className="w-full h-[120px] border border-[#EAEAEA] rounded-[8px] p-[16px] outline-none focus:border-[#1D5E2E] text-[14px] resize-none"
                         required
                       />
@@ -738,7 +738,7 @@ export default function ProductDetailPageClient({
                           </button>
                         </div>
                       ) : (
-                        <div 
+                        <div
                           onClick={() => fileInputRef.current?.click()}
                           className="w-full h-[80px] border-[2px] border-dashed border-[#EAEAEA] rounded-[8px] flex items-center justify-center bg-[#F9F9F9] cursor-pointer hover:border-[#1D5E2E] transition-colors"
                         >
@@ -749,21 +749,21 @@ export default function ProductDetailPageClient({
                     </div>
 
                     {!user ? (
-                      <button 
-                        type="button" 
+                      <button
+                        type="button"
                         onClick={() => setAuthModalOpen(true)}
                         className="mt-[12px] h-[54px] bg-white border border-brand-green text-brand-green rounded-full font-bold text-[16px] hover:bg-[#F2F9ED] transition-all flex justify-center items-center gap-[12px] shadow-sm"
                       >
                         Sign in to write a review
                       </button>
                     ) : (
-                      <button 
-                        type="submit" 
+                      <button
+                        type="submit"
                         disabled={submittingReview}
                         className="mt-[12px] h-[54px] bg-[#1D5E2E] text-white rounded-full font-bold text-[16px] hover:bg-[#154617] transition-all flex justify-center items-center gap-[12px] shadow-md disabled:opacity-50"
                       >
                         {submittingReview ? <Loader2 size={20} className="animate-spin" /> : 'Submit'}
-                        {!submittingReview && <div className="w-[32px] h-[32px] bg-white rounded-full flex items-center justify-center text-[#1D5E2E]"><ChevronRight size={18} strokeWidth={3}/></div>}
+                        {!submittingReview && <div className="w-[32px] h-[32px] bg-white rounded-full flex items-center justify-center text-[#1D5E2E]"><ChevronRight size={18} strokeWidth={3} /></div>}
                       </button>
                     )}
                   </form>
@@ -781,7 +781,7 @@ export default function ProductDetailPageClient({
             <h2 className="text-[28px] md:text-[36px] font-bold mb-[40px] text-brand-black tracking-tight font-sans lg:text-left text-center">
               You may also like
             </h2>
-            
+
             {/* Desktop Grid */}
             <div className="hidden md:grid grid-cols-2 md:grid-cols-4 gap-[16px] md:gap-[32px]">
               {relatedLoading ? (
@@ -795,7 +795,7 @@ export default function ProductDetailPageClient({
 
             {/* Mobile Carousel */}
             <div className="flex md:hidden flex-col w-full">
-              <div 
+              <div
                 id="related-mobile-carousel"
                 onScroll={handleRelatedScroll}
                 className="flex w-full overflow-x-auto snap-x snap-mandatory scrollbar-none gap-[16px] pb-[24px]"
@@ -814,10 +814,10 @@ export default function ProductDetailPageClient({
                   ))
                 )}
               </div>
-              
+
               {/* Controls */}
               <div className="flex items-center justify-center gap-[24px] mt-[8px]">
-                <button 
+                <button
                   onClick={() => {
                     const c = document.getElementById('related-mobile-carousel');
                     if (c) c.scrollBy({ left: -window.innerWidth * 0.85, behavior: 'smooth' });
@@ -826,7 +826,7 @@ export default function ProductDetailPageClient({
                 >
                   <ChevronLeft size={20} strokeWidth={2.5} />
                 </button>
-                
+
                 <div className="flex items-center gap-[8px]">
                   {relatedProducts.map((_, idx) => (
                     <div
@@ -836,7 +836,7 @@ export default function ProductDetailPageClient({
                   ))}
                 </div>
 
-                <button 
+                <button
                   onClick={() => {
                     const c = document.getElementById('related-mobile-carousel');
                     if (c) c.scrollBy({ left: window.innerWidth * 0.85, behavior: 'smooth' });
@@ -860,15 +860,15 @@ export default function ProductDetailPageClient({
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               {relatedBlogs.map((blog) => (
-                <Link 
-                  key={blog.id} 
+                <Link
+                  key={blog.id}
                   href={`/blogs/${blog.slug.startsWith('/') ? blog.slug.substring(1) : blog.slug}`}
                   className="group flex flex-col bg-white rounded-[24px] overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 border border-gray-100 h-full"
                 >
                   <div className="relative aspect-[16/9] overflow-hidden bg-gray-50">
                     {blog.featured_image_url ? (
-                      <img 
-                        src={blog.featured_image_url} 
+                      <img
+                        src={blog.featured_image_url}
                         alt={blog.title}
                         className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                       />
@@ -896,7 +896,7 @@ export default function ProductDetailPageClient({
         )}
 
       </div>
-      
+
       {/* ============================== */}
       {/* PRODUCT TESTIMONIAL SLIDER     */}
       {/* ============================== */}

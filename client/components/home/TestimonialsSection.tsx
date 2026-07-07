@@ -55,7 +55,7 @@ const HOMEPAGE_REVIEWS = [
   },
 ];
 
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, LazyMotion, domAnimation, AnimatePresence } from 'framer-motion';
 import ProductCard from '@/components/products/ProductCard';
 
 interface TestimonialsSectionProps {
@@ -95,7 +95,7 @@ export default function TestimonialsSection({ initialReviews }: TestimonialsSect
   }, [initialReviews]);
 
   const reviewCount = reviews?.length || 0;
-  
+
   const nextSlide = useCallback(() => {
     if (reviewCount <= 1) return;
     setDirection(1);
@@ -127,7 +127,7 @@ export default function TestimonialsSection({ initialReviews }: TestimonialsSect
 
   const current = reviews[currentIndex];
   if (!current) return null;
-  
+
   // Inject the section-specific subtitle into the product data
   const product = current.product ? {
     ...current.product,
@@ -156,7 +156,7 @@ export default function TestimonialsSection({ initialReviews }: TestimonialsSect
       {/* Background Image with Blur */}
       <div className="absolute inset-0 z-0">
         <Image
-          src="/Product-Background@2x.png"
+          src="/Product-Background@2x.webp"
           alt="Background"
           fill
           className="object-cover blur-[10px] scale-110 opacity-90"
@@ -165,12 +165,40 @@ export default function TestimonialsSection({ initialReviews }: TestimonialsSect
       </div>
 
       <div className="relative z-10 max-w-[1440px] w-full mx-auto px-0 md:px-[60px] lg:px-[100px] flex flex-col md:flex-row items-stretch justify-between min-h-[600px]">
-        
+
         {/* Left: Product Card */}
         <div className="w-full md:w-[45%] lg:w-[525px] flex items-center justify-center md:justify-center py-10 md:py-20 px-4 md:px-0">
           <div className="w-full max-w-[340px] bg-white rounded-[24px] p-6 shadow-[0_24px_50px_rgba(0,0,0,0.1)]">
+            <LazyMotion features={domAnimation}>
+              <AnimatePresence mode="wait" custom={direction}>
+                <m.div
+                  key={currentIndex}
+                  custom={direction}
+                  variants={variants}
+                  initial="enter"
+                  animate="center"
+                  exit="exit"
+                  transition={{
+                    y: { type: "spring", stiffness: 100, damping: 20 },
+                    opacity: { duration: 0.4 }
+                  }}
+                >
+                  {product ? (
+                    <ProductCard product={product} />
+                  ) : (
+                    <div className="aspect-[4/5] bg-white/20 backdrop-blur-md rounded-[24px]" />
+                  )}
+                </m.div>
+              </AnimatePresence>
+            </LazyMotion>
+          </div>
+        </div>
+
+        {/* Right: Testimonial Box */}
+        <div className="w-full md:w-[50%] lg:w-[540px] bg-[#EEFBDC]/95 backdrop-blur-md px-6 py-10 md:p-14 lg:p-16 flex flex-col justify-between shadow-2xl relative overflow-hidden">
+          <LazyMotion features={domAnimation}>
             <AnimatePresence mode="wait" custom={direction}>
-              <motion.div
+              <m.div
                 key={currentIndex}
                 custom={direction}
                 variants={variants}
@@ -181,62 +209,38 @@ export default function TestimonialsSection({ initialReviews }: TestimonialsSect
                   y: { type: "spring", stiffness: 100, damping: 20 },
                   opacity: { duration: 0.4 }
                 }}
+                className="h-full flex flex-col justify-between"
               >
-                {product ? (
-                  <ProductCard product={product} />
-                ) : (
-                  <div className="aspect-[4/5] bg-white/20 backdrop-blur-md rounded-[24px]" />
-                )}
-              </motion.div>
+                <div>
+                  <h4 className="text-[13px] md:text-[15px] font-semibold text-[#1A1A1A] mb-10 opacity-70 tracking-wide uppercase">
+                    What people are saying about Grainzz
+                  </h4>
+
+                  <div className="min-h-[180px] mb-10">
+                    <h2 className="text-[20px] md:text-[26px] lg:text-[28px] font-bold text-[#1A1A1A] leading-[1.6] tracking-tight">
+                      &quot;{current.text}&quot;
+                    </h2>
+                  </div>
+
+                  <div className="flex items-center gap-5 mb-12">
+                    <div className="w-[68px] h-[68px] rounded-full overflow-hidden border-2 border-white shadow-md">
+                      <Image
+                        src={`https://ui-avatars.com/api/?name=${encodeURIComponent(current.author)}&background=1A5B23&color=fff`}
+                        alt={current.author}
+                        width={68}
+                        height={68}
+                        className="object-cover"
+                      />
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-[19px] font-bold text-[#1A1A1A]">{current.author}</span>
+                      <span className="text-[14px] text-[#4A4A4A] font-medium opacity-80">{current.role}</span>
+                    </div>
+                  </div>
+                </div>
+              </m.div>
             </AnimatePresence>
-          </div>
-        </div>
-
-        {/* Right: Testimonial Box */}
-        <div className="w-full md:w-[50%] lg:w-[540px] bg-[#EEFBDC]/95 backdrop-blur-md px-6 py-10 md:p-14 lg:p-16 flex flex-col justify-between shadow-2xl relative overflow-hidden">
-          <AnimatePresence mode="wait" custom={direction}>
-            <motion.div
-              key={currentIndex}
-              custom={direction}
-              variants={variants}
-              initial="enter"
-              animate="center"
-              exit="exit"
-              transition={{
-                y: { type: "spring", stiffness: 100, damping: 20 },
-                opacity: { duration: 0.4 }
-              }}
-              className="h-full flex flex-col justify-between"
-            >
-              <div>
-                <h4 className="text-[13px] md:text-[15px] font-semibold text-[#1A1A1A] mb-10 opacity-70 tracking-wide uppercase">
-                  What people are saying about Grainzz
-                </h4>
-
-                <div className="min-h-[180px] mb-10">
-                  <h2 className="text-[20px] md:text-[26px] lg:text-[28px] font-bold text-[#1A1A1A] leading-[1.6] tracking-tight">
-                    &quot;{current.text}&quot;
-                  </h2>
-                </div>
-
-                <div className="flex items-center gap-5 mb-12">
-                  <div className="w-[68px] h-[68px] rounded-full overflow-hidden border-2 border-white shadow-md">
-                    <Image
-                      src={`https://ui-avatars.com/api/?name=${encodeURIComponent(current.author)}&background=1A5B23&color=fff`}
-                      alt={current.author}
-                      width={68}
-                      height={68}
-                      className="object-cover"
-                    />
-                  </div>
-                  <div className="flex flex-col">
-                    <span className="text-[19px] font-bold text-[#1A1A1A]">{current.author}</span>
-                    <span className="text-[14px] text-[#4A4A4A] font-medium opacity-80">{current.role}</span>
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-          </AnimatePresence>
+          </LazyMotion>
 
           {/* Navigation Controls - Keep these static */}
           <div className="flex items-center gap-[28px] z-20 mt-auto">

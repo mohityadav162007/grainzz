@@ -1,12 +1,14 @@
+import dynamic from 'next/dynamic';
 import HeroSection from '@/components/home/HeroSection';
 import StatsBar from '@/components/home/StatsBar';
 import ProductSegments from '@/components/home/ProductSegments';
-import BenefitsSection from '@/components/home/BenefitsSection';
-import PoweredBy from '@/components/home/PoweredBy';
-import EssentialSnackBox from '@/components/home/EssentialSnackBox';
-import TestimonialsSection from '@/components/home/TestimonialsSection';
-import InstagramSection from '@/components/home/InstagramSection';
-import FAQSection from '@/components/home/FAQSection';
+
+const BenefitsSection = dynamic(() => import('@/components/home/BenefitsSection'));
+const PoweredBy = dynamic(() => import('@/components/home/PoweredBy'));
+const EssentialSnackBox = dynamic(() => import('@/components/home/EssentialSnackBox'));
+const TestimonialsSection = dynamic(() => import('@/components/home/TestimonialsSection'));
+const InstagramSection = dynamic(() => import('@/components/home/InstagramSection'));
+const FAQSection = dynamic(() => import('@/components/home/FAQSection'));
 
 import {
   getHeroSlides,
@@ -92,15 +94,15 @@ export default async function HomePage() {
 
   const batchProducts: any[] = allNeededIds.length > 0
     ? await supabase
-        .from('products')
-        .select('*')
-        .in('id', allNeededIds)
-        .eq('is_active', true)
-        .then(r => (r.data || []).map((p: any) => {
-          if (p?.images) p.images = p.images.map((img: string) => img.includes('placeholder.jpg') ? '/image-2@2x.png' : img);
-          return p;
-        }))
-        .catch(() => [])
+      .from('products')
+      .select('*')
+      .in('id', allNeededIds)
+      .eq('is_active', true)
+      .then(r => (r.data || []).map((p: any) => {
+        if (p?.images) p.images = p.images.map((img: string) => img.includes('placeholder.jpg') ? '/image-2@2x.png' : img);
+        return p;
+      }))
+      .catch(() => [])
     : [];
 
   const batchMap = new Map(batchProducts.map((p: any) => [p.id, p]));
@@ -108,7 +110,7 @@ export default async function HomePage() {
   // ── Build PoweredBy cards from batch map ──────────────────────────────────
   const poweredByCards = poweredBySlice.map((card: any) => {
     const productData = card.product_id ? batchMap.get(card.product_id) || null : null;
-    const image = card.custom_image_url || productData?.images?.[0] || card.image_url || '/Rectangle-10@2x.png';
+    const image = card.custom_image_url || productData?.images?.[0] || card.image_url || '/Rectangle-10@2x.webp';
     const title = productData?.name || card.title || 'Product';
     const link = productData ? `/products/${productData.slug}` : card.link || '#';
     return { title, subtitle: card.subtitle || '', topBg: card.top_bg_color || '#C68356', bottomBg: card.bottom_bg_color || '#FDECE7', image, link, price: productData?.price, mrp: productData?.mrp, product: productData };

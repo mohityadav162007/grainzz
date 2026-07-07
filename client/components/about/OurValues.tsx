@@ -6,17 +6,17 @@ const values = [
   {
     title: 'We are Bold',
     desc: 'We are not here to make healthy snacking feel safe, plain or forgettable. Grainzz stands for bold flavours, bold choices and the courage to give familiar grains a completely new identity.',
-    image: '/value-bold.png',
+    image: '/value-bold.webp',
   },
   {
     title: 'We are Honest',
     desc: 'We believe people do not need complicated snack promises. They need products that taste good, feel lighter and are built with better ingredient choices. Our communication stays clear, simple and real.',
-    image: '/value-authentic.png',
+    image: '/value-authentic.webp',
   },
   {
     title: 'We are Mindful',
     desc: 'Every Grainzz product is built around everyday snacking moments. We think about what people actually eat, when they eat it and how to make that choice better without making it difficult.',
-    image: '/value-mindful.png',
+    image: '/value-mindful.webp',
   },
 ];
 

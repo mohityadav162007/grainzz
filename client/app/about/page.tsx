@@ -80,7 +80,7 @@ export default function AboutPage() {
           {/* Left — Image */}
           <div className="w-full md:w-[50%] relative overflow-hidden bg-[#C24A2B]">
             <Image
-              src="/about section cover.png"
+              src="/about section cover.avif"
               alt="Grainzz snack products on a table"
               fill
               className="object-cover"
@@ -172,7 +172,7 @@ export default function AboutPage() {
               <div className="bg-white p-[16px] rounded-[2px] shadow-[0_20px_60px_rgba(0,0,0,0.5)]">
                 <div className="relative w-full aspect-[4/5] overflow-hidden rounded-[1px]">
                   <Image
-                    src="/founders.png"
+                    src="/founders.webp"
                     alt="Grainzz Founders"
                     fill
                     className="object-cover"

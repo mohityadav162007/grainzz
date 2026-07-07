@@ -16,7 +16,7 @@ const GroupComponent: NextPage<GroupComponentType> = ({ className = "" }) => {
         height={700}
         sizes="100vw"
         alt=""
-        src="/Product-Background@2x.png"
+        src="/Product-Background@2x.webp"
       />
       <section className="flex flex-col items-start pt-[97px] px-0 pb-0 box-border max-w-full shrink-0 text-left text-sm text-[#fff] font-sans mq800:pt-[63px] mq800:box-border mq1350:flex-1">
         <div className="rounded-2xl bg-[#fff] flex flex-col items-start p-3 gap-6">
@@ -56,7 +56,7 @@ const GroupComponent: NextPage<GroupComponentType> = ({ className = "" }) => {
             <div className="self-stretch flex flex-col items-start gap-2">
               <h2 className="m-0 self-stretch relative text-[length:inherit] leading-[132%] font-medium font-[inherit] mq450:text-[21px] mq450:leading-[27px]">{`Oats Chips – Peri Peri `}</h2>
               <div className="self-stretch relative text-base leading-[140%] font-sans text-[#555]">
-                High-Fibre | No Palm Oil | Baked Crunch 
+                High-Fibre | No Palm Oil | Baked Crunch
               </div>
             </div>
             <div className="flex items-center gap-3">

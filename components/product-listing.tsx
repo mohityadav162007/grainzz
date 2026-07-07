@@ -17,7 +17,7 @@ const ProductListing: NextPage<ProductListingType> = ({ className = "" }) => {
           height={669}
           sizes="100vw"
           alt=""
-          src="/Rectangle-10@2x.png"
+          src="/Rectangle-10@2x.webp"
         />
         <div className="absolute top-[602px] left-[20px] rounded-[99px] bg-[#fff] border-brand-green border-solid border-[1px] hidden items-center justify-center py-[13px] px-6">
           <div className="relative leading-[132%] capitalize font-semibold shrink-0">
@@ -33,7 +33,7 @@ const ProductListing: NextPage<ProductListingType> = ({ className = "" }) => {
                 The Essential Snack Box
               </h2>
               <div className="relative text-base leading-[140%] text-[#555]">
-                High-Fibre | No Palm Oil | Baked Crunch 
+                High-Fibre | No Palm Oil | Baked Crunch
               </div>
             </div>
             <div className="flex items-center gap-3 text-[38px] text-brand-black">

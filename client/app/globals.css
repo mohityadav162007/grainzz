@@ -103,6 +103,11 @@
   white-space: nowrap;
 }
 
+@keyframes marquee {
+  0% { transform: translate3d(0, 0, 0); }
+  100% { transform: translate3d(-50%, 0, 0); }
+}
+
 .marquee-content {
   display: inline-flex;
   animation: marquee 20s linear infinite;
@@ -171,9 +176,7 @@
 @media (prefers-reduced-motion: reduce) {
   .animate-fade-in,
   .animate-slide-in-right,
-  .animate-pulse,
-  .marquee-content,
-  .marquee-track {
+  .animate-pulse {
     animation: none !important;
     transition: none !important;
   }

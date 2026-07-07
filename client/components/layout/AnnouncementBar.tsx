@@ -44,7 +44,7 @@ export default function AnnouncementBar() {
     };
   }, []);
 
-  const isMultiple = messages.length > 1;
+  const isMultiple = messages.length > 0;
 
   // Build a repeated list to ensure it spans wider than the screen
   const repeatedList: string[] = [];
@@ -84,30 +84,14 @@ export default function AnnouncementBar() {
 
   return (
     <div className="block bg-brand-green text-white h-[36px] w-full text-[12px] md:text-[14px] font-medium leading-[132%] tracking-normal overflow-hidden relative select-none">
-      {isMultiple && (
-        <style>{`
-          @keyframes marquee {
-            0% {
-              transform: translate3d(0, 0, 0);
-            }
-            100% {
-              transform: translate3d(-50%, 0, 0);
-            }
-          }
-          .marquee-track {
-            display: flex;
-            align-items: center;
-            width: max-content;
-            animation: marquee 25s linear infinite;
-          }
-        `}</style>
-      )}
+
       
-      <div className="h-full flex items-center justify-center">
+      <div className="h-full flex items-center justify-start overflow-hidden w-full">
         {isMultiple ? (
           <div 
-            className="marquee-track cursor-pointer"
+            className="flex items-center w-max marquee-content cursor-pointer"
             style={{
+              animation: 'marquee 25s linear infinite',
               animationPlayState: isPaused ? 'paused' : 'running'
             }}
             onMouseEnter={handleMouseEnter}

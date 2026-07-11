@@ -22,8 +22,8 @@ import {
 } from '@/lib/api';
 import { supabase } from '@/lib/supabase';
 
-// ISR: re-generate the page at most once every 5 minutes.
-export const revalidate = 300;
+// ISR: re-generate the page at most once every 60 seconds.
+export const revalidate = 60;
 
 const HOMEPAGE_REVIEW_IDS = [
   '9fb17378-0edd-4f8f-a7ca-f23ad2d3b049',

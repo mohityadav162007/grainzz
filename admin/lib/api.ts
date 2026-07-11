@@ -1,5 +1,5 @@
 import { supabase } from './supabase';
-import { uploadProductImageCloudinary, uploadHeroImageCloudinary, uploadInstagramImageCloudinary, uploadToCloudinary } from './cloudinary';
+import { uploadProductImage as _uploadProductImage, uploadHeroImage as _uploadHeroImage, uploadInstagramImage as _uploadInstagramImage, uploadToS3, uploadBlogImage, uploadPoweredByImage as _uploadPoweredByImage, uploadSnackBoxImage as _uploadSnackBoxImage, deleteFromS3, S3_FOLDERS } from './s3';
 import { submitToIndexNow } from './indexnow';
 import { revalidateClientPaths } from './revalidate';
 
@@ -193,13 +193,13 @@ export const createProduct = async (formData: FormData) => {
     .replace(/-+/g, '-')
     .trim();
 
-  // Upload images to Cloudinary
+  // Upload images to S3
   const imageUrls: string[] = [];
   const files = formData.getAll('images') as File[];
   for (const file of files) {
     if (file && file.size > 0) {
       try {
-        const url = await uploadProductImageCloudinary(file);
+        const url = await _uploadProductImage(file);
         imageUrls.push(url);
       } catch (uploadError) {
         console.error('Upload error:', uploadError);
@@ -349,7 +349,7 @@ export const updateProduct = async (id: string, formData: FormData) => {
   for (const file of files) {
     if (file && file.size > 0) {
       try {
-        const url = await uploadProductImageCloudinary(file);
+        const url = await _uploadProductImage(file);
         newImageUrls.push(url);
       } catch (uploadError) {
         console.error('Upload error:', uploadError);
@@ -897,12 +897,17 @@ export const deleteHeroSlide = async (id: string) => {
 };
 
 export const uploadHeroImage = async (file: File): Promise<string> => {
-  return uploadHeroImageCloudinary(file);
+  return _uploadHeroImage(file);
 };
 
-export const deleteHeroImage = async (_url: string) => {
-  // Cloudinary deletion requires server-side signed requests.
-  // Images are managed via Cloudinary dashboard if cleanup is needed.
+export const deleteHeroImage = async (url: string) => {
+  if (url) {
+    try {
+      await deleteFromS3(url);
+    } catch (err) {
+      console.warn('[deleteHeroImage] S3 deletion failed (non-fatal):', err);
+    }
+  }
 };
 
 // â”€â”€â”€ Powered By Cards â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -953,7 +958,7 @@ export const deletePoweredByCard = async (id: string) => {
 };
 
 export const uploadPoweredByImage = async (file: File): Promise<string> => {
-  return uploadToCloudinary(file, 'grainzz/powered-by');
+  return _uploadPoweredByImage(file);
 };
 
 // â”€â”€â”€ Snack Box Items â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -983,7 +988,7 @@ export const updateSnackBoxItems = async (items: any) => {
 };
 
 export const uploadSnackBoxImage = async (file: File): Promise<string> => {
-  return uploadToCloudinary(file, 'grainzz/snack-box');
+  return _uploadSnackBoxImage(file);
 };
 
 // â”€â”€â”€ Trust Metrics â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -1154,12 +1159,17 @@ export const deleteInstagramPost = async (id: string) => {
 };
 
 export const uploadInstagramImage = async (file: File): Promise<string> => {
-  return uploadInstagramImageCloudinary(file);
+  return _uploadInstagramImage(file);
 };
 
-export const deleteInstagramImage = async (_url: string) => {
-  // Cloudinary deletion requires server-side signed requests.
-  // Images are managed via Cloudinary dashboard if cleanup is needed.
+export const deleteInstagramImage = async (url: string) => {
+  if (url) {
+    try {
+      await deleteFromS3(url);
+    } catch (err) {
+      console.warn('[deleteInstagramImage] S3 deletion failed (non-fatal):', err);
+    }
+  }
 };
 
 // â”€â”€â”€ FAQs â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -1531,8 +1541,7 @@ export const createBlog = async (formData: FormData) => {
   let featured_image_url = '';
   const file = formData.get('featured_image') as File;
   if (file && file.size > 0) {
-    const { uploadBlogImageCloudinary } = await import('./cloudinary');
-    featured_image_url = await uploadBlogImageCloudinary(file);
+    featured_image_url = await uploadBlogImage(file);
   }
 
   // SEO Fields
@@ -1547,8 +1556,7 @@ export const createBlog = async (formData: FormData) => {
   let og_image_url = '';
   const ogImageFile = formData.get('og_image') as File;
   if (ogImageFile && ogImageFile.size > 0) {
-    const { uploadBlogImageCloudinary } = await import('./cloudinary');
-    og_image_url = await uploadBlogImageCloudinary(ogImageFile);
+    og_image_url = await uploadBlogImage(ogImageFile);
   }
 
   const { data, error } = await supabase
@@ -1600,8 +1608,7 @@ export const updateBlog = async (id: string, formData: FormData) => {
 
   const file = formData.get('featured_image') as File;
   if (file && file.size > 0) {
-    const { uploadBlogImageCloudinary } = await import('./cloudinary');
-    updates.featured_image_url = await uploadBlogImageCloudinary(file);
+    updates.featured_image_url = await uploadBlogImage(file);
   } else {
     const existingImage = formData.get('existing_image') as string;
     if (existingImage) updates.featured_image_url = existingImage;
@@ -1631,8 +1638,7 @@ export const updateBlog = async (id: string, formData: FormData) => {
 
   const ogImageFile = formData.get('og_image') as File;
   if (ogImageFile && ogImageFile.size > 0) {
-    const { uploadBlogImageCloudinary } = await import('./cloudinary');
-    updates.og_image_url = await uploadBlogImageCloudinary(ogImageFile);
+    updates.og_image_url = await uploadBlogImage(ogImageFile);
   } else {
     const existingOgImage = formData.get('existing_og_image') as string;
     if (existingOgImage) updates.og_image_url = existingOgImage;

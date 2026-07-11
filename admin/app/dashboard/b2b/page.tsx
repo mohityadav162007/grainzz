@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { getStoreSettings, updateStoreSetting } from '@/lib/api';
-import { uploadToCloudinary } from '@/lib/cloudinary';
+import { uploadToS3, S3_FOLDERS } from '@/lib/s3';
 import { 
   Loader2, 
   Save, 
@@ -155,7 +155,7 @@ export default function B2BConfigPage() {
     else setUploadingGifting(true);
 
     try {
-      const url = await uploadToCloudinary(file, 'grainzz/b2b');
+      const url = await uploadToS3(file, S3_FOLDERS.B2B);
       setConfig((prev: any) => ({
         ...prev,
         [type === 'hero' ? 'hero_image_url' : 'gifting_image_url']: url,
@@ -308,7 +308,7 @@ export default function B2BConfigPage() {
                         {uploadingHero ? (
                           <div className="flex flex-col items-center gap-2 text-[#1D5E20]">
                             <Loader2 size={24} className="animate-spin" />
-                            <span className="text-xs font-semibold">Uploading to Cloudinary...</span>
+                            <span className="text-xs font-semibold">Uploading...</span>
                           </div>
                         ) : (
                           <div className="flex flex-col items-center gap-2 text-gray-500">
@@ -636,7 +636,7 @@ export default function B2BConfigPage() {
                         {uploadingGifting ? (
                           <div className="flex flex-col items-center gap-2 text-[#1D5E20]">
                             <Loader2 size={24} className="animate-spin" />
-                            <span className="text-xs font-semibold">Uploading to Cloudinary...</span>
+                            <span className="text-xs font-semibold">Uploading...</span>
                           </div>
                         ) : (
                           <div className="flex flex-col items-center gap-2 text-gray-500">

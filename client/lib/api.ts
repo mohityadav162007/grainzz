@@ -370,25 +370,7 @@ export const getAvailabilityLogos = async () => {
     return { success: true };
   };
 
-  export const uploadReviewImage = async (file: File): Promise<string> => {
-    const CLOUD_NAME = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || '';
-    const UPLOAD_PRESET = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET || '';
-    if (!CLOUD_NAME || !UPLOAD_PRESET) throw new Error('Cloudinary not configured');
-
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('upload_preset', UPLOAD_PRESET);
-    formData.append('folder', 'grainzz/reviews');
-
-    const response = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, {
-      method: 'POST',
-      body: formData,
-    });
-
-    if (!response.ok) throw new Error('Failed to upload image');
-    const data = await response.json();
-    return data.secure_url;
-  };
+  export { uploadReviewImage } from './s3';
 
   export const getRelatedProductsSection = async () => {
     const { data, error } = await supabase

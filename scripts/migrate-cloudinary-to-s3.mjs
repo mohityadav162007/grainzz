@@ -1,12 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
-import dotenv from 'dotenv';
-import path from 'path';
-import { fileURLToPath } from 'url';
-
-// Load admin .env.local file to get variables
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-dotenv.config({ path: path.resolve(__dirname, '../admin/.env.local') });
 
 // Setup Supabase and S3 clients
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;

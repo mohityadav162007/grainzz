@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
-import Image from 'next/image';
+import Image from '@/components/ui/OptimizedImage';
 import { getPoweredByCards, getProductById } from '@/lib/api';
 import { useCartStore } from '@/store/cartStore';
 import { useRouter } from 'next/navigation';
@@ -138,6 +138,7 @@ function CardWrapper({ cat, idx, isMobile, handleBuyNow, containerProgress }: an
             src={cat.image}
             alt={cat.title}
             fill
+            sizes="(max-width: 768px) 100vw, 33vw"
             className="object-cover group-hover/card:scale-105 transition-transform duration-500"
           />
         </div>
@@ -170,3 +171,4 @@ function CardWrapper({ cat, idx, isMobile, handleBuyNow, containerProgress }: an
     </MotionLink>
   );
 }
+

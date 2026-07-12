@@ -1,5 +1,5 @@
 import type { NextPage } from "next";
-import Image from "next/image";
+import Image from '@/components/ui/OptimizedImage';
 
 export type FrameComponent6Type = {
   className?: string;
@@ -94,3 +94,4 @@ const FrameComponent6: NextPage<FrameComponent6Type> = ({ className = "" }) => {
 };
 
 export default FrameComponent6;
+

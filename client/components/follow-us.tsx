@@ -1,5 +1,5 @@
 import type { NextPage } from "next";
-import Image from "next/image";
+import Image from '@/components/ui/OptimizedImage';
 
 export type FollowUsType = {
   className?: string;
@@ -89,3 +89,4 @@ const FollowUs: NextPage<FollowUsType> = ({ className = "" }) => {
 };
 
 export default FollowUs;
+

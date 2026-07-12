@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
-import Image from 'next/image';
+import Image from '@/components/ui/OptimizedImage';
 import TeamFavourites from '@/components/about/TeamFavourites';
 import OurValues from '@/components/about/OurValues';
 import CustomerTestimonials from '@/components/about/CustomerTestimonials';
@@ -145,6 +145,7 @@ export default function AboutPage() {
                     src={image} 
                     alt={title} 
                     fill 
+                    sizes="80px"
                     className="object-contain" 
                   />
                 </div>
@@ -202,3 +203,4 @@ export default function AboutPage() {
     </div>
   );
 }
+

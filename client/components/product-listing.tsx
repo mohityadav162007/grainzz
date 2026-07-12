@@ -1,5 +1,5 @@
 import type { NextPage } from "next";
-import Image from "next/image";
+import Image from '@/components/ui/OptimizedImage';
 
 export type ProductListingType = {
   className?: string;
@@ -17,7 +17,7 @@ const ProductListing: NextPage<ProductListingType> = ({ className = "" }) => {
           height={669}
           sizes="100vw"
           alt=""
-          src="/Rectangle-10@2x.webp"
+          src="/Rectangle-10@2x.png"
         />
         <div className="absolute top-[602px] left-[20px] rounded-[99px] bg-[#fff] border-brand-green border-solid border-[1px] hidden items-center justify-center py-[13px] px-6">
           <div className="relative leading-[132%] capitalize font-semibold shrink-0">
@@ -137,3 +137,4 @@ const ProductListing: NextPage<ProductListingType> = ({ className = "" }) => {
 };
 
 export default ProductListing;
+

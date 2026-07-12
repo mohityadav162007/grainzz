@@ -1,6 +1,6 @@
 import type { NextPage } from "next";
 import { type CSSProperties } from "react";
-import Image from "next/image";
+import Image from '@/components/ui/OptimizedImage';
 
 export type TabType = {
   className?: string;
@@ -35,3 +35,4 @@ const Tab: NextPage<TabType> = ({
 };
 
 export default Tab;
+

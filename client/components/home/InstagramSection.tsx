@@ -1,5 +1,5 @@
 import { Instagram } from 'lucide-react';
-import Image from 'next/image';
+import Image from '@/components/ui/OptimizedImage';
 import { getInstagramPosts, getSiteContent } from '@/lib/api';
 
 interface InstagramSectionProps {
@@ -75,3 +75,4 @@ export default function InstagramSection({ initialPosts, initialSection, initial
     </section>
   );
 }
+

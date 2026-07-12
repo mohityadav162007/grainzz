@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import Image from 'next/image';
+import Image from '@/components/ui/OptimizedImage';
 import Link from 'next/link';
 import { ChevronRight, ChevronLeft, Plus, Minus, Star, Check, X, Loader2 } from 'lucide-react';
 import { submitProductReview, uploadReviewImage, getRelatedProductsSection, submitStockNotification, getProductReviews, getSeedReviewsByProductId } from '@/lib/api';
@@ -305,9 +305,9 @@ export default function ProductDetailPageClient({
               style={{ aspectRatio: '1 / 1' }}
             >
               {product?.images?.length > 0 ? (
-                <Image src={product.images[selectedImage % product.images.length]} alt={product.name} fill className="object-cover transition-transform duration-700 hover:scale-[1.03]" priority />
+                <Image src={product.images[selectedImage % product.images.length]} alt={product.name} fill sizes="(max-width: 768px) 100vw, 50vw" className="object-cover transition-transform duration-700 hover:scale-[1.03]" priority />
               ) : (
-                <Image src="/Rectangle-10@2x.webp" alt={product.name} fill className="object-cover" />
+                <Image src="/Rectangle-10@2x.png" alt={product.name} fill sizes="(max-width: 768px) 100vw, 50vw" className="object-cover" />
               )}
               {discount > 0 && (
                 <div className="absolute top-[20px] left-[20px] bg-[#9A0000] text-white text-[13px] font-medium px-[14px] py-[6px] rounded-full tracking-wide shadow-sm z-10">
@@ -337,7 +337,7 @@ export default function ProductDetailPageClient({
                   className={`relative w-[60px] h-[60px] md:w-[82px] md:h-[82px] rounded-[12px] overflow-hidden flex-shrink-0 transition-all 
                     ${selectedImage === i ? 'border-[2px] border-brand-green shadow-md' : 'border border-[#EAEAEA] opacity-70 hover:opacity-100'}`}
                 >
-                  <Image src={img} alt="" fill className="object-cover" />
+                  <Image src={img} alt="" fill sizes="80px" className="object-cover" />
                 </button>
               ))}
             </div>
@@ -664,7 +664,7 @@ export default function ProductDetailPageClient({
 
                       {!isSeed && review.review_image_url && (
                         <div className="relative w-[120px] h-[120px] rounded-[12px] overflow-hidden mb-[16px] border border-[#EAEAEA]">
-                          <Image src={review.review_image_url} alt="Review attachment" fill className="object-cover" />
+                          <Image src={review.review_image_url} alt="Review attachment" fill sizes="100px" className="object-cover" />
                         </div>
                       )}
 
@@ -732,7 +732,7 @@ export default function ProductDetailPageClient({
                       <label className="text-[13px] font-bold text-brand-black mb-[8px] block">Do you have photos to share?</label>
                       {reviewImagePreview ? (
                         <div className="relative w-full h-[120px] rounded-[8px] overflow-hidden border border-[#EAEAEA]">
-                          <Image src={reviewImagePreview} alt="Preview" fill className="object-cover" />
+                          <Image src={reviewImagePreview} alt="Preview" fill sizes="100px" className="object-cover" />
                           <button type="button" onClick={() => { setReviewImage(null); setReviewImagePreview(''); }} className="absolute top-2 right-2 bg-white rounded-full p-1 shadow-md">
                             <X size={14} className="text-red-500" />
                           </button>

@@ -120,7 +120,7 @@ export default async function HomePage() {
   // ── Build PoweredBy cards from batch map ──────────────────────────────────
   const poweredByCards = poweredBySlice.map((card: any) => {
     const productData = card.product_id ? batchMap.get(card.product_id) || null : null;
-    const image = card.custom_image_url || productData?.images?.[0] || card.image_url || '/Rectangle-10@2x.webp';
+    const image = card.custom_image_url || productData?.images?.[0] || card.image_url || '/Rectangle-10@2x.png';
     const title = productData?.name || card.title || 'Product';
     const link = productData ? `/products/${productData.slug}` : card.link || '#';
     return { title, subtitle: card.subtitle || '', topBg: card.top_bg_color || '#C68356', bottomBg: card.bottom_bg_color || '#FDECE7', image, link, price: productData?.price, mrp: productData?.mrp, product: productData };

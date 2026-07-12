@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/store/authStore';
 import { X, Mail, Lock, User, ArrowRight, Loader2, CheckCircle2, AlertCircle, ShoppingBag, Sparkles } from 'lucide-react';
-import Image from 'next/image';
+import Image from '@/components/ui/OptimizedImage';
 import { sendOTP, verifyOTPAndSetPassword } from '@/lib/api';
 
 export default function AuthModal() {
@@ -126,7 +126,7 @@ export default function AuthModal() {
           {/* Logo & Heading */}
           <div className="flex flex-col items-center text-center mb-8">
             <div className="relative w-[140px] h-[38px] mb-5">
-              <Image src="/image-2@2x.png" alt="Grainzz Logo" fill className="object-contain" />
+              <Image src="/image-2@2x.png" alt="Grainzz Logo" fill sizes="150px" className="object-contain" />
             </div>
 
             {/* Mode-specific badge */}
@@ -413,3 +413,4 @@ export default function AuthModal() {
     </div>
   );
 }
+

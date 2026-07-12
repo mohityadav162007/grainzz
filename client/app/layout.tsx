@@ -42,6 +42,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en">
       <head>
+        <link rel="preconnect" href={process.env.NEXT_PUBLIC_IMAGEKIT_URL || "https://ik.imagekit.io"} crossOrigin="anonymous" />
+        <link rel="dns-prefetch" href={process.env.NEXT_PUBLIC_IMAGEKIT_URL || "https://ik.imagekit.io"} />
         <Script src="https://mercury.phonepe.com/web/bundle/checkout.js" strategy="lazyOnload" />
         <script
           type="application/ld+json"

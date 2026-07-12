@@ -1,5 +1,5 @@
 import type { NextPage } from "next";
-import Image from "next/image";
+import Image from '@/components/ui/OptimizedImage';
 
 export type SliderContainerType = {
   className?: string;
@@ -71,3 +71,4 @@ const SliderContainer: NextPage<SliderContainerType> = ({ className = "" }) => {
 };
 
 export default SliderContainer;
+

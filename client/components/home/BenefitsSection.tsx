@@ -1,4 +1,4 @@
-import Image from 'next/image';
+import Image from '@/components/ui/OptimizedImage';
 import { Droplets, Wheat, ShieldCheck, Heart } from 'lucide-react';
 
 const fallbackBenefits = [
@@ -87,3 +87,4 @@ export default function BenefitsSection() {
     </>
   );
 }
+

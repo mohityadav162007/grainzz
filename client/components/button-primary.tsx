@@ -1,6 +1,6 @@
 import type { NextPage } from "next";
 import { type CSSProperties } from "react";
-import Image from "next/image";
+import Image from '@/components/ui/OptimizedImage';
 
 export type ButtonPrimaryType = {
   className?: string;
@@ -46,3 +46,4 @@ const ButtonPrimary: NextPage<ButtonPrimaryType> = ({
 };
 
 export default ButtonPrimary;
+

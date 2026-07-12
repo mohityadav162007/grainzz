@@ -1,7 +1,7 @@
 "use client";
 import type { NextPage } from "next";
 import { useMemo, type CSSProperties } from "react";
-import Image from "next/image";
+import Image from '@/components/ui/OptimizedImage';
 import ButtonPrimary from "./button-primary";
 
 export type FrameComponentType = {
@@ -63,3 +63,4 @@ const FrameComponent: NextPage<FrameComponentType> = ({
 };
 
 export default FrameComponent;
+

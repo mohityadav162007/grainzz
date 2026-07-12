@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { useState, useEffect, useRef } from 'react';
 import { usePathname } from 'next/navigation';
 import { Search, ShoppingCart, User, Menu, X, ChevronDown, Heart, Home } from 'lucide-react';
-import Image from 'next/image';
+import Image from '@/components/ui/OptimizedImage';
 import { useCartStore } from '@/store/cartStore';
 import { useAuthStore } from '@/store/authStore';
 import clsx from 'clsx';
@@ -270,3 +270,4 @@ export default function Navbar() {
     </>
   );
 }
+

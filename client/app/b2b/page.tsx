@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import Image from 'next/image';
+import Image from '@/components/ui/OptimizedImage';
 import { submitEnquiry, getStoreSettings } from '@/lib/api';
 import { 
   Plus, 
@@ -946,3 +946,4 @@ ${quantityTimeline || 'No specific quantity/timeline provided.'}
     </div>
   );
 }
+

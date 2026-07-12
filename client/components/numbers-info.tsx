@@ -1,5 +1,5 @@
 import type { NextPage } from "next";
-import Image from "next/image";
+import Image from '@/components/ui/OptimizedImage';
 
 export type NumbersInfoType = {
   className?: string;
@@ -37,3 +37,4 @@ const NumbersInfo: NextPage<NumbersInfoType> = ({
 };
 
 export default NumbersInfo;
+

@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { getHeroSlides } from '@/lib/api';
 import { m, LazyMotion, domAnimation, AnimatePresence } from 'framer-motion';
-import Image from 'next/image';
+import Image from '@/components/ui/OptimizedImage';
 
 interface HeroSlide {
   id?: string;
@@ -138,13 +138,14 @@ export default function HeroSection({ initialSlides }: HeroSectionProps) {
                 className="w-full h-full absolute inset-0 cursor-pointer"
                 onClick={() => handleSlideClick(slides[imageIndex])}
               >
-                <Image
-                  src={isMobileActual ? (slides[imageIndex].mobile_image_url || slides[imageIndex].image_url) : slides[imageIndex].image_url}
-                  alt={slides[imageIndex].title || 'Hero Banner'}
-                  fill
-                  className="object-cover"
-                  priority
-                />
+                  <Image
+                    src={isMobileActual ? (slides[imageIndex].mobile_image_url || slides[imageIndex].image_url) : slides[imageIndex].image_url}
+                    alt={slides[imageIndex].title || 'Hero Banner'}
+                    fill
+                    sizes="100vw"
+                    className="object-cover"
+                    priority
+                  />
               </m.div>
             </AnimatePresence>
           </LazyMotion>
@@ -194,3 +195,4 @@ export default function HeroSection({ initialSlides }: HeroSectionProps) {
     </>
   );
 }
+

@@ -1,7 +1,7 @@
 'use client';
 import { useState } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
+import Image from '@/components/ui/OptimizedImage';
 import { useRouter } from 'next/navigation';
 import {
   ShoppingBag, Trash2, Plus, Minus, Tag, ArrowRight,
@@ -373,3 +373,4 @@ export default function CartPage() {
     </div>
   );
 }
+

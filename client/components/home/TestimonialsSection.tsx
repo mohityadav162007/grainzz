@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { ChevronRight, ChevronLeft, Plus } from 'lucide-react';
-import Image from 'next/image';
+import Image from '@/components/ui/OptimizedImage';
 import { supabase } from '@/lib/supabase';
 import { useCartStore } from '@/store/cartStore';
 
@@ -159,6 +159,7 @@ export default function TestimonialsSection({ initialReviews }: TestimonialsSect
           src="/Product-Background@2x.webp"
           alt="Background"
           fill
+          sizes="100vw"
           className="object-cover blur-[10px] scale-110 opacity-90"
         />
         <div className="absolute inset-0 bg-white/5" />
@@ -270,3 +271,4 @@ export default function TestimonialsSection({ initialReviews }: TestimonialsSect
     </section>
   );
 }
+

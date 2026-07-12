@@ -1,6 +1,6 @@
 import type { NextPage } from "next";
 import { type CSSProperties } from "react";
-import Image from "next/image";
+import Image from '@/components/ui/OptimizedImage';
 
 export type ProductCardType = {
   className?: string;
@@ -79,3 +79,4 @@ const ProductCard: NextPage<ProductCardType> = ({
 };
 
 export default ProductCard;
+

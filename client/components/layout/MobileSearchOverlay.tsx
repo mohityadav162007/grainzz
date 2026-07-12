@@ -1,6 +1,6 @@
 'use client';
 import { useState, useEffect, useRef } from 'react';
-import Image from 'next/image';
+import Image from '@/components/ui/OptimizedImage';
 import Link from 'next/link';
 import { X, Search as SearchIcon, ShoppingCart } from 'lucide-react';
 import { getProducts } from '@/lib/api';
@@ -134,3 +134,4 @@ export default function MobileSearchOverlay({ isOpen, onClose }: MobileSearchOve
     </div>
   );
 }
+

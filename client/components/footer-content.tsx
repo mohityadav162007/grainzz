@@ -1,5 +1,5 @@
 import type { NextPage } from "next";
-import Image from "next/image";
+import Image from '@/components/ui/OptimizedImage';
 
 export type FooterContentType = {
   className?: string;
@@ -146,3 +146,4 @@ const FooterContent: NextPage<FooterContentType> = ({ className = "" }) => {
 };
 
 export default FooterContent;
+

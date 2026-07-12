@@ -1,6 +1,6 @@
 'use client';
 import { useRef } from 'react';
-import Image from 'next/image';
+import Image from '@/components/ui/OptimizedImage';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 const testimonials = [
@@ -112,3 +112,4 @@ export default function CustomerTestimonials() {
     </section>
   );
 }
+

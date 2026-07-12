@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
+import Image from '@/components/ui/OptimizedImage';
 import { Phone, Mail, MapPin, Facebook, Linkedin, Instagram, Send, ChevronDown } from 'lucide-react';
 import { getStoreSettings } from '@/lib/api';
 
@@ -169,3 +169,4 @@ export default function Footer() {
     </footer>
   );
 }
+

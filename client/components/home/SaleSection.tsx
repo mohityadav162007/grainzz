@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
+import Image from '@/components/ui/OptimizedImage';
 import { ChevronRight } from 'lucide-react';
 import { getComboProducts, getSiteContent } from '@/lib/api';
 
@@ -100,3 +100,4 @@ export default function SaleSection() {
     </section>
   );
 }
+

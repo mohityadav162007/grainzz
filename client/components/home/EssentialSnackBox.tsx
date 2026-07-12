@@ -1,6 +1,6 @@
 'use client';
 import { useState, useEffect, useCallback } from 'react';
-import Image from 'next/image';
+import Image from '@/components/ui/OptimizedImage';
 import { Plus, Minus, ShoppingBag, Zap } from 'lucide-react';
 import { getSnackBoxItems } from '@/lib/api';
 import { useCartStore } from '@/store/cartStore';
@@ -280,3 +280,4 @@ export default function EssentialSnackBox({ initialData }: EssentialSnackBoxProp
     </section>
   );
 }
+

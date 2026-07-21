@@ -2,7 +2,7 @@ import Head from 'next/head';
 
 export default function TestPage() {
   return (
-    <div className="flex flex-col gap-4 bg-gray-200 min-h-screen">
+    <div className="flex flex-col gap-4 bg-gray-200 min-h-[100dvh]">
       <img src="/Slider-Background@2x.png" width={400} />
       <img src="/Content-Background@2x.png" width={400} />
       <img src="/Product-Background@2x.webp" width={400} />

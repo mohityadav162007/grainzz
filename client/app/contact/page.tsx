@@ -86,7 +86,7 @@ export default function ContactPage() {
   };
 
   return (
-    <div className="bg-[#FBF5EB] min-h-screen">
+    <div className="bg-[#FBF5EB] min-h-[100dvh]">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}

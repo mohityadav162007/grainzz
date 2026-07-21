@@ -10,7 +10,7 @@ export const metadata: Metadata = constructMetadata({
 
 export default function ShippingPolicyPage() {
   return (
-    <div className="bg-white min-h-screen py-[48px] md:py-[64px]">
+    <div className="bg-white min-h-[100dvh] py-[48px] md:py-[64px]">
       <div className="max-w-[720px] mx-auto px-[20px] md:px-[40px]">
         {/* Title */}
         <h1 className="text-[32px] md:text-[40px] font-bold text-brand-black text-center tracking-tight leading-[1.15] mb-[8px]" style={{ fontFamily: 'serif' }}>

@@ -5,6 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { ChevronLeft, Package, Truck, MapPin, CreditCard, Calendar, Check, X, ExternalLink, Download, ArrowLeft } from 'lucide-react';
 import { getOrderById } from '@/lib/api';
 import { useAuthStore } from '@/store/authStore';
+import Image from '@/components/ui/OptimizedImage';
 
 const TRACKING_STEPS = ['Processing', 'Shipped', 'In Transit', 'Out For Delivery', 'Delivered'];
 
@@ -52,7 +53,7 @@ export default function OrderDetailsPage() {
 
   if (authLoading || loading) {
     return (
-      <div className="bg-[#FCF9F2] min-h-screen flex items-center justify-center">
+      <div className="bg-[#FCF9F2] min-h-[100dvh] flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
           <div className="w-12 h-12 border-4 border-brand-green/20 border-t-brand-green rounded-full animate-spin"></div>
           <p className="text-brand-green font-bold animate-pulse">Loading order details...</p>
@@ -63,7 +64,7 @@ export default function OrderDetailsPage() {
 
   if (error || !order) {
     return (
-      <div className="bg-[#FCF9F2] min-h-screen flex flex-col items-center justify-center p-4">
+      <div className="bg-[#FCF9F2] min-h-[100dvh] flex flex-col items-center justify-center p-4">
         <div className="w-20 h-20 bg-red-50 text-brand-red rounded-full flex items-center justify-center mb-6">
           <X size={40} />
         </div>
@@ -80,7 +81,7 @@ export default function OrderDetailsPage() {
   const isDelivered = stepIdx === 4;
 
   return (
-    <div className="bg-[#FCF9F2] min-h-screen pb-[100px]">
+    <div className="bg-[#FCF9F2] min-h-[100dvh] pb-[100px]">
       <div className="max-w-[1200px] mx-auto px-4 md:px-[60px] pt-[32px]">
         {/* Breadcrumb */}
         <div className="flex items-center gap-[8px] text-[13px] md:text-[14px] font-semibold text-[#8E8E8E] mb-[24px] tracking-wide">
@@ -189,7 +190,7 @@ export default function OrderDetailsPage() {
                     <div key={i} className="p-6 flex gap-6 hover:bg-[#FAFAFA] transition-colors">
                       <div className="w-[100px] h-[100px] bg-[#F5F0E8] rounded-2xl overflow-hidden flex-shrink-0 border border-[#EAEAEA]">
                         {item.image ? (
-                          <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+                          <Image src={item.image} alt={item.name} fill sizes="100px" className="object-cover" />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center text-[#CCC]"><Package size={32} /></div>
                         )}

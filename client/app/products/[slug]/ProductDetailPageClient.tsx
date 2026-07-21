@@ -260,7 +260,7 @@ export default function ProductDetailPageClient({
   if (!product) return <div className="py-[100px] text-center text-[#707070] font-sans">Product not found.</div>;
 
   return (
-    <div className="bg-[#FCF9F2] min-h-screen pb-[60px] md:pb-[100px] font-sans">
+    <div className="bg-[#FCF9F2] min-h-[100dvh] pb-[60px] md:pb-[100px] font-sans">
       <div className="max-w-[1440px] mx-auto px-4 md:px-[60px] lg:px-[120px] pt-[32px]">
         {/* Desktop Breadcrumb */}
         <nav className="hidden lg:flex items-center gap-[6px] text-[13px] font-medium text-black mb-[32px] tracking-tight">
@@ -301,7 +301,7 @@ export default function ProductDetailPageClient({
           <div className="w-full lg:w-[46%] xl:w-[46%] flex-shrink-0 order-2 lg:order-1 flex flex-col gap-[16px]">
             {/* Main Image */}
             <div
-              className="relative w-full rounded-[24px] overflow-hidden bg-[#F5F0E8] shadow-sm border border-[#EAEAEA]"
+              className="relative w-full rounded-[24px] overflow-hidden bg-[#F5F0E8] shadow-sm border border-[#EAEAEA] transform-gpu"
               style={{ aspectRatio: '1 / 1' }}
             >
               {product?.images?.length > 0 ? (
@@ -867,10 +867,12 @@ export default function ProductDetailPageClient({
                 >
                   <div className="relative aspect-[16/9] overflow-hidden bg-gray-50">
                     {blog.featured_image_url ? (
-                      <img
+                      <Image
                         src={blog.featured_image_url}
                         alt={blog.title}
-                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                        fill
+                        sizes="(max-width: 768px) 100vw, 33vw"
+                        className="object-cover transition-transform duration-500 group-hover:scale-105"
                       />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center bg-gray-100">

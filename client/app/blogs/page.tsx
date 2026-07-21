@@ -4,6 +4,7 @@ export const revalidate = 300;
 import { getPublicBlogs } from '@/lib/api';
 import Link from 'next/link';
 import { ChevronRight } from 'lucide-react';
+import Image from '@/components/ui/OptimizedImage';
 
 export default async function BlogsPage() {
   let blogs: any[] = [];
@@ -46,7 +47,7 @@ export default async function BlogsPage() {
   };
 
   return (
-    <main className="min-h-screen bg-[#FCF9F2]">
+    <main className="min-h-[100dvh] bg-[#FCF9F2]">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
@@ -77,10 +78,12 @@ export default async function BlogsPage() {
               >
                 <div className="relative aspect-[16/9] overflow-hidden bg-gray-50 flex items-center justify-center">
                   {blog.featured_image_url ? (
-                    <img 
+                    <Image 
                       src={blog.featured_image_url} 
                       alt={blog.title}
-                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                      fill
+                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                      className="object-cover transition-transform duration-700 group-hover:scale-110"
                     />
                   ) : (
                     <div className="flex flex-col items-center gap-2 text-gray-300">

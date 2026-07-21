@@ -79,7 +79,7 @@ export default function ProductCard({ product, centered = false }: ProductCardPr
       <div className={`h-full flex flex-col relative ${centered ? 'md:items-center' : ''}`}>
 
         {/* Image Container */}
-        <div className="relative aspect-square overflow-hidden rounded-2xl bg-white w-full mb-4">
+        <div className="relative aspect-square overflow-hidden rounded-2xl bg-white w-full mb-4 transform-gpu">
           <div className="absolute inset-0">
             {product.images?.[0] ? (
               <Image

@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { ArrowLeft, Calendar, Clock } from 'lucide-react';
 import ShareButtonsClient from '../ShareButtonsClient';
 import ProductCard from '@/components/products/ProductCard';
+import Image from '@/components/ui/OptimizedImage';
 
 interface PageProps {
   params: {
@@ -91,7 +92,7 @@ export default async function BlogDetailPage({ params }: PageProps) {
 
   if (!blog) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-[#FCF9F2] px-4 text-center">
+      <div className="min-h-[100dvh] flex flex-col items-center justify-center bg-[#FCF9F2] px-4 text-center">
         <h1 className="text-4xl font-black text-gray-900 mb-4">Blog Not Found</h1>
         <p className="text-gray-600 mb-8">The article you're looking for doesn't exist or has been moved.</p>
         <Link href="/blogs" className="bg-[#1D5E20] text-white px-8 py-3 rounded-full font-bold hover:scale-105 transition-transform">
@@ -113,7 +114,7 @@ export default async function BlogDetailPage({ params }: PageProps) {
   }
 
   return (
-    <main className="bg-[#FCF9F2] min-h-screen pb-20">
+    <main className="bg-[#FCF9F2] min-h-[100dvh] pb-20">
       {/* Header / Breadcrumb */}
       <div className="max-w-[900px] mx-auto px-4 pt-12 pb-8">
         <Link href="/blogs" className="inline-flex items-center gap-2 text-[#1D5E20] font-bold hover:gap-3 transition-all mb-8">
@@ -140,11 +141,14 @@ export default async function BlogDetailPage({ params }: PageProps) {
       {/* Featured Image */}
       {blog.featured_image_url && (
         <div className="max-w-[1100px] mx-auto px-4 mb-12">
-          <div className="aspect-[21/9] rounded-[32px] overflow-hidden shadow-2xl">
-            <img 
+          <div className="aspect-[21/9] rounded-[32px] overflow-hidden shadow-2xl relative">
+            <Image 
               src={blog.featured_image_url} 
               alt={blog.title}
-              className="w-full h-full object-cover"
+              fill
+              sizes="(max-width: 1100px) 100vw, 1100px"
+              priority
+              className="object-cover"
             />
           </div>
         </div>

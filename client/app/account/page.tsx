@@ -7,6 +7,7 @@ import { ChevronRight, User, MapPin, Package, Settings, LogOut, PackageOpen, Ext
 import { getUserOrders, sendOTP, verifyOTPAndSetPassword, getProductSlugById, getSavedAddresses, addSavedAddress, updateSavedAddress, deleteSavedAddress, setDefaultAddress, type SavedAddress } from '@/lib/api';
 import { useAuthStore } from '@/store/authStore';
 import { useCartStore } from '@/store/cartStore';
+import Image from '@/components/ui/OptimizedImage';
 
 type Tab = 'profile' | 'orders' | 'addresses' | 'settings';
 
@@ -25,7 +26,7 @@ export default function AccountPage() {
 
   if (loading) {
     return (
-      <div className="bg-[#FCF9F2] min-h-screen flex items-center justify-center">
+      <div className="bg-[#FCF9F2] min-h-[100dvh] flex items-center justify-center">
         <div className="animate-pulse text-brand-green font-bold text-[20px]">Loading...</div>
       </div>
     );
@@ -34,7 +35,7 @@ export default function AccountPage() {
   if (!user) return null;
 
   return (
-    <div className="bg-[#FCF9F2] min-h-screen pb-[100px]">
+    <div className="bg-[#FCF9F2] min-h-[100dvh] pb-[100px]">
       <div className="max-w-[1440px] mx-auto px-4 md:px-[60px] lg:px-[120px] pt-[24px] md:pt-[32px]">
         {/* DESKTOP LAYOUT (>= 768px) */}
         <div className="hidden md:block">
@@ -567,7 +568,7 @@ function OrdersTab({ userEmail }: { userEmail: string }) {
               <div className="flex items-center gap-3">
                 <div className="w-12 h-12 bg-[#F5F0E8] rounded-lg overflow-hidden flex-shrink-0 border border-[#EAEAEA]">
                   {order.order_items?.[0]?.image ? (
-                    <img src={order.order_items[0].image} alt="" className="w-full h-full object-cover" />
+                    <Image src={order.order_items[0].image} alt="" fill sizes="50px" className="object-cover" />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-[#CCC]"><Package size={20} /></div>
                   )}
@@ -636,7 +637,7 @@ function OrdersTab({ userEmail }: { userEmail: string }) {
                   <div key={i} className="flex flex-col sm:flex-row gap-4 border-t border-[#F0F2F2] pt-6">
                     <div className="w-20 h-20 bg-[#F5F0E8] rounded-md overflow-hidden flex-shrink-0 border border-[#EAEAEA]">
                       {item.image ? (
-                        <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+                        <Image src={item.image} alt={item.name} fill sizes="80px" className="object-cover" />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center text-[#CCC]"><Package size={24} /></div>
                       )}

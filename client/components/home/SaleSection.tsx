@@ -45,7 +45,7 @@ export default function SaleSection() {
                          Save {discount}%
                        </div>
                     )}
-                    <div className="relative w-full h-full rounded-[10px] overflow-hidden shadow-sm">
+                    <div className="relative w-full h-full rounded-[10px] overflow-hidden shadow-sm transform-gpu">
                       {product.images?.[0] ? (
                         <Image
                           src={product.images[0]}

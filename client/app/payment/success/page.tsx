@@ -111,7 +111,7 @@ function SuccessContent() {
 
 export default function PaymentSuccessPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><CheckCircle size={40} className="text-green-400 animate-pulse" /></div>}>
+    <Suspense fallback={<div className="min-h-[100dvh] flex items-center justify-center"><CheckCircle size={40} className="text-green-400 animate-pulse" /></div>}>
       <SuccessContent />
     </Suspense>
   );

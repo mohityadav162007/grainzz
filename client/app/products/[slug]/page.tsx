@@ -83,7 +83,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
 
   if (!product) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-[#FCF9F2] px-4 text-center">
+      <div className="min-h-[100dvh] flex flex-col items-center justify-center bg-[#FCF9F2] px-4 text-center">
         <h1 className="text-4xl font-black text-gray-900 mb-4">Product Not Found</h1>
         <p className="text-gray-600 mb-8">The product you're looking for doesn't exist or has been moved.</p>
         <Link href="/products" className="bg-[#1D5E20] text-white px-8 py-3 rounded-full font-bold hover:scale-105 transition-transform">

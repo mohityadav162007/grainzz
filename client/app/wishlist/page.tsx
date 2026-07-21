@@ -44,7 +44,7 @@ export default function WishlistPage() {
   }, [items]);
 
   return (
-    <div className="bg-[#FCF9F2] min-h-screen pb-[100px]">
+    <div className="bg-[#FCF9F2] min-h-[100dvh] pb-[100px]">
       <div className="max-w-[1440px] mx-auto px-4 md:px-[60px] lg:px-[120px] pt-[32px]">
         {/* Breadcrumb */}
         <div className="flex items-center gap-[8px] text-[13px] md:text-[14px] font-semibold text-[#8E8E8E] mb-[24px] tracking-wide">

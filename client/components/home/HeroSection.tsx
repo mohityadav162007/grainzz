@@ -144,7 +144,7 @@ export default function HeroSection({ initialSlides }: HeroSectionProps) {
                     fill
                     sizes="100vw"
                     className="object-cover"
-                    priority
+                    priority={page === 0}
                   />
               </m.div>
             </AnimatePresence>

@@ -126,7 +126,7 @@ export default function PaymentVerifyPage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen flex items-center justify-center">
+        <div className="min-h-[100dvh] flex items-center justify-center">
           <Loader2 size={40} className="text-blue-400 animate-spin" />
         </div>
       }

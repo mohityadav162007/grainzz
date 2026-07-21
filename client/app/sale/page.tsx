@@ -123,7 +123,7 @@ function SaleContent() {
   );
 
   return (
-    <div className="bg-white min-h-screen pb-[80px]">
+    <div className="bg-white min-h-[100dvh] pb-[80px]">
       <div className="max-w-[1280px] mx-auto px-4 md:px-[40px] lg:px-[60px] pt-[40px]">
         {/* Page Heading */}
         <h1 className="text-[28px] md:text-[36px] font-bold text-[#C41E3A] tracking-tight m-0 mb-[32px] italic">

@@ -201,7 +201,7 @@ function ProductsContent() {
   };
 
   return (
-    <div className="bg-white min-h-screen pb-[80px]">
+    <div className="bg-white min-h-[100dvh] pb-[80px]">
       <div className="max-w-[1280px] mx-auto px-4 md:px-[40px] lg:px-[60px] pt-[40px]">
 
         <div className="flex gap-[40px] lg:gap-[48px] items-start">

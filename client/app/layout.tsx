@@ -103,7 +103,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <CouponNotificationToast />
         <AnnouncementBar />
         <Navbar />
-        <main className="min-h-screen overflow-x-clip">{children}</main>
+        <main className="min-h-[100dvh] overflow-x-clip">{children}</main>
         <Footer />
         <CartDrawer />
         <AuthModal />

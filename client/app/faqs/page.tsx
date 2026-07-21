@@ -11,7 +11,7 @@ export const metadata: Metadata = constructMetadata({
 
 export default function FAQsPage() {
   return (
-    <div className="bg-[#FBF5EB] min-h-screen">
+    <div className="bg-[#FBF5EB] min-h-[100dvh]">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{

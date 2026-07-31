@@ -360,8 +360,14 @@ export const updateProduct = async (id: string, formData: FormData) => {
 
   // Merge with existing images
   const existingImages = formData.getAll('existingImages') as string[];
+  const makePrimary = formData.get('primaryNew') === 'true';
+
   if (newImageUrls.length > 0 || existingImages.length > 0) {
-    updates.images = [...existingImages.filter(Boolean), ...newImageUrls];
+    if (makePrimary && newImageUrls.length > 0) {
+      updates.images = [...newImageUrls, ...existingImages.filter(Boolean)];
+    } else {
+      updates.images = [...existingImages.filter(Boolean), ...newImageUrls];
+    }
   }
 
   const { data, error } = await supabase
@@ -841,10 +847,12 @@ export const upsertSiteContent = async (key: string, value: any) => {
   if (data) {
     const { data: updated, error } = await supabase.from('store_settings').update({ value: strValue }).eq('key', key).select().single();
     if (error) throw new Error(error.message);
+    revalidateClientPaths(['/']);
     return updated;
   } else {
     const { data: inserted, error } = await supabase.from('store_settings').insert({ key, value: strValue, description: 'Site content' }).select().single();
     if (error) throw new Error(error.message);
+    revalidateClientPaths(['/']);
     return inserted;
   }
 };
@@ -869,6 +877,8 @@ const saveHeroSlides = async (slides: any[]) => {
     const { error } = await supabase.from('store_settings').insert({ key: 'hero_slides_json', value: JSON.stringify(slides), description: 'Hero slides JSON' });
     if (error) throw new Error(error.message);
   }
+  // Purge ISR cache on the client site so homepage reflects changes immediately
+  revalidateClientPaths(['/']);
 };
 
 export const createHeroSlide = async (slide: any) => {
@@ -930,6 +940,7 @@ const savePoweredByCards = async (cards: any[]) => {
     const { error } = await supabase.from('store_settings').insert({ key: 'powered_by_json', value: JSON.stringify(cards), description: 'Powered By Cards JSON' });
     if (error) throw new Error(error.message);
   }
+  revalidateClientPaths(['/']);
 };
 
 export const createPoweredByCard = async (card: any) => {
@@ -984,6 +995,7 @@ const saveSnackBoxItems = async (items: any) => {
 
 export const updateSnackBoxItems = async (items: any) => {
   await saveSnackBoxItems(items);
+  revalidateClientPaths(['/']);
   return items;
 };
 
@@ -1002,6 +1014,7 @@ export const getTrustMetrics = async () => {
 export const updateTrustMetric = async (id: string, metric: any) => {
   const { data, error } = await supabase.from('trust_metrics').update(metric).eq('id', id).select().single();
   if (error) throw new Error(error.message);
+  revalidateClientPaths(['/']);
   return data;
 };
 
@@ -1016,6 +1029,7 @@ export const getBenefits = async () => {
 export const updateBenefit = async (id: string, benefit: any) => {
   const { data, error } = await supabase.from('benefits').update(benefit).eq('id', id).select().single();
   if (error) throw new Error(error.message);
+  revalidateClientPaths(['/']);
   return data;
 };
 
@@ -1148,6 +1162,7 @@ export const upsertInstagramPost = async (post: any) => {
     posts.push(newPost);
   }
   await saveInstagramPosts(posts);
+  revalidateClientPaths(['/']);
   return { success: true, data: newPost };
 };
 
@@ -1155,6 +1170,7 @@ export const deleteInstagramPost = async (id: string) => {
   const res = await getInstagramPostsAdmin();
   const newPosts = res.data.filter((p: any) => p.id !== id);
   await saveInstagramPosts(newPosts);
+  revalidateClientPaths(['/']);
   return { success: true };
 };
 

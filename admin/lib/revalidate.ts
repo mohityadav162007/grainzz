@@ -1,17 +1,26 @@
 export async function revalidateClientPaths(paths: string[]) {
-  // Try to use NEXT_PUBLIC_SITE_URL, or determine based on hostname
+  // Determine target client site URL
   let siteUrl = process.env.NEXT_PUBLIC_SITE_URL;
   if (!siteUrl) {
     if (typeof window !== 'undefined') {
-      if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+      const hostname = window.location.hostname;
+      if (hostname === 'localhost' || hostname === '127.0.0.1') {
         siteUrl = 'http://localhost:3000';
       } else {
         siteUrl = 'https://www.grainzz.com';
       }
     } else {
-      siteUrl = 'https://www.grainzz.com';
+      // In server-side Node.js context, check environment
+      if (process.env.NODE_ENV !== 'production') {
+        siteUrl = 'http://localhost:3000';
+      } else {
+        siteUrl = 'https://www.grainzz.com';
+      }
     }
   }
+
+  // Remove trailing slash if present
+  siteUrl = siteUrl.replace(/\/$/, '');
 
   const token = process.env.NEXT_PUBLIC_REVALIDATION_TOKEN || 'GrainzzRevalidationToken2026';
 
@@ -24,16 +33,17 @@ export async function revalidateClientPaths(paths: string[]) {
       body: JSON.stringify({
         paths,
         token,
+        tags: ['products', 'homepage', 'categories'],
       }),
     });
 
     if (!response.ok) {
-      console.error(`Revalidation request failed: ${response.statusText}`);
+      console.error(`Revalidation request failed: ${response.status} ${response.statusText}`);
     } else {
       const data = await response.json();
       console.log('Successfully revalidated paths on client:', data.paths);
     }
   } catch (error) {
-    console.error('Error triggering revalidation:', error);
+    console.error('Error triggering client revalidation:', error);
   }
 }

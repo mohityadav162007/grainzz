@@ -2,9 +2,13 @@
 const nextConfig = {
   images: {
     remotePatterns: [
+      { protocol: 'https', hostname: 'ik.imagekit.io' },
+      { protocol: 'https', hostname: '*.imagekit.io' },
       { protocol: 'https', hostname: 'grainzz-media-prod.s3.ap-south-1.amazonaws.com' },
+      { protocol: 'https', hostname: '*.amazonaws.com' },
       { protocol: 'https', hostname: 'images.unsplash.com' },
       { protocol: 'https', hostname: 'qnptydpfzinhgacdmwmo.supabase.co' },
+      { protocol: 'https', hostname: '*.supabase.co' },
       { protocol: 'https', hostname: 'ui-avatars.com' },
       { protocol: 'https', hostname: 'api.dicebear.com' },
       { protocol: 'https', hostname: 'i.pravatar.cc' },

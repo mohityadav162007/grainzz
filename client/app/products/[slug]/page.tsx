@@ -2,8 +2,8 @@ import { getProductBySlug, getProductReviews, getSeedReviewsByProductId, getPubl
 import Link from 'next/link';
 import ProductDetailPageClient from './ProductDetailPageClient';
 
-// ISR: re-generate at most once every 5 minutes — product changes are visible quickly without a redeploy
-export const revalidate = 300;
+// ISR: re-generate at most once every 60 seconds — on-demand revalidation handles instant updates
+export const revalidate = 60;
 
 interface PageProps {
   params: {

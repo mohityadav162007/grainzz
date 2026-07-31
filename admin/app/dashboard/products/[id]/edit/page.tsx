@@ -40,6 +40,7 @@ export default function EditProductPage() {
   const [error, setError] = useState('');
   const [existingImages, setExistingImages] = useState<string[]>([]);
   const [newImageFiles, setNewImageFiles] = useState<File[]>([]);
+  const [makePrimary, setMakePrimary] = useState(true);
   const [categories, setCategories] = useState<any[]>([]);
   const [selectedCategory, setSelectedCategory] = useState('');
 
@@ -186,6 +187,7 @@ export default function EditProductPage() {
       const form = new FormData(e.currentTarget);
       existingImages.forEach((url) => form.append('existingImages', url));
       newImageFiles.forEach(file => form.append('images', file));
+      form.append('primaryNew', makePrimary ? 'true' : 'false');
 
       // Normal nutrition
       form.append('nutritionTable', JSON.stringify(nutritionTable.filter(r => r.nutrient)));
@@ -657,15 +659,29 @@ export default function EditProductPage() {
             <input type="file" multiple accept="image/*" onChange={handleImageChange} className="w-full max-w-xs mx-auto text-sm" />
           </div>
           {newImageFiles.length > 0 && (
-            <div className="flex gap-3 flex-wrap">
-              {newImageFiles.map((f, i) => (
-                <div key={i} className="relative group">
-                  <img src={URL.createObjectURL(f)} alt="" className="w-20 h-20 object-cover rounded-lg border" />
-                  <button type="button" onClick={() => removeNewImage(i)} className="absolute -top-2 -right-2 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                    <X size={12} />
-                  </button>
-                </div>
-              ))}
+            <div className="space-y-3">
+              <div className="flex items-center gap-2 pt-1">
+                <input
+                  type="checkbox"
+                  id="makePrimaryCheckbox"
+                  checked={makePrimary}
+                  onChange={(e) => setMakePrimary(e.target.checked)}
+                  className="w-4 h-4 text-primary rounded border-gray-300 focus:ring-primary"
+                />
+                <label htmlFor="makePrimaryCheckbox" className="text-xs font-semibold text-gray-700 cursor-pointer">
+                  Set newly uploaded image as Main (Primary) Product Image
+                </label>
+              </div>
+              <div className="flex gap-3 flex-wrap">
+                {newImageFiles.map((f, i) => (
+                  <div key={i} className="relative group">
+                    <img src={URL.createObjectURL(f)} alt="" className="w-20 h-20 object-cover rounded-lg border" />
+                    <button type="button" onClick={() => removeNewImage(i)} className="absolute -top-2 -right-2 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                      <X size={12} />
+                    </button>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
         </div>

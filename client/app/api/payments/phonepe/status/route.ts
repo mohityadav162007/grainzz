@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getAccessToken, getSupabaseAdmin, mapPhonePeStatus, PHONEPE_PG_BASE_URL, logPaymentEvent } from '@/lib/phonepe';
 
 export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
 
 /**
  * GET /api/payments/phonepe/status?orderId=<id>

@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { getHeroSlides } from '@/lib/api';
 import { m, LazyMotion, domAnimation, AnimatePresence } from 'framer-motion';
-import Image from '@/components/ui/OptimizedImage';
+import Image from '@/components/ui/AppImage';
 
 interface HeroSlide {
   id?: string;
@@ -32,16 +32,7 @@ export default function HeroSection({ initialSlides }: HeroSectionProps) {
 
   useEffect(() => { setMounted(true); }, []);
 
-  const [windowWidth, setWindowWidth] = useState(0);
-  useEffect(() => {
-    if (!mounted) return;
-    setWindowWidth(window.innerWidth);
-    const onResize = () => setWindowWidth(window.innerWidth);
-    window.addEventListener('resize', onResize);
-    return () => window.removeEventListener('resize', onResize);
-  }, [mounted]);
-
-  const isMobileActual = windowWidth < 768;
+  // Render both mobile and desktop images with CSS media queries to fix LCP hydration delays
 
   // Only fetch on the client if we didn't get server-side data
   useEffect(() => {
@@ -138,14 +129,24 @@ export default function HeroSection({ initialSlides }: HeroSectionProps) {
                 className="w-full h-full absolute inset-0 cursor-pointer"
                 onClick={() => handleSlideClick(slides[imageIndex])}
               >
-                  <Image
-                    src={isMobileActual ? (slides[imageIndex].mobile_image_url || slides[imageIndex].image_url) : slides[imageIndex].image_url}
-                    alt={slides[imageIndex].title || 'Hero Banner'}
-                    fill
-                    sizes="100vw"
-                    className="object-cover"
-                    priority={page === 0}
-                  />
+                  <>
+                    <Image
+                      src={slides[imageIndex].mobile_image_url || slides[imageIndex].image_url}
+                      alt={slides[imageIndex].title || 'Hero Banner'}
+                      fill
+                      sizes="100vw"
+                      className="object-cover block md:hidden"
+                      priority={page === 0}
+                    />
+                    <Image
+                      src={slides[imageIndex].image_url}
+                      alt={slides[imageIndex].title || 'Hero Banner'}
+                      fill
+                      sizes="100vw"
+                      className="object-cover hidden md:block"
+                      priority={page === 0}
+                    />
+                  </>
               </m.div>
             </AnimatePresence>
           </LazyMotion>

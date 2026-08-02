@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
-import Image from '@/components/ui/OptimizedImage';
+import Image from '@/components/ui/AppImage';
 import { getPoweredByCards, getProductById } from '@/lib/api';
 import { useCartStore } from '@/store/cartStore';
 import { useRouter } from 'next/navigation';

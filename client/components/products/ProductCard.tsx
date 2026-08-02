@@ -1,5 +1,5 @@
 'use client';
-import Image from '@/components/ui/OptimizedImage';
+import Image from '@/components/ui/AppImage';
 import Link from 'next/link';
 import { Plus, ShoppingCart, Heart } from 'lucide-react';
 import { useCartStore } from '@/store/cartStore';

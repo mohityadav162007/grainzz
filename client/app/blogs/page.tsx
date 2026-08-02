@@ -4,7 +4,7 @@ export const revalidate = 300;
 import { getPublicBlogs } from '@/lib/api';
 import Link from 'next/link';
 import { ChevronRight } from 'lucide-react';
-import Image from '@/components/ui/OptimizedImage';
+import Image from '@/components/ui/AppImage';
 
 export default async function BlogsPage() {
   let blogs: any[] = [];

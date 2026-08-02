@@ -1,6 +1,6 @@
 'use client';
 import { useState, useEffect, useRef } from 'react';
-import Image from '@/components/ui/OptimizedImage';
+import Image from '@/components/ui/AppImage';
 import Link from 'next/link';
 import { X, Search as SearchIcon, ShoppingCart } from 'lucide-react';
 import { getProducts } from '@/lib/api';

@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import Image from '@/components/ui/OptimizedImage';
+import Image from '@/components/ui/AppImage';
 import { ChevronRight } from 'lucide-react';
 import { getComboProducts, getSiteContent } from '@/lib/api';
 

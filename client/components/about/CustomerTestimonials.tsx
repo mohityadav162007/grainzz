@@ -1,6 +1,6 @@
 'use client';
 import { useRef } from 'react';
-import Image from '@/components/ui/OptimizedImage';
+import Image from '@/components/ui/AppImage';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 const testimonials = [

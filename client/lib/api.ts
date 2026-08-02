@@ -1,4 +1,5 @@
 import { supabase } from './supabase';
+import { cache } from 'react';
  
  export const sendOTP = async (email: string) => {
    const { error } = await supabase.auth.resetPasswordForEmail(email);
@@ -48,16 +49,7 @@ export interface ActiveOffer {
   expiry_date: string | null;
 }
 
-let cachedOffersMap: Record<string, ActiveOffer> | null = null;
-let lastOffersFetchedTime = 0;
-const CACHE_TTL = 30000; // 30 seconds cache to optimize performance
-
-export const getActiveOffersMap = async (): Promise<Record<string, ActiveOffer>> => {
-  const now = Date.now();
-  if (cachedOffersMap && (now - lastOffersFetchedTime < CACHE_TTL)) {
-    return cachedOffersMap;
-  }
-
+export const getActiveOffersMap = cache(async (): Promise<Record<string, ActiveOffer>> => {
   try {
     const nowStr = new Date().toISOString();
     const { data: offers, error } = await supabase
@@ -66,7 +58,7 @@ export const getActiveOffersMap = async (): Promise<Record<string, ActiveOffer>>
       .eq('is_active', true)
       .or(`expiry_date.is.null,expiry_date.gte.${nowStr}`);
 
-    if (error || !offers) return cachedOffersMap || {};
+    if (error || !offers) return {};
 
     const productOfferMap: Record<string, ActiveOffer> = {};
 
@@ -80,14 +72,12 @@ export const getActiveOffersMap = async (): Promise<Record<string, ActiveOffer>>
       }
     }
 
-    cachedOffersMap = productOfferMap;
-    lastOffersFetchedTime = now;
     return productOfferMap;
   } catch (err) {
     console.error('Error fetching active offers:', err);
-    return cachedOffersMap || {};
+    return {};
   }
-};
+});
 
 export const applyOffersToProduct = (product: any, offersMap: Record<string, ActiveOffer>): any => {
   if (!product) return null;
@@ -242,9 +232,14 @@ export const getProductBySlug = async (slug: string) => {
 export const getStoreSettings = async () => {
   const { data, error } = await supabase.from('store_settings').select('key, value');
   if (error) throw new Error(error.message);
-  // Transform to a simple object for easier use: { key: value }
-  return (data || []).reduce((acc: Record<string, string>, item) => {
-    acc[item.key] = item.value;
+  // Transform to a simple object for easier use: { key: parsedValue }
+  return (data || []).reduce((acc: Record<string, any>, item) => {
+    try {
+      // Safely parse JSON if possible to avoid double-escaping issues during Next.js prop serialization
+      acc[item.key] = JSON.parse(item.value);
+    } catch (e) {
+      acc[item.key] = item.value;
+    }
     return acc;
   }, {});
 };

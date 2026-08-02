@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
-import Image from '@/components/ui/OptimizedImage';
+import Image from '@/components/ui/AppImage';
 import TeamFavourites from '@/components/about/TeamFavourites';
 import OurValues from '@/components/about/OurValues';
 import CustomerTestimonials from '@/components/about/CustomerTestimonials';

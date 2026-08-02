@@ -5,7 +5,7 @@ import ShareButtonsClient from '../ShareButtonsClient';
 import ProductCard from '@/components/products/ProductCard';
 import { Metadata } from 'next';
 import { constructMetadata, generateBlogSchema, siteConfig } from '@/lib/seo';
-import Image from '@/components/ui/OptimizedImage';
+import Image from '@/components/ui/AppImage';
 
 interface PageProps {
   params: {

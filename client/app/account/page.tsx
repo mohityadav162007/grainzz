@@ -7,7 +7,7 @@ import { ChevronRight, User, MapPin, Package, Settings, LogOut, PackageOpen, Ext
 import { getUserOrders, sendOTP, verifyOTPAndSetPassword, getProductSlugById, getSavedAddresses, addSavedAddress, updateSavedAddress, deleteSavedAddress, setDefaultAddress, type SavedAddress } from '@/lib/api';
 import { useAuthStore } from '@/store/authStore';
 import { useCartStore } from '@/store/cartStore';
-import Image from '@/components/ui/OptimizedImage';
+import Image from '@/components/ui/AppImage';
 
 type Tab = 'profile' | 'orders' | 'addresses' | 'settings';
 

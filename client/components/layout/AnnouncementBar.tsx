@@ -1,39 +1,25 @@
 'use client';
 import { useState, useEffect, useRef } from 'react';
 
-export default function AnnouncementBar() {
-  const [messages, setMessages] = useState<string[]>(['Start this year with a healthy choice: Shipping PAN India 🇮🇳']);
+export default function AnnouncementBar({ storeSettings }: { storeSettings?: Record<string, any> }) {
+  let initialMessages = ['Start this year with a healthy choice: Shipping PAN India 🇮🇳'];
+  try {
+    let parsedValue: any = storeSettings?.announcement_bar;
+    if (typeof parsedValue === 'string') {
+      try { parsedValue = JSON.parse(parsedValue); } catch (e) {}
+    }
+    if (parsedValue?.messages && Array.isArray(parsedValue.messages) && parsedValue.messages.filter((m: string) => m.trim() !== '').length > 0) {
+      initialMessages = parsedValue.messages.filter((m: string) => m.trim() !== '');
+    } else if (parsedValue?.text) {
+      initialMessages = [parsedValue.text];
+    }
+  } catch (e) {
+    console.error('Error parsing announcement:', e);
+  }
+
+  const messages = initialMessages;
   const [isPaused, setIsPaused] = useState(false);
   const pauseTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-
-  useEffect(() => {
-    const fetchAnnouncement = async () => {
-      try {
-        const { supabase } = await import('@/lib/supabase');
-        const { data } = await supabase
-          .from('store_settings')
-          .select('value')
-          .eq('key', 'announcement_bar')
-          .single();
-          
-        let parsedValue = data?.value;
-        if (typeof parsedValue === 'string') {
-          try {
-            parsedValue = JSON.parse(parsedValue);
-          } catch (e) {}
-        }
-          
-        if (parsedValue?.messages && Array.isArray(parsedValue.messages) && parsedValue.messages.filter((m: string) => m.trim() !== '').length > 0) {
-          setMessages(parsedValue.messages.filter((m: string) => m.trim() !== ''));
-        } else if (parsedValue?.text) {
-          setMessages([parsedValue.text]);
-        }
-      } catch (e) {
-        console.error('Error fetching announcement:', e);
-      }
-    };
-    fetchAnnouncement();
-  }, []);
 
   // Cleanup timeout on component unmount
   useEffect(() => {

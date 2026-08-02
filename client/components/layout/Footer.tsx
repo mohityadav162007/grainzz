@@ -1,27 +1,21 @@
 'use client';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import Image from '@/components/ui/OptimizedImage';
+import Image from '@/components/ui/AppImage';
 import { Phone, Mail, MapPin, Facebook, Linkedin, Instagram, Send, ChevronDown } from 'lucide-react';
-import { getStoreSettings } from '@/lib/api';
 
-export default function Footer() {
+export default function Footer({ storeSettings }: { storeSettings?: Record<string, any> }) {
   const [openSection, setOpenSection] = useState<string | null>('Quick Links');
-  const [settings, setSettings] = useState<Record<string, string>>({
+  const settings: Record<string, any> = {
     contact_phone: '96262425 , 93756546',
     contact_email: 'katariavibhor9@gmail.com',
     contact_address: 'B-291, MIG Flats, East of Loni road, Delhi, Delhi - 110093, India',
     social_instagram: '#',
     social_facebook: '#',
     social_linkedin: '#',
-    about_text: 'Subscribe to get latest offers'
-  });
-
-  useEffect(() => {
-    getStoreSettings().then(data => {
-      if (data) setSettings(prev => ({ ...prev, ...data }));
-    }).catch(console.error);
-  }, []);
+    about_text: 'Subscribe to get latest offers',
+    ...storeSettings
+  };
 
   const toggleSection = (section: string) => {
     setOpenSection(openSection === section ? null : section);
@@ -40,7 +34,7 @@ export default function Footer() {
     'Shop': [
       { name: 'All Products', href: '/products' },
       { name: 'Combos', href: '/combos' },
-      ...(settings.show_sale_page !== 'false' ? [{ name: 'Sale!', href: '/sale' }] : []),
+      { name: 'Sale!', href: '/sale', isSale: true },
     ],
     'Policies': [
       { name: 'Shipping', href: '/shipping' },
@@ -73,7 +67,7 @@ export default function Footer() {
                 <div className="flex items-center gap-4">
                   <Phone size={22} className="shrink-0 text-white" strokeWidth={1.5} />
                   <div className="flex flex-wrap items-center gap-1">
-                    {settings.contact_phone.split(',').map((num, i, arr) => (
+                    {String(settings.contact_phone || '').split(',').map((num: string, i: number, arr: string[]) => (
                       <div key={i} className="flex items-center gap-1">
                         <a href={`tel:${num.trim()}`} className="hover:text-white transition-colors">{num.trim()}</a>
                         {i < arr.length - 1 && <span>,</span>}
@@ -116,7 +110,7 @@ export default function Footer() {
                 </button>
                 <div className={`mt-4 lg:mt-6 flex-col gap-[14px] lg:flex ${openSection === title ? 'flex' : 'hidden'}`}>
                   {links.map((link) => (
-                    <Link key={link.name} href={link.href} className="text-[14px] lg:text-[15px] font-medium text-white/80 hover:text-white hover:underline decoration-2 underline-offset-8 transition-all block whitespace-nowrap">
+                    <Link key={link.name} href={link.href} className={`text-[14px] lg:text-[15px] font-medium text-white/80 hover:text-white hover:underline decoration-2 underline-offset-8 transition-all whitespace-nowrap ${(link as any).isSale && String(settings.show_sale_page) === 'false' ? 'hidden' : 'block'}`}>
                       {link.name}
                     </Link>
                   ))}

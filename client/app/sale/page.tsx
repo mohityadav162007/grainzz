@@ -50,7 +50,7 @@ function SaleContent() {
       // Check visibility first
       const { getStoreSettings } = await import('@/lib/api');
       const settings = await getStoreSettings();
-      if (settings.show_sale_page === 'false') {
+      if (String(settings.show_sale_page) === 'false') {
         setShowSale(false);
         window.location.href = '/products';
         return;

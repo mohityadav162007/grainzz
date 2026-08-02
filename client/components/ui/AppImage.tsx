@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import NextImage, { ImageProps } from 'next/image';
-import { getImageKitUrl, isS3Url, DEFAULT_FALLBACK_IMAGE } from '@/lib/imageService';
+import { ImageService, DEFAULT_FALLBACK_IMAGE } from '@/lib/imageService';
 
 export interface AppImageProps extends Omit<ImageProps, 'src'> {
   src: string | any;
@@ -19,50 +19,24 @@ export default function AppImage({
   onError,
   ...restProps
 }: AppImageProps) {
-  // Determine raw src string
   const rawSrc = typeof src === 'string' ? src : (src?.src || '');
-  const [currentSrc, setCurrentSrc] = useState<string>(() => {
-    if (!rawSrc) return fallbackSrc;
-    if (isS3Url(rawSrc)) return getImageKitUrl(rawSrc);
-    return rawSrc;
-  });
-
   const [hasError, setHasError] = useState(false);
 
-  // Update src if prop changes
-  useEffect(() => {
-    if (!rawSrc) {
-      setCurrentSrc(fallbackSrc);
-      return;
-    }
-    if (isS3Url(rawSrc)) {
-      setCurrentSrc(getImageKitUrl(rawSrc));
-    } else {
-      setCurrentSrc(rawSrc);
-    }
-    setHasError(false);
-  }, [rawSrc, fallbackSrc]);
+  const isS3 = ImageService.isS3Url(rawSrc);
+  let currentSrc = ImageService.getFallbackUrl(rawSrc, hasError, isS3, fallbackSrc);
+  const responsiveSizes = ImageService.getResponsiveSizes(restProps.fill, sizes);
+  const shouldBypass = ImageService.shouldBypassNextOptimization(rawSrc);
+
+  if (shouldBypass && !hasError) {
+    currentSrc = ImageService.getImageKitUrl(currentSrc);
+  }
 
   const handleError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
-    if (!hasError) {
-      setHasError(true);
-      // If primary ImageKit URL failed and original was S3, fall back to raw S3 URL
-      if (isS3Url(rawSrc) && currentSrc !== rawSrc) {
-        setCurrentSrc(rawSrc);
-      } else {
-        // Otherwise fall back to local placeholder
-        setCurrentSrc(fallbackSrc);
-      }
-    }
-    if (onError) {
-      onError(e);
-    }
+    if (!hasError) setHasError(true);
+    if (onError) onError(e);
   };
 
-  // Set default sizes if fill is used and sizes is missing to optimize performance
-  const responsiveSizes = restProps.fill && !sizes
-    ? '(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw'
-    : sizes;
+  const loader = shouldBypass ? ImageService.imageKitLoader(hasError) : undefined;
 
   return (
     <NextImage
@@ -73,6 +47,8 @@ export default function AppImage({
       priority={priority}
       onError={handleError}
       className={className}
+      loader={loader}
+      unoptimized={hasError || shouldBypass}
     />
   );
 }

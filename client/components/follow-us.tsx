@@ -1,5 +1,5 @@
 import type { NextPage } from "next";
-import Image from '@/components/ui/OptimizedImage';
+import Image from '@/components/ui/AppImage';
 
 export type FollowUsType = {
   className?: string;

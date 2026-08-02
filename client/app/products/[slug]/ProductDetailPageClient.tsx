@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import Image from '@/components/ui/OptimizedImage';
+import Image from '@/components/ui/AppImage';
 import Link from 'next/link';
 import { ChevronRight, ChevronLeft, Plus, Minus, Star, Check, X, Loader2 } from 'lucide-react';
 import { submitProductReview, uploadReviewImage, getRelatedProductsSection, submitStockNotification, getProductReviews, getSeedReviewsByProductId } from '@/lib/api';

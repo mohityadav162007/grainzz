@@ -1,7 +1,7 @@
 'use client';
 import { useState } from 'react';
 import Link from 'next/link';
-import Image from '@/components/ui/OptimizedImage';
+import Image from '@/components/ui/AppImage';
 import { useRouter } from 'next/navigation';
 import {
   ShoppingBag, Trash2, Plus, Minus, Tag, ArrowRight,

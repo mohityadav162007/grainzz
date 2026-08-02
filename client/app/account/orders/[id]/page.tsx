@@ -5,7 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { ChevronLeft, Package, Truck, MapPin, CreditCard, Calendar, Check, X, ExternalLink, Download, ArrowLeft } from 'lucide-react';
 import { getOrderById } from '@/lib/api';
 import { useAuthStore } from '@/store/authStore';
-import Image from '@/components/ui/OptimizedImage';
+import Image from '@/components/ui/AppImage';
 
 const TRACKING_STEPS = ['Processing', 'Shipped', 'In Transit', 'Out For Delivery', 'Delivered'];
 

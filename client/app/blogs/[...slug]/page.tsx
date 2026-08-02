@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { ArrowLeft, Calendar, Clock } from 'lucide-react';
 import ShareButtonsClient from '../ShareButtonsClient';
 import ProductCard from '@/components/products/ProductCard';
-import Image from '@/components/ui/OptimizedImage';
+import Image from '@/components/ui/AppImage';
 
 interface PageProps {
   params: {

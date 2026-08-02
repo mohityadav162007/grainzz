@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import Image from '@/components/ui/OptimizedImage';
+import Image from '@/components/ui/AppImage';
 import { X, Plus, Minus, Trash2, ShoppingBag, Tag, Lock } from 'lucide-react';
 import { useCartStore } from '@/store/cartStore';
 import { useAuthStore } from '@/store/authStore';

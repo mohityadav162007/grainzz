@@ -1,5 +1,5 @@
 import { Instagram } from 'lucide-react';
-import Image from '@/components/ui/OptimizedImage';
+import Image from '@/components/ui/AppImage';
 import { getInstagramPosts, getSiteContent } from '@/lib/api';
 
 interface InstagramSectionProps {

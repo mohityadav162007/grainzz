@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import Image from '@/components/ui/OptimizedImage';
+import Image from '@/components/ui/AppImage';
 import { submitEnquiry, getStoreSettings } from '@/lib/api';
 import { 
   Plus, 

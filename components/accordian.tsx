@@ -6,7 +6,7 @@ export type AccordianType = {
   className?: string;
 
   /** Variant props */
-  property1?: CSSProperties["property1"];
+  property1?: string;
 };
 
 const Accordian: NextPage<AccordianType> = ({

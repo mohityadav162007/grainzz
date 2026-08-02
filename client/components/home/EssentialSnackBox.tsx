@@ -1,6 +1,6 @@
 'use client';
 import { useState, useEffect, useCallback } from 'react';
-import Image from '@/components/ui/OptimizedImage';
+import Image from '@/components/ui/AppImage';
 import { Plus, Minus, ShoppingBag, Zap } from 'lucide-react';
 import { getSnackBoxItems } from '@/lib/api';
 import { useCartStore } from '@/store/cartStore';

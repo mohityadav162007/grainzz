@@ -1,6 +1,6 @@
 import type { NextPage } from "next";
 import { type CSSProperties } from "react";
-import Image from '@/components/ui/OptimizedImage';
+import Image from '@/components/ui/AppImage';
 
 export type ButtonPrimaryType = {
   className?: string;

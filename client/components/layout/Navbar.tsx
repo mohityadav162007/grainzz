@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { useState, useEffect, useRef } from 'react';
 import { usePathname } from 'next/navigation';
 import { Search, ShoppingCart, User, Menu, X, ChevronDown, Heart, Home } from 'lucide-react';
-import Image from '@/components/ui/OptimizedImage';
+import Image from '@/components/ui/AppImage';
 import { useCartStore } from '@/store/cartStore';
 import { useAuthStore } from '@/store/authStore';
 import clsx from 'clsx';
@@ -29,28 +29,17 @@ const HEADER_CSS = `
 @media(max-width:1023px){.hdr-layer{display:none!important}}
 `;
 
-export default function Navbar() {
+export default function Navbar({ storeSettings }: { storeSettings?: Record<string, any> }) {
   const { items, itemCount, openCart } = useCartStore();
   const { user, setAuthModalOpen } = useAuthStore();
   const [count, setCount] = useState(0);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const [showSale, setShowSale] = useState(true);
   const pathname = usePathname();
   const headerRef = useRef<HTMLElement>(null);
 
-  useEffect(() => {
-    import('@/lib/api').then(({ getStoreSettings }) => {
-      getStoreSettings().then((settings: any) => {
-        if (settings.show_sale_page === 'false') {
-          setShowSale(false);
-        }
-      }).catch(() => {});
-    });
-  }, []);
-
-  const filteredNavLinks = navLinks.filter(link => link.href !== '/sale' || showSale);
+  const showSale = String(storeSettings?.show_sale_page) !== 'false';
 
   useEffect(() => { setCount(itemCount()); }, [items]);
 
@@ -141,6 +130,7 @@ export default function Navbar() {
                     value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && searchSubmit()}
                     className="w-full h-full pl-3 bg-transparent text-[15px] text-[#222] placeholder:text-[#999] focus:outline-none"
+                    suppressHydrationWarning
                   />
                 </div>
               </div>
@@ -196,7 +186,7 @@ export default function Navbar() {
               onChange={(e) => setSearchQuery(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && searchSubmit()}
               className="w-full h-full pl-3 bg-transparent text-[15px] text-[#222] placeholder:text-[#999] focus:outline-none"
-              autoFocus={isSearchOpen} />
+              autoFocus={isSearchOpen} suppressHydrationWarning />
             <button onClick={() => setIsSearchOpen(false)} className="text-[#AAA] hover:text-[#222] transition-colors p-1"><X size={18} strokeWidth={2.5} /></button>
           </div>
         </div>
@@ -207,8 +197,8 @@ export default function Navbar() {
         <div className="hidden lg:block bg-white border-b border-[#EAEAEA] w-full">
           <div className="max-w-[1440px] mx-auto px-[60px] lg:px-[100px]">
             <nav className="flex items-center justify-center gap-[48px] h-[60px]">
-              {filteredNavLinks.map((link) => (
-                <div key={link.href} className="relative group flex items-center h-full">
+              {navLinks.map((link) => (
+                <div key={link.href} className={clsx("relative group items-center h-full", link.href === '/sale' && !showSale ? "hidden" : "flex")}>
                   <div className="flex items-center gap-1 cursor-pointer group-hover:text-primary transition-colors">
                     <Link 
                       href={link.href} 
@@ -257,9 +247,7 @@ export default function Navbar() {
             <Link href="/products" onClick={() => setMobileOpen(false)} className={clsx('py-4 text-[15px] font-medium border-b border-[#E5DFCC]', pathname === '/products' ? 'text-brand-green underline underline-offset-8 decoration-2' : 'text-[#222] hover:underline underline-offset-8 decoration-2')}>Shop All</Link>
             <Link href="/combos" onClick={() => setMobileOpen(false)} className={clsx('py-4 text-[15px] font-medium border-b border-[#E5DFCC]', pathname === '/combos' ? 'text-brand-green underline underline-offset-8 decoration-2' : 'text-[#222] hover:underline underline-offset-8 decoration-2')}>Combos</Link>
             <Link href="/b2b" onClick={() => setMobileOpen(false)} className={clsx('py-4 text-[15px] font-medium border-b border-[#E5DFCC]', pathname === '/b2b' ? 'text-brand-green underline underline-offset-8 decoration-2' : 'text-[#222] hover:underline underline-offset-8 decoration-2')}>Corporate Gifting</Link>
-            {showSale && (
-              <Link href="/sale" onClick={() => setMobileOpen(false)} className={clsx('py-4 text-[15px] font-semibold border-b border-[#E5DFCC]', pathname === '/sale' ? 'text-brand-green underline underline-offset-8 decoration-2' : 'text-brand-red hover:underline underline-offset-8 decoration-2')}>Sales!</Link>
-            )}
+            <Link href="/sale" onClick={() => setMobileOpen(false)} className={clsx('py-4 text-[15px] font-semibold border-b border-[#E5DFCC]', pathname === '/sale' ? 'text-brand-green underline underline-offset-8 decoration-2' : 'text-brand-red hover:underline underline-offset-8 decoration-2', showSale ? 'block' : 'hidden')}>Sales!</Link>
             <Link href="/about" onClick={() => setMobileOpen(false)} className={clsx('py-4 text-[15px] font-medium border-b border-[#E5DFCC]', pathname === '/about' ? 'text-brand-green underline underline-offset-8 decoration-2' : 'text-[#222] hover:underline underline-offset-8 decoration-2')}>About Us</Link>
             <Link href="/faqs" onClick={() => setMobileOpen(false)} className={clsx('py-4 text-[15px] font-medium border-b border-[#E5DFCC]', pathname === '/faqs' ? 'text-brand-green underline underline-offset-8 decoration-2' : 'text-[#222] hover:underline underline-offset-8 decoration-2')}>FAQs</Link>
             <Link href="/account" onClick={handleAccountClick} className={clsx('py-4 text-[15px] font-medium border-b border-[#E5DFCC]', pathname === '/account' ? 'text-brand-green underline underline-offset-8 decoration-2' : 'text-[#222] hover:underline underline-offset-8 decoration-2')}>My account</Link>

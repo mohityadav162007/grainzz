@@ -4,8 +4,8 @@
  * responsive sizing, format optimization (WebP/AVIF), and graceful fallbacks.
  */
 
-const DEFAULT_IMAGEKIT_ENDPOINT = 'https://ik.imagekit.io/mohityadav162009';
 export const DEFAULT_FALLBACK_IMAGE = '/image-2@2x.png';
+const DEFAULT_IMAGEKIT_ENDPOINT = 'https://ik.imagekit.io/mohityadav162009';
 
 export interface ImageTransformationOptions {
   width?: number;
@@ -15,75 +15,96 @@ export interface ImageTransformationOptions {
   raw?: string;
 }
 
-/**
- * Checks if a given string is an AWS S3 URL
- */
-export function isS3Url(src: string): boolean {
-  if (!src || typeof src !== 'string') return false;
-  return src.includes('amazonaws.com');
-}
+export const ImageService = {
+  isS3Url(src: string): boolean {
+    if (!src || typeof src !== 'string') return false;
+    return src.includes('amazonaws.com');
+  },
 
-/**
- * Checks if a given string is an ImageKit URL
- */
-export function isImageKitUrl(src: string): boolean {
-  if (!src || typeof src !== 'string') return false;
-  return src.includes('ik.imagekit.io');
-}
+  isImageKitUrl(src: string): boolean {
+    if (!src || typeof src !== 'string') return false;
+    return src.includes('ik.imagekit.io');
+  },
 
-/**
- * Extracts object path from S3 URL
- * e.g. https://grainzz-media-prod.s3.ap-south-1.amazonaws.com/products/1720-file.jpg
- * returns: products/1720-file.jpg
- */
-export function getS3Path(s3Url: string): string {
-  try {
-    const url = new URL(s3Url);
-    const pathname = url.pathname;
-    return pathname.startsWith('/') ? pathname.slice(1) : pathname;
-  } catch {
-    return '';
-  }
-}
-
-/**
- * Converts an S3 URL to a fully transformed ImageKit URL
- */
-export function getImageKitUrl(
-  src: string,
-  options?: ImageTransformationOptions
-): string {
-  if (!src || typeof src !== 'string') {
-    return DEFAULT_FALLBACK_IMAGE;
-  }
-
-  const endpoint = (process.env.NEXT_PUBLIC_IMAGEKIT_URL || DEFAULT_IMAGEKIT_ENDPOINT).replace(/\/$/, '');
-
-  // 1. If it's an S3 URL, convert to ImageKit URL format
-  if (isS3Url(src)) {
-    const objectPath = getS3Path(src);
-    if (!objectPath) return src;
-
-    // Build transformation string
-    const trParts: string[] = ['f-auto', 'pr-true', 'q-auto', 'dpr-auto'];
-    if (options?.width) trParts.push(`w-${options.width}`);
-    if (options?.height) trParts.push(`h-${options.height}`);
-    if (options?.quality) trParts.push(`q-${options.quality}`);
-    if (options?.raw) trParts.push(options.raw);
-
-    const trString = trParts.join(',');
-    return `${endpoint}/${objectPath}?tr=${trString}`;
-  }
-
-  // 2. If it's already an ImageKit URL, ensure transformation params exist
-  if (isImageKitUrl(src)) {
-    if (!src.includes('tr=')) {
-      const separator = src.includes('?') ? '&' : '?';
-      return `${src}${separator}tr=f-auto,pr-true,q-auto,dpr-auto`;
+  getS3Path(s3Url: string): string {
+    try {
+      const url = new URL(s3Url);
+      const pathname = url.pathname;
+      return pathname.startsWith('/') ? pathname.slice(1) : pathname;
+    } catch {
+      return '';
     }
-    return src;
-  }
+  },
 
-  // 3. Fallback for local assets or other external URLs
-  return src;
-}
+  getImageKitUrl(src: string, options?: ImageTransformationOptions): string {
+    if (!src || typeof src !== 'string') {
+      return DEFAULT_FALLBACK_IMAGE;
+    }
+
+    const endpoint = (process.env.NEXT_PUBLIC_IMAGEKIT_URL || DEFAULT_IMAGEKIT_ENDPOINT).replace(/\/$/, '');
+
+    // 1. If it's an S3 URL, convert to ImageKit URL format
+    if (this.isS3Url(src)) {
+      const objectPath = this.getS3Path(src);
+      if (!objectPath) return src;
+
+      // Build transformation string
+      const trParts: string[] = ['f-auto', 'pr-true', 'q-auto', 'dpr-auto'];
+      if (options?.width) trParts.push(`w-${options.width}`);
+      if (options?.height) trParts.push(`h-${options.height}`);
+      if (options?.quality) trParts.push(`q-${options.quality}`);
+      if (options?.raw) trParts.push(options.raw);
+
+      const trString = trParts.join(',');
+      return `${endpoint}/${objectPath}?tr=${trString}`;
+    }
+
+    // 2. If it's already an ImageKit URL, ensure transformation params exist
+    if (this.isImageKitUrl(src)) {
+      if (!src.includes('tr=')) {
+        const separator = src.includes('?') ? '&' : '?';
+        return `${src}${separator}tr=f-auto,pr-true,q-auto,dpr-auto`;
+      }
+      return src;
+    }
+
+    // 3. Fallback for local assets or other external URLs
+    return src;
+  },
+
+  getResponsiveSizes(fill?: boolean, sizes?: string): string | undefined {
+    if (fill && !sizes) {
+      return '(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw';
+    }
+    return sizes;
+  },
+
+  getFallbackUrl(src: string, hasError: boolean, isS3: boolean, fallbackSrc: string = DEFAULT_FALLBACK_IMAGE): string {
+    if (hasError) {
+      return isS3 ? src : fallbackSrc;
+    }
+    return src || fallbackSrc;
+  },
+
+  // A standalone loader that can be passed to Next.js Image component
+  imageKitLoader(hasError: boolean) {
+    return ({ src, width, quality }: { src: string; width: number; quality?: number }) => {
+      if (hasError) return src;
+      
+      if (ImageService.isS3Url(src) || ImageService.isImageKitUrl(src)) {
+        return ImageService.getImageKitUrl(src, { width, quality });
+      }
+      
+      // Satisfy Next.js requirement that custom loaders must implement width
+      if (src.startsWith('/')) {
+        return `${src}?w=${width}&q=${quality || 75}`;
+      }
+      
+      return src;
+    };
+  },
+
+  shouldBypassNextOptimization(src: string): boolean {
+    return this.isS3Url(src) || this.isImageKitUrl(src);
+  }
+};

@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/store/authStore';
 import { X, Mail, Lock, User, ArrowRight, Loader2, CheckCircle2, AlertCircle, ShoppingBag, Sparkles } from 'lucide-react';
-import Image from '@/components/ui/OptimizedImage';
+import Image from '@/components/ui/AppImage';
 import { sendOTP, verifyOTPAndSetPassword } from '@/lib/api';
 
 export default function AuthModal() {

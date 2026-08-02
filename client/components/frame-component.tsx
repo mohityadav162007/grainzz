@@ -1,7 +1,7 @@
 "use client";
 import type { NextPage } from "next";
 import { useMemo, type CSSProperties } from "react";
-import Image from '@/components/ui/OptimizedImage';
+import Image from '@/components/ui/AppImage';
 import ButtonPrimary from "./button-primary";
 
 export type FrameComponentType = {

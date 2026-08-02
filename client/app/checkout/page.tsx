@@ -2,7 +2,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import Image from '@/components/ui/OptimizedImage';
+import Image from '@/components/ui/AppImage';
 import { ChevronRight, ChevronLeft, Loader2, Check, MapPin, Package, CreditCard, Truck, Clock, Tag, Minus, Plus } from 'lucide-react';
 import { useCartStore, validateCoupon, calculateDiscount, type CouponData } from '@/store/cartStore';
 import { useAuthStore } from '@/store/authStore';

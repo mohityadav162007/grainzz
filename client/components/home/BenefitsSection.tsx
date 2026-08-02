@@ -1,4 +1,4 @@
-import Image from '@/components/ui/OptimizedImage';
+import Image from '@/components/ui/AppImage';
 import { Droplets, Wheat, ShieldCheck, Heart } from 'lucide-react';
 
 const fallbackBenefits = [

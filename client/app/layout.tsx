@@ -37,8 +37,11 @@ export const viewport: Viewport = {
 };
 
 import Script from 'next/script';
+import { getStoreSettings } from '@/lib/api';
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const storeSettings = await getStoreSettings();
+  
   return (
     <html lang="en">
       <head>
@@ -94,6 +97,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             width="1"
             style={{ display: 'none' }}
             src="https://www.facebook.com/tr?id=1028722326482306&ev=PageView&noscript=1"
+            loading="lazy"
+            fetchPriority="low"
           />
         </noscript>
         {/* End Meta Pixel Code */}
@@ -101,10 +106,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className={`${jakarta.className} bg-white text-brand-black`}>
         <AuthInitializer />
         <CouponNotificationToast />
-        <AnnouncementBar />
-        <Navbar />
+        <AnnouncementBar storeSettings={storeSettings} />
+        <Navbar storeSettings={storeSettings} />
         <main className="min-h-[100dvh] overflow-x-clip">{children}</main>
-        <Footer />
+        <Footer storeSettings={storeSettings} />
         <CartDrawer />
         <AuthModal />
       </body>

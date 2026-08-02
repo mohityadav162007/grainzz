@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { ChevronRight, ChevronLeft, Plus } from 'lucide-react';
-import Image from '@/components/ui/OptimizedImage';
+import Image from '@/components/ui/AppImage';
 import { supabase } from '@/lib/supabase';
 import { useCartStore } from '@/store/cartStore';
 

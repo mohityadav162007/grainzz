@@ -1,5 +1,5 @@
 import type { NextPage } from "next";
-import Image from '@/components/ui/OptimizedImage';
+import Image from '@/components/ui/AppImage';
 import FrameComponent1 from "./frame-component1";
 
 export type FrameComponent3Type = {

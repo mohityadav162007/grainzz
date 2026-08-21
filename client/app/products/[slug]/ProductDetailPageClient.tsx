@@ -301,6 +301,7 @@ export default function ProductDetailPageClient({
           <div className="w-full lg:w-[46%] xl:w-[46%] flex-shrink-0 order-2 lg:order-1 flex flex-col gap-[16px]">
             {/* Main Image */}
             <div
+              key={`main-img-${selectedImage}`}
               className="relative w-full rounded-[24px] overflow-hidden bg-[#F5F0E8] shadow-sm border border-[#EAEAEA] transform-gpu"
               style={{ aspectRatio: '1 / 1' }}
             >

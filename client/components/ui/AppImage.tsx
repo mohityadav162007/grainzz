@@ -22,14 +22,14 @@ export default function AppImage({
   const rawSrc = typeof src === 'string' ? src : (src?.src || '');
   const [hasError, setHasError] = useState(false);
 
+  React.useEffect(() => {
+    setHasError(false);
+  }, [rawSrc]);
+
   const isS3 = ImageService.isS3Url(rawSrc);
   let currentSrc = ImageService.getFallbackUrl(rawSrc, hasError, isS3, fallbackSrc);
   const responsiveSizes = ImageService.getResponsiveSizes(restProps.fill, sizes);
   const shouldBypass = ImageService.shouldBypassNextOptimization(rawSrc);
-
-  if (shouldBypass && !hasError) {
-    currentSrc = ImageService.getImageKitUrl(currentSrc);
-  }
 
   const handleError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
     if (!hasError) setHasError(true);
@@ -48,7 +48,7 @@ export default function AppImage({
       onError={handleError}
       className={className}
       loader={loader}
-      unoptimized={hasError || shouldBypass}
+      unoptimized={hasError || (!shouldBypass && rawSrc.endsWith('.svg'))}
     />
   );
 }

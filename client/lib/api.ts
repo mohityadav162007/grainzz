@@ -938,6 +938,34 @@ export const getBlogBySlug = async (slug: string) => {
   return { success: true, data };
 };
 
+export const fetchBlogWithFallback = async (rawInput: string | string[]) => {
+  const fullSlug = Array.isArray(rawInput) ? rawInput.join('/') : rawInput;
+  if (!fullSlug) return null;
+
+  const cleanSlug = fullSlug.replace(/^\/?(blog\/)?/, '');
+
+  const candidates = [
+    fullSlug,
+    '/' + fullSlug,
+    cleanSlug,
+    '/' + cleanSlug,
+    'blog/' + cleanSlug,
+    '/blog/' + cleanSlug,
+  ];
+
+  const uniqueCandidates = Array.from(new Set(candidates.filter(Boolean)));
+
+  for (const candidate of uniqueCandidates) {
+    try {
+      const res = await getBlogBySlug(candidate);
+      if (res?.data) return res.data;
+    } catch {
+      // Ignore and try next candidate
+    }
+  }
+  return null;
+};
+
 export const getActiveCoupons = async (): Promise<any[]> => {
   const now = new Date().toISOString();
   const { data, error } = await supabase

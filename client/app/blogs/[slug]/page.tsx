@@ -1,4 +1,7 @@
-import { getBlogBySlug, getProducts } from '@/lib/api';
+// ISR: re-generate at most once every 5 minutes
+export const revalidate = 300;
+
+import { fetchBlogWithFallback, getProducts } from '@/lib/api';
 import Link from 'next/link';
 import { ArrowLeft, Calendar, Clock } from 'lucide-react';
 import ShareButtonsClient from '../ShareButtonsClient';
@@ -6,6 +9,7 @@ import ProductCard from '@/components/products/ProductCard';
 import { Metadata } from 'next';
 import { constructMetadata, generateBlogSchema, siteConfig } from '@/lib/seo';
 import Image from '@/components/ui/AppImage';
+import { ImageService } from '@/lib/imageService';
 
 interface PageProps {
   params: {
@@ -16,8 +20,7 @@ interface PageProps {
 export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
   let blog = null;
   try {
-    const res = await getBlogBySlug(params.slug);
-    blog = res?.data;
+    blog = await fetchBlogWithFallback(params.slug);
   } catch (error) {
     console.error('Error generating metadata:', error);
   }
@@ -41,7 +44,9 @@ export async function generateMetadata({ params }: { params: { slug: string } })
     description = strippedContent.length > 150 ? strippedContent.substring(0, 150) + '...' : strippedContent;
   }
   
-  const image = blog.og_image_url || blog.featured_image_url || siteConfig.ogImage;
+  // Image priority: 1. blog.og_image_url -> 2. blog.featured_image_url -> 3. siteConfig.ogImage
+  const rawImage = blog.og_image_url || blog.featured_image_url || siteConfig.ogImage;
+  const image = ImageService.getOgImageUrl(rawImage);
   const ogTitle = blog.og_title || title;
   const ogDescription = blog.og_description || description;
 
@@ -115,8 +120,7 @@ function getRelevantProducts(blog: any, products: any[]): any[] {
 export default async function BlogDetailPage({ params }: PageProps) {
   let blog = null;
   try {
-    const res = await getBlogBySlug(params.slug);
-    blog = res?.data;
+    blog = await fetchBlogWithFallback(params.slug);
   } catch (error) {
     console.error('Failed to load blog by slug:', error);
   }

@@ -1,7 +1,7 @@
 // ISR: re-generate at most once every 5 minutes — blog edits appear quickly without hammering the DB
 export const revalidate = 300;
 
-import { getBlogBySlug, getProducts, getPublicBlogs } from '@/lib/api';
+import { fetchBlogWithFallback, getProducts, getPublicBlogs } from '@/lib/api';
 import Link from 'next/link';
 import { ArrowLeft, Calendar, Clock } from 'lucide-react';
 import ShareButtonsClient from '../ShareButtonsClient';
@@ -24,36 +24,6 @@ export async function generateStaticParams() {
   } catch {
     return [];
   }
-}
-
-async function fetchBlogWithFallback(slugArray: string[]) {
-  if (!slugArray || slugArray.length === 0) return null;
-
-  const fullSlug = slugArray.join('/');
-  const lastSegment = slugArray[slugArray.length - 1];
-  
-  // 1. Try exact match
-  let res = await getBlogBySlug(fullSlug);
-  
-  // 2. Try with leading slash
-  if (!res?.data) {
-    res = await getBlogBySlug('/' + fullSlug);
-  }
-
-  // 3. Try stripping "blog/" prefix
-  if (!res?.data && fullSlug.startsWith('blog/')) {
-    const stripped = fullSlug.replace('blog/', '');
-    res = await getBlogBySlug(stripped);
-    if (!res?.data) res = await getBlogBySlug('/' + stripped);
-  }
-
-  // 4. Ultimate Fallback
-  if (!res?.data && slugArray.length > 1) {
-    res = await getBlogBySlug(lastSegment);
-    if (!res?.data) res = await getBlogBySlug('/' + lastSegment);
-  }
-
-  return res?.data;
 }
 
 function getRelevantProducts(blog: any, products: any[]): any[] {

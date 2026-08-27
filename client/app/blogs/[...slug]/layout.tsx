@@ -2,38 +2,9 @@
 export const revalidate = 300;
 
 import { Metadata } from 'next';
-import { getBlogBySlug } from '@/lib/api';
+import { fetchBlogWithFallback } from '@/lib/api';
 import { constructMetadata, generateBlogSchema, siteConfig } from '@/lib/seo';
-
-async function fetchBlogWithFallback(slugArray: string[]) {
-  if (!slugArray || slugArray.length === 0) return null;
-
-  const fullSlug = slugArray.join('/');
-  const lastSegment = slugArray[slugArray.length - 1];
-  
-  // 1. Try exact match
-  let res = await getBlogBySlug(fullSlug);
-  
-  // 2. Try with leading slash
-  if (!res?.data) {
-    res = await getBlogBySlug('/' + fullSlug);
-  }
-
-  // 3. Try stripping "blog/" prefix
-  if (!res?.data && fullSlug.startsWith('blog/')) {
-    const stripped = fullSlug.replace('blog/', '');
-    res = await getBlogBySlug(stripped);
-    if (!res?.data) res = await getBlogBySlug('/' + stripped);
-  }
-
-  // 4. Ultimate Fallback
-  if (!res?.data && slugArray.length > 1) {
-    res = await getBlogBySlug(lastSegment);
-    if (!res?.data) res = await getBlogBySlug('/' + lastSegment);
-  }
-
-  return res?.data;
-}
+import { ImageService } from '@/lib/imageService';
 
 export async function generateMetadata({ params }: { params: { slug: string[] } }): Promise<Metadata> {
   const blog = await fetchBlogWithFallback(params.slug);
@@ -55,7 +26,9 @@ export async function generateMetadata({ params }: { params: { slug: string[] } 
     description = strippedContent.length > 150 ? strippedContent.substring(0, 150) + '...' : strippedContent;
   }
   
-  const image = blog.og_image_url || blog.featured_image_url || siteConfig.ogImage;
+  // Image priority: 1. blog.og_image_url -> 2. blog.featured_image_url -> 3. siteConfig.ogImage
+  const rawImage = blog.og_image_url || blog.featured_image_url || siteConfig.ogImage;
+  const image = ImageService.getOgImageUrl(rawImage);
   const ogTitle = blog.og_title || title;
   const ogDescription = blog.og_description || description;
 

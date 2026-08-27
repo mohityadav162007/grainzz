@@ -72,6 +72,16 @@ export const ImageService = {
     return src;
   },
 
+  getOgImageUrl(src?: string | null): string {
+    const defaultSiteOg = `${process.env.NEXT_PUBLIC_SITE_URL || 'https://www.grainzzindia.com'}/og-image.jpg`;
+    if (!src || typeof src !== 'string') return defaultSiteOg;
+    if (src.startsWith('/')) {
+      const baseUrl = (process.env.NEXT_PUBLIC_SITE_URL || 'https://www.grainzzindia.com').replace(/\/$/, '');
+      return `${baseUrl}${src}`;
+    }
+    return this.getImageKitUrl(src, { width: 1200, height: 630, quality: 80 });
+  },
+
   getResponsiveSizes(fill?: boolean, sizes?: string): string | undefined {
     if (fill && !sizes) {
       return '(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw';

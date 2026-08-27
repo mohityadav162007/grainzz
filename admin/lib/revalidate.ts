@@ -7,14 +7,14 @@ export async function revalidateClientPaths(paths: string[]) {
       if (hostname === 'localhost' || hostname === '127.0.0.1') {
         siteUrl = 'http://localhost:3000';
       } else {
-        siteUrl = 'https://www.grainzz.com';
+        siteUrl = 'https://www.grainzzindia.com';
       }
     } else {
       // In server-side Node.js context, check environment
       if (process.env.NODE_ENV !== 'production') {
         siteUrl = 'http://localhost:3000';
       } else {
-        siteUrl = 'https://www.grainzz.com';
+        siteUrl = 'https://www.grainzzindia.com';
       }
     }
   }

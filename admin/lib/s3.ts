@@ -159,6 +159,16 @@ export const uploadToS3 = async (
 
   const { uploadUrl, publicUrl, key } = await presignRes.json();
 
+  // Convert File to ArrayBuffer/Blob to bypass iOS Safari fetch bug (WebKit Bug 216736).
+  // Native OS-linked File objects can cause network aborts when streamed directly via fetch PUT.
+  let safeBody;
+  try {
+    const arrayBuffer = await finalFile.arrayBuffer();
+    safeBody = new Blob([arrayBuffer], { type: fileType });
+  } catch (err: any) {
+    throw new Error(`[File Read Error] Browser could not read file from device storage: ${err.message}`);
+  }
+
   // Step 2: Upload the file directly to S3 using the pre-signed URL
   let uploadRes;
   try {
@@ -167,7 +177,7 @@ export const uploadToS3 = async (
       headers: {
         'Content-Type': fileType,
       },
-      body: finalFile,
+      body: safeBody,
     });
   } catch (err: any) {
     // This catches browser network errors like CORS preflight failure or cellular timeout

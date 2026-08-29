@@ -324,12 +324,12 @@ ${quantityTimeline || 'No specific quantity/timeline provided.'}
             {/* Right Card Panel (Custom image vs CSS fallback) */}
             <div className="lg:col-span-5 w-full">
               {activeConfig.hero_image_url ? (
-                <div className="relative rounded-[24px] overflow-hidden min-h-[340px] md:min-h-[380px] group shadow-lg hover:shadow-xl transition-all duration-300">
+                <div className="relative rounded-[24px] overflow-hidden min-h-[340px] md:min-h-[380px] bg-white group shadow-lg hover:shadow-xl transition-all duration-300">
                   <Image
                     src={activeConfig.hero_image_url}
                     alt={activeConfig.hero_card_title}
                     fill
-                    className="object-cover group-hover:scale-[1.02] transition-transform duration-500"
+                    className="object-contain group-hover:scale-[1.02] transition-transform duration-500"
                     sizes="(max-width: 1024px) 100vw, 480px"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-transparent p-[36px] md:p-[44px] flex flex-col justify-end gap-3 text-white">
@@ -482,12 +482,12 @@ ${quantityTimeline || 'No specific quantity/timeline provided.'}
             {/* Left Side Highlight Card (Custom image vs CSS fallback) */}
             <div className="lg:col-span-5 w-full order-2 lg:order-1">
               {activeConfig.gifting_image_url ? (
-                <div className="relative rounded-[24px] overflow-hidden min-h-[300px] md:min-h-[360px] group shadow-lg hover:shadow-xl transition-all duration-300">
+                <div className="relative rounded-[24px] overflow-hidden min-h-[300px] md:min-h-[360px] bg-white group shadow-lg hover:shadow-xl transition-all duration-300">
                   <Image
                     src={activeConfig.gifting_image_url}
                     alt={activeConfig.gifting_card_title}
                     fill
-                    className="object-cover group-hover:scale-[1.02] transition-transform duration-500"
+                    className="object-contain group-hover:scale-[1.02] transition-transform duration-500"
                     sizes="(max-width: 1024px) 100vw, 480px"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent p-[36px] md:p-[44px] flex flex-col justify-end gap-2 text-white">

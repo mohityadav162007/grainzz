@@ -37,7 +37,75 @@ interface UploadResponse {
   key: string;
 }
 
-// ─── Core Upload Function ────────────────────────────────────────────────────
+const compressImage = async (file: File): Promise<File> => {
+  return new Promise((resolve) => {
+    // Only attempt compression in browser environments
+    if (typeof window === 'undefined' || typeof document === 'undefined') {
+      return resolve(file);
+    }
+
+    const img = new Image();
+    const objectUrl = URL.createObjectURL(file);
+
+    img.onload = () => {
+      URL.revokeObjectURL(objectUrl);
+      
+      const MAX_WIDTH = 1920;
+      const MAX_HEIGHT = 1920;
+      let width = img.width;
+      let height = img.height;
+
+      if (width > height) {
+        if (width > MAX_WIDTH) {
+          height = Math.round((height * MAX_WIDTH) / width);
+          width = MAX_WIDTH;
+        }
+      } else {
+        if (height > MAX_HEIGHT) {
+          width = Math.round((width * MAX_HEIGHT) / height);
+          height = MAX_HEIGHT;
+        }
+      }
+
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return resolve(file);
+
+      ctx.drawImage(img, 0, 0, width, height);
+
+      canvas.toBlob(
+        (blob) => {
+          if (!blob) return resolve(file);
+          const newFileName = file.name.replace(/\.[^/.]+$/, "") + ".jpg";
+          const newFile = new File([blob], newFileName, {
+            type: 'image/jpeg',
+            lastModified: Date.now(),
+          });
+          resolve(newFile);
+        },
+        'image/jpeg',
+        0.85
+      );
+    };
+
+    img.onerror = () => {
+      URL.revokeObjectURL(objectUrl);
+      // Fallback: If image fails to load (e.g. native HEIC not supported in this browser without conversion)
+      // just return the original file, but normalize its type if empty.
+      if (!file.type) {
+        const fallbackFile = new File([file], file.name, { type: 'application/octet-stream' });
+        resolve(fallbackFile);
+      } else {
+        resolve(file);
+      }
+    };
+
+    img.src = objectUrl;
+  });
+};
 
 /**
  * Upload a file to S3 via the /api/s3/upload endpoint.
@@ -51,35 +119,66 @@ export const uploadToS3 = async (
   file: File,
   folder: string = S3_FOLDERS.MISC
 ): Promise<string> => {
+  let finalFile = file;
+
+  // Attempt client-side compression/normalization for large images or missing MIME types
+  try {
+    const isImage = file.type.startsWith('image/') || !file.type || file.name.match(/\.(jpg|jpeg|png|webp|heic)$/i);
+    const isLarge = file.size > 2 * 1024 * 1024; // > 2MB
+    
+    if (isImage && (isLarge || !file.type || file.type.includes('heic'))) {
+      finalFile = await compressImage(file);
+    }
+  } catch (err) {
+    console.warn('[S3] Image compression skipped', err);
+  }
+
+  // Ensure fileType is never empty (fixes AWS Signature mismatch if browser omits it)
+  const fileType = finalFile.type || 'application/octet-stream';
+
   // Step 1: Get a pre-signed upload URL from our API
-  const presignRes = await fetch('/api/s3/upload', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      fileName: file.name,
-      fileType: file.type,
-      folder,
-    }),
-  });
+  let presignRes;
+  try {
+    presignRes = await fetch('/api/s3/upload', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        fileName: finalFile.name,
+        fileType: fileType,
+        folder,
+      }),
+    });
+  } catch (err: any) {
+    throw new Error(`[Network Error] Could not connect to API to request upload URL: ${err.message}`);
+  }
 
   if (!presignRes.ok) {
     const errData = await presignRes.json().catch(() => ({}));
-    throw new Error(errData?.error || 'Failed to get upload URL from S3');
+    throw new Error(`[API Error] Failed to generate upload URL: ${errData?.error || presignRes.statusText}`);
   }
 
   const { uploadUrl, publicUrl, key } = await presignRes.json();
 
   // Step 2: Upload the file directly to S3 using the pre-signed URL
-  const uploadRes = await fetch(uploadUrl, {
-    method: 'PUT',
-    headers: {
-      'Content-Type': file.type,
-    },
-    body: file,
-  });
+  let uploadRes;
+  try {
+    uploadRes = await fetch(uploadUrl, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': fileType,
+      },
+      body: finalFile,
+    });
+  } catch (err: any) {
+    // This catches browser network errors like CORS preflight failure or cellular timeout
+    if (err.name === 'TypeError' && err.message.includes('Failed to fetch')) {
+      throw new Error(`[Upload Error] Network/CORS failure while uploading to S3. This might be due to a poor connection or unsupported file type.`);
+    }
+    throw new Error(`[Upload Error] ${err.message}`);
+  }
 
   if (!uploadRes.ok) {
-    throw new Error(`S3 upload failed (HTTP ${uploadRes.status})`);
+    throw new Error(`[S3 Error] Upload rejected by S3 (HTTP ${uploadRes.status}: ${uploadRes.statusText})`);
   }
 
   return publicUrl;

@@ -164,9 +164,12 @@ export default function B2BPage() {
     getStoreSettings().then((settings: any) => {
       if (settings?.b2b_settings) {
         try {
-          setCustomConfig(JSON.parse(settings.b2b_settings));
+          const parsed = typeof settings.b2b_settings === 'string'
+            ? JSON.parse(settings.b2b_settings)
+            : settings.b2b_settings;
+          setCustomConfig(parsed);
         } catch (e) {
-          console.error(e);
+          console.error('[B2B Page] Failed to parse b2b_settings:', e);
         }
       }
     }).catch(console.error);
